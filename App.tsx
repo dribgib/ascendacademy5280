@@ -11,6 +11,7 @@ import HomePage from './pages/HomePage';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AuthPage from './pages/AuthPage';
+import CheckoutPage from './pages/CheckoutPage';
 
 // Scroll to top helper
 const ScrollToTop = () => {
@@ -121,6 +122,11 @@ VITE_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_XROcSoH4Xvg_Ias4cGELbw_iTbXEyxQ
           <Route 
             path="/admin" 
             element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/login" replace />} 
+          />
+
+          <Route 
+            path="/checkout/:packageId" 
+            element={<CheckoutPage />} 
           />
         </Routes>
       </Layout>

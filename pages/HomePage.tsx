@@ -119,7 +119,7 @@ const HomePage: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/login" className="block w-full py-3 border border-zinc-700 text-center uppercase font-teko text-xl text-white hover:bg-white hover:text-black transition-colors">
+                <Link to={`/checkout/${pkg.id}`} className="block w-full py-3 border border-zinc-700 text-center uppercase font-teko text-xl text-white hover:bg-white hover:text-black transition-colors">
                   Select Plan
                 </Link>
               </div>

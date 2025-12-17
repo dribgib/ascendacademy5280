@@ -202,5 +202,17 @@ export const api = {
         // For now, we simulate success
         return true;
     }
+  },
+
+  subscriptions: {
+    create: async (userId: string, childId: string | null, packageId: string) => {
+      const { error } = await supabase.from('subscriptions').insert({
+        user_id: userId,
+        child_id: childId,
+        package_id: packageId,
+        status: 'active'
+      });
+      if (error) throw error;
+    }
   }
 };
