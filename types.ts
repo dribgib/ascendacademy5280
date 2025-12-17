@@ -7,7 +7,7 @@ export interface User {
   lastName: string;
   phone: string;
   role: UserRole;
-  stripeCustomerId?: string; // Placeholder for Stripe integration
+  stripeCustomerId?: string;
 }
 
 export interface Child {
@@ -16,8 +16,8 @@ export interface Child {
   firstName: string;
   lastName: string;
   dob: string;
-  sports: string[]; // List of favorite sports
-  qrCode: string; // The UUID string used for the QR code
+  sports: string[];
+  qrCode: string;
 }
 
 export interface TrainingPackage {
@@ -26,7 +26,7 @@ export interface TrainingPackage {
   price: number;
   description: string;
   features: string[];
-  color: string; // Tailwind color class helper
+  color: string;
   billingPeriod: 'Monthly' | 'Weekly' | 'Per Session';
 }
 
@@ -34,9 +34,11 @@ export interface Event {
   id: string;
   title: string;
   description: string;
-  date: string; // ISO string
-  startTime: string;
-  endTime: string;
+  date: string; // Formatted date string for UI (YYYY-MM-DD)
+  startTime: string; // Formatted time string (HH:MM)
+  endTime: string; // Formatted time string (HH:MM)
+  isoStart: string; // Full ISO timestamp for logic
+  isoEnd: string; // Full ISO timestamp for logic
   location: string;
   maxSlots: number;
   bookedSlots: number;
@@ -47,21 +49,6 @@ export interface Event {
 export interface Donation {
   amount: number;
   isSponsorship: boolean;
-  athleteName?: string; // If sponsoring specific athlete (optional)
+  athleteName?: string;
   donorEmail: string;
 }
-
-// Database / Integration Notes (For the Developer):
-/*
-  Supabase Schema Recommendations:
-  - users: id (uuid), email, role, phone, etc.
-  - children: id (uuid), user_id (fk), name, dob, sports (jsonb)
-  - events: id (uuid), title, start_time, end_time, capacity, location
-  - registrations: id, event_id, child_id, checked_in (bool)
-  - payments: Stripe webhook logs
-
-  Stripe Integration:
-  - Use Stripe Checkout for subscriptions (Elite, All-Pro, etc.)
-  - Use Stripe Payment Links or custom intent for One-time donations.
-  - Store 'stripe_customer_id' in Supabase 'users' table.
-*/

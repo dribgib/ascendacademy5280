@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, User as UserIcon, LogOut, Dumbbell } from 'lucide-react';
-import { AuthService } from '../services/mockService';
+import { api } from '../services/api';
 import { User } from '../types';
 
 interface LayoutProps {
@@ -14,8 +14,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await api.auth.signOut();
     setUser(null);
     navigate('/');
   };

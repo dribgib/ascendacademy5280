@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
-import { DataService } from '../services/mockService';
+import { api } from '../services/api';
 import { Plus, User as KidIcon, Calendar, CheckCircle } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
@@ -13,6 +13,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const [kids, setKids] = useState<Child[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [showAddKidModal, setShowAddKidModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // New Kid Form State
   const [newKidName, setNewKidName] = useState({ first: '', last: '' });
@@ -24,28 +25,40 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   }, [user.id]);
 
   const loadData = async () => {
-    const [kidsData, eventsData] = await Promise.all([
-      DataService.getChildren(user.id),
-      DataService.getEvents()
-    ]);
-    setKids(kidsData);
-    setEvents(eventsData);
+    try {
+      const [kidsData, eventsData] = await Promise.all([
+        api.children.list(user.id),
+        api.events.list()
+      ]);
+      setKids(kidsData);
+      setEvents(eventsData);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddKid = async (e: React.FormEvent) => {
     e.preventDefault();
-    await DataService.addChild({
-      parentId: user.id,
-      firstName: newKidName.first,
-      lastName: newKidName.last,
-      dob: newKidDob,
-      sports: selectedSports
-    });
-    setShowAddKidModal(false);
-    loadData();
-    // Reset form
-    setNewKidName({ first: '', last: '' });
-    setSelectedSports([]);
+    try {
+      await api.children.create({
+        parentId: user.id,
+        firstName: newKidName.first,
+        lastName: newKidName.last,
+        dob: newKidDob,
+        sports: selectedSports
+      });
+      setShowAddKidModal(false);
+      loadData();
+      // Reset form
+      setNewKidName({ first: '', last: '' });
+      setSelectedSports([]);
+      setNewKidDob('');
+    } catch (e) {
+      console.error(e);
+      alert('Error adding child');
+    }
   };
 
   const toggleSport = (sport: string) => {
@@ -57,9 +70,16 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   };
 
   const handleRegister = async (eventId: string, kidId: string) => {
-    await DataService.registerForEvent(eventId, kidId);
-    loadData();
+    try {
+      await api.registrations.register(eventId, kidId);
+      loadData();
+    } catch (e) {
+      console.error(e);
+      alert('Registration failed. Please try again.');
+    }
   };
+
+  if (loading) return <div className="p-10 text-center text-zinc-500">Loading your profile...</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -116,7 +136,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             </h2>
 
             <div className="space-y-4">
-              {events.map(evt => {
+              {events.length === 0 ? <p className="text-zinc-500">No events scheduled.</p> : events.map(evt => {
                 const isFull = evt.bookedSlots >= evt.maxSlots;
                 return (
                   <div key={evt.id} className="bg-black border border-zinc-800 p-5 rounded hover:border-zinc-700 transition-colors">

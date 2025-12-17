@@ -7,29 +7,32 @@ const HomePage: React.FC = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
-        {/* Placeholder for video background */}
+      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-black">
+        {/* Background Video/Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1526676037777-05a232554f77?q=80&w=2070&auto=format&fit=crop" 
+            src="https://api.ascendacademy5280.com/storage/v1/object/public/ascendacademy/Gemini_Generated_Image_uw538duw538duw53.png" 
             alt="Hero Background" 
-            className="w-full h-full object-cover opacity-40"
+            className="w-full h-full object-cover opacity-80"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-black/50 to-transparent"></div>
+          {/* Dark Overlay for Text Contrast - Increased opacity for readability */}
+          <div className="absolute inset-0 bg-black/70 mix-blend-multiply"></div>
+          {/* Gradient for smooth transition to content */}
+          <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-black/50 to-black/30"></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
-          <h1 className="font-teko text-7xl md:text-9xl font-bold text-white uppercase leading-none tracking-tighter mb-4 animate-fade-in-up">
+          <h1 className="font-teko text-7xl md:text-9xl font-bold text-white uppercase leading-none tracking-tighter mb-4 animate-fade-in-up drop-shadow-2xl">
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-red">The Competition</span>
           </h1>
-          <p className="mt-4 text-xl md:text-2xl text-zinc-300 max-w-3xl mx-auto font-light tracking-wide">
+          <p className="mt-4 text-xl md:text-2xl text-zinc-200 max-w-3xl mx-auto font-light tracking-wide drop-shadow-md">
             Elite athletic performance training in Colorado. Join the Academy.
           </p>
           <div className="mt-10 flex justify-center gap-6">
             <a 
               href="#packages"
-              className="bg-co-yellow text-black px-10 py-4 font-teko text-2xl uppercase tracking-wider font-bold hover:bg-yellow-400 transition-transform hover:scale-105 -skew-x-12"
+              className="bg-co-yellow text-black px-10 py-4 font-teko text-2xl uppercase tracking-wider font-bold hover:bg-yellow-400 transition-transform hover:scale-105 -skew-x-12 shadow-lg shadow-yellow-900/20"
             >
               <span className="skew-x-12 inline-block">Start Training</span>
             </a>

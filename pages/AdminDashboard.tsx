@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, Event, Child } from '../types';
-import { DataService } from '../services/mockService';
+import { User, Event } from '../types';
+import { api } from '../services/api';
 import { QrCode, Plus, Calendar, Smartphone, Users, CheckCircle } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -30,7 +30,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   }, [events]);
 
   const loadEvents = async () => {
-    const data = await DataService.getEvents();
+    const data = await api.events.list();
     setEvents(data);
   };
 
@@ -41,8 +41,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       return;
     }
 
-    const result = await DataService.checkInChild(selectedEventId, qrInput);
-    setCheckInStatus({ msg: result.message + (result.childName ? ` - ${result.childName}` : ''), success: result.success });
+    const result = await api.registrations.checkIn(selectedEventId, qrInput);
+    setCheckInStatus({ msg: result.message, success: result.success });
     setQrInput(''); // Clear input for next scan
     
     // Auto-clear success message after 3 seconds
@@ -52,15 +52,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    await DataService.createEvent(newEvent);
-    setShowCreateModal(false);
-    loadEvents();
-    // Reset
-    setNewEvent({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20 });
+    try {
+      // Combine Date + Time into ISO string
+      // Note: This naive approach assumes local time logic. In production, consider Timezones (MST/MDT for Denver)
+      const startIso = new Date(`${newEvent.date}T${newEvent.startTime}`).toISOString();
+      const endIso = new Date(`${newEvent.date}T${newEvent.endTime}`).toISOString();
+
+      await api.events.create({
+        title: newEvent.title,
+        description: newEvent.description,
+        startTime: startIso,
+        endTime: endIso,
+        location: newEvent.location,
+        maxSlots: newEvent.maxSlots
+      });
+
+      setShowCreateModal(false);
+      loadEvents();
+      // Reset
+      setNewEvent({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20 });
+    } catch (e) {
+      console.error(e);
+      alert('Failed to create event. Check console.');
+    }
   };
 
   const handleSendReminders = async (eventId: string) => {
-    await DataService.sendReminder(eventId);
+    await api.registrations.sendReminder(eventId);
     alert('Mock SMS reminders sent via Twilio!');
   };
 
@@ -141,6 +159,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
             <Calendar className="text-co-blue" /> Scheduled Sessions
           </h2>
+          {events.length === 0 && <div className="text-zinc-500 p-4">No events scheduled.</div>}
           {events.map(evt => (
             <div key={evt.id} className="bg-zinc-900 border border-zinc-800 p-6 rounded-lg relative">
               <div className="flex justify-between items-start mb-4">
