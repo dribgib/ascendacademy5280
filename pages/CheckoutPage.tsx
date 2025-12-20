@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PACKAGES } from '../constants';
 import { api } from '../services/api';
 import { Child, User } from '../types';
-import { Check, Shield, AlertCircle, CreditCard, User as UserIcon } from 'lucide-react';
+import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag } from 'lucide-react';
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
@@ -51,10 +51,14 @@ const CheckoutPage: React.FC = () => {
     const pkg = PACKAGES.find(p => p.id === pkgId);
     if (!pkg) return;
 
+    // Calculate count of OTHER kids with active subs (excluding current one if they are updating)
+    // For a new sub, it counts all existing active ones.
+    const activeSubscriptionCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
+
     setProcessing(true);
     try {
       // Direct call to Billing Service which handles Stripe Checkout
-      await api.billing.createCheckoutSession(pkg.stripePriceId, activeKidId, user.id);
+      await api.billing.createCheckoutSession(pkg.stripePriceId, activeKidId, user.id, activeSubscriptionCount);
     } catch (e) {
       alert('Checkout initiation failed.');
       setProcessing(false);
@@ -80,6 +84,19 @@ const CheckoutPage: React.FC = () => {
   );
 
   const activeKid = kids.find(k => k.id === activeKidId);
+  const otherActiveSubsCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
+  
+  // Calculate discount Tier
+  let discountLabel = '';
+  let discountPercent = 0;
+
+  if (otherActiveSubsCount === 1) {
+      discountPercent = 45;
+      discountLabel = "Sibling Discount Applied";
+  } else if (otherActiveSubsCount >= 2) {
+      discountPercent = 65;
+      discountLabel = "Multi-Sibling Discount Applied";
+  }
 
   return (
     <div className="min-h-screen bg-dark-bg pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-poppins">
@@ -129,6 +146,13 @@ const CheckoutPage: React.FC = () => {
           </div>
         )}
 
+        {/* Discount Banner */}
+        {discountPercent > 0 && activeKid && activeKid.subscriptionStatus !== 'active' && (
+             <div className="bg-gradient-to-r from-co-yellow to-yellow-600 text-black p-4 mb-8 rounded font-bold text-center uppercase tracking-wide flex items-center justify-center gap-2 animate-pulse">
+                <Tag size={20} /> {discountLabel}: Save {discountPercent}% on this subscription!
+             </div>
+        )}
+
         {/* Pricing Cards (Only if Kid Selected) */}
         {activeKid && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -136,6 +160,9 @@ const CheckoutPage: React.FC = () => {
               // Highlight if this kid has this specific active plan (mock logic)
               const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); // Loose matching for demo
               const isSelectedFromUrl = packageId === pkg.id;
+              
+              // Calculate Price
+              const finalPrice = discountPercent > 0 ? Math.round(pkg.price * (1 - discountPercent / 100)) : pkg.price;
 
               return (
                 <div 
@@ -155,9 +182,12 @@ const CheckoutPage: React.FC = () => {
                   <div className="mb-4">
                     <h3 className="font-teko text-3xl text-white uppercase">{pkg.name}</h3>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-2xl font-bold text-white">${pkg.price}</span>
+                      <span className="text-2xl font-bold text-white">${finalPrice}</span>
                       <span className="text-xs text-zinc-500 uppercase">/ Month</span>
                     </div>
+                    {discountPercent > 0 && (
+                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500">${pkg.price}/mo</p>
+                    )}
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-grow">

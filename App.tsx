@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SetPasswordPage from './pages/SetPasswordPage';
+import SponsorPage from './pages/SponsorPage';
 
 // Scroll to top helper
 const ScrollToTop = () => {
@@ -165,6 +166,11 @@ const App: React.FC = () => {
           <Route 
             path="/set-password" 
             element={<SetPasswordPage />} 
+          />
+
+          <Route 
+            path="/sponsor" 
+            element={<SponsorPage />} 
           />
           
           {/* Catch-all route to redirect back home if 404 */}

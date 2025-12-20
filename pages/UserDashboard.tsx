@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate } from 'react-router-dom';
@@ -60,9 +60,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
   const handleManageBilling = async () => {
     try {
+      setLoading(true);
       await api.billing.createPortalSession();
     } catch (e) {
       alert('Unable to open billing portal');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,16 +170,24 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   };
 
   const handleRegister = async (eventId: string, kidId: string) => {
+    if (!confirm(`Confirm registration for this session?`)) return;
     try {
       await api.registrations.register(eventId, kidId);
       loadData();
-    } catch (e) {
+      alert("Registration Successful!");
+    } catch (e: any) {
       console.error(e);
-      alert('Registration failed. Please try again.');
+      alert(e.message || 'Registration failed. Please try again.');
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-zinc-500">Loading your profile...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
+        <div className="text-co-yellow font-teko text-5xl animate-pulse tracking-widest text-center uppercase">
+          Loading Dashboard
+        </div>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -232,14 +243,34 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                        )}
                     </div>
 
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-teko text-3xl text-white uppercase leading-none mt-1">{kid.firstName} {kid.lastName}</h3>
                       <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
                       
-                      {/* Subscription Status Pill */}
+                      {/* Subscription Status & Limits */}
                       <div className="mt-3">
-                         {kid.subscriptionStatus === 'active' ? (
-                           <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50">Active Membership</span>
+                         {kid.subscriptionStatus === 'active' && kid.usageStats ? (
+                           <div>
+                               <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
+                                   {kid.usageStats.planName} Plan
+                               </span>
+                               {/* Usage Bar */}
+                               <div className="mt-2">
+                                   <div className="flex justify-between text-[10px] text-zinc-400 mb-1 uppercase tracking-wider">
+                                       <span>Usage</span>
+                                       <span>{kid.usageStats.used} / {kid.usageStats.limit} Sessions</span>
+                                   </div>
+                                   <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+                                       <div 
+                                          className={`h-full ${kid.usageStats.used >= kid.usageStats.limit ? 'bg-co-red' : 'bg-co-yellow'}`} 
+                                          style={{ width: `${Math.min((kid.usageStats.used / kid.usageStats.limit) * 100, 100)}%` }}
+                                       ></div>
+                                   </div>
+                                   {kid.usageStats.used >= kid.usageStats.limit && (
+                                       <p className="text-co-red text-[10px] mt-1 font-bold">Monthly limit reached.</p>
+                                   )}
+                               </div>
+                           </div>
                          ) : (
                            <button 
                              onClick={() => navigate('/checkout/p_elite')} // Default to Elite, let them choose
@@ -292,22 +323,29 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                       <div className="flex flex-col gap-2 min-w-[140px]">
                         {kids.map(kid => {
                           const isRegistered = evt.registeredKidIds.includes(kid.id);
+                          const limitReached = kid.usageStats && kid.usageStats.used >= kid.usageStats.limit;
+                          const hasPlan = kid.subscriptionStatus === 'active';
+
                           return (
                             <button
                               key={kid.id}
-                              disabled={isRegistered || isFull}
+                              disabled={isRegistered || isFull || (!isRegistered && limitReached) || !hasPlan}
                               onClick={() => handleRegister(evt.id, kid.id)}
                               className={`
                                 text-xs py-2 px-3 rounded uppercase font-bold transition-colors
                                 ${isRegistered 
                                   ? 'bg-green-900/30 text-green-500 border border-green-900 cursor-default' 
-                                  : isFull 
-                                    ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                                  : (isFull || limitReached || !hasPlan)
+                                    ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed border border-zinc-800'
                                     : 'bg-zinc-800 hover:bg-co-red hover:text-white text-zinc-300 border border-zinc-700'}
                               `}
                             >
                               {isRegistered ? (
                                 <span className="flex items-center justify-center gap-1"><CheckCircle size={12} /> {kid.firstName} In</span>
+                              ) : !hasPlan ? (
+                                `Plan Required`
+                              ) : limitReached ? (
+                                `Limit Reached`
                               ) : isFull ? (
                                 `${kid.firstName} (Full)`
                               ) : (

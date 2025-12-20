@@ -15,6 +15,7 @@ export const PACKAGES: TrainingPackage[] = [
     name: 'Elite',
     price: 310,
     billingPeriod: 'Monthly',
+    maxSessions: 12,
     description: 'The ultimate performance package for dedicated athletes.',
     color: 'border-co-yellow',
     features: [
@@ -31,6 +32,7 @@ export const PACKAGES: TrainingPackage[] = [
     name: 'All-Pro',
     price: 215,
     billingPeriod: 'Monthly',
+    maxSessions: 8,
     description: 'High-intensity training to maintain peak condition.',
     color: 'border-co-red',
     features: [
@@ -46,6 +48,7 @@ export const PACKAGES: TrainingPackage[] = [
     name: 'Pro',
     price: 120,
     billingPeriod: 'Monthly',
+    maxSessions: 4,
     description: 'Consistent training foundation.',
     color: 'border-zinc-500',
     features: [
@@ -60,6 +63,7 @@ export const PACKAGES: TrainingPackage[] = [
     name: 'Rookie',
     price: 100,
     billingPeriod: 'Monthly',
+    maxSessions: 8, // Approx 2 per week
     description: 'Intro to sports fitness (Grades 6 & Under).',
     color: 'border-white',
     features: [

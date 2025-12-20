@@ -21,6 +21,12 @@ export interface Child {
   image?: string; // Profile image URL
   subscriptionId?: string; // Optional: link to active subscription
   subscriptionStatus?: 'active' | 'past_due' | 'canceled' | 'none';
+  // Usage tracking for plan enforcement
+  usageStats?: {
+    used: number;
+    limit: number;
+    planName: string;
+  };
 }
 
 export interface TrainingPackage {
@@ -32,6 +38,7 @@ export interface TrainingPackage {
   features: string[];
   color: string;
   billingPeriod: 'Monthly' | 'Weekly' | 'Per Session';
+  maxSessions: number; // Max sessions allowed per billing period
 }
 
 export interface Event {

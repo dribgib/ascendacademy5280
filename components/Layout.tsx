@@ -83,17 +83,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 <button onClick={() => handleScrollTo('schedule')} className={navLinkClass}>Schedule</button>
                 
                 {user ? (
-                  <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700">
+                  <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700 h-8">
                     <button 
                       onClick={() => navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard')}
-                      className="flex items-center gap-2 text-white hover:text-co-yellow transition-colors font-teko text-xl uppercase tracking-wide"
+                      className="flex items-center gap-2 text-white hover:text-co-yellow transition-colors font-teko text-xl uppercase tracking-wide h-full"
                     >
-                      <UserIcon className="h-5 w-5 mb-1" />
+                      <UserIcon className="h-5 w-5" />
                       Dashboard
                     </button>
                     <button 
                       onClick={handleLogout}
-                      className="text-zinc-500 hover:text-co-red transition-colors"
+                      className="text-zinc-500 hover:text-co-red transition-colors flex items-center h-full"
                       title="Logout"
                     >
                       <LogOut className="h-5 w-5" />

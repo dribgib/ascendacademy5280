@@ -180,7 +180,7 @@ export const mockApi = {
   },
 
   billing: {
-    createCheckoutSession: async (priceId: string, childId: string, userId: string) => {
+    createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0) => {
       await delay(1000);
       console.log(`[Mock] Creating checkout session for package ${priceId} user ${userId} child ${childId}`);
       // Simulate "success" by adding a subscription locally
@@ -194,6 +194,11 @@ export const mockApi = {
       });
       // Redirect to dashboard to see changes
       window.location.href = '/#/dashboard';
+    },
+    createDonationSession: async (amount: number, userId?: string) => {
+      await delay(1000);
+      console.log(`[Mock] Creating donation session for $${amount}`);
+      alert('Mock Donation Successful! Thank you for your support.');
     },
     createPortalSession: async () => {
       await delay(500);
@@ -213,5 +218,22 @@ export const mockApi = {
         createdAt: new Date().toISOString()
       });
     }
+  },
+  
+  waivers: {
+    checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
+        // Mock check for waiver
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return true; 
+    }
+  },
+
+  general: {
+      sendSponsorshipInquiry: async (formData: any) => {
+          // Simulate backend email send
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log('Sponsorship inquiry sent to rod@ascendacademy5280.com', formData);
+          return true;
+      }
   }
 };

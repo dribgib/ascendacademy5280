@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PACKAGES } from '../constants';
-import { Check, Star, Trophy, Users, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Check, Star, Trophy, Users, Heart, DollarSign, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const [showDonateModal, setShowDonateModal] = useState(false);
+  const [donationAmount, setDonationAmount] = useState<number | ''>('');
+  const [customAmount, setCustomAmount] = useState<string>('');
+  const [processingDonation, setProcessingDonation] = useState(false);
+
+  const handleDonate = async () => {
+    const amount = Number(customAmount) || Number(donationAmount);
+    if (!amount || amount <= 0) {
+        alert("Please select or enter a valid donation amount.");
+        return;
+    }
+    setProcessingDonation(true);
+    try {
+        await api.billing.createDonationSession(amount);
+    } catch (e) {
+        console.error(e);
+        setProcessingDonation(false);
+    }
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -163,10 +185,16 @@ const HomePage: React.FC = () => {
               <p className="text-zinc-400 mb-8">Every kid deserves a chance to compete. Donate to sponsor an athlete who needs financial assistance.</p>
               
               <div className="flex flex-col gap-4 relative z-10">
-                <button className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-4 px-4 text-sm uppercase font-bold tracking-widest transition-colors duration-300 flex items-center justify-center gap-2">
-                  Donate $10+
+                <button 
+                    onClick={() => setShowDonateModal(true)}
+                    className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-4 px-4 text-sm uppercase font-bold tracking-widest transition-colors duration-300 flex items-center justify-center gap-2"
+                >
+                  <DollarSign size={16} /> Donate
                 </button>
-                <button className="w-full border border-zinc-700 text-zinc-400 hover:border-co-yellow hover:text-co-yellow py-4 px-4 text-sm uppercase font-bold tracking-widest transition-colors duration-300">
+                <button 
+                    onClick={() => navigate('/sponsor')}
+                    className="w-full border border-zinc-700 text-zinc-400 hover:border-co-yellow hover:text-co-yellow py-4 px-4 text-sm uppercase font-bold tracking-widest transition-colors duration-300"
+                >
                   Sponsor an Athlete
                 </button>
               </div>
@@ -193,6 +221,63 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
       </section>
+
+      {/* Donation Modal */}
+      {showDonateModal && (
+        <div 
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          onClick={() => setShowDonateModal(false)}
+        >
+            <div 
+                className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-md w-full relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button 
+                    onClick={() => setShowDonateModal(false)}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                >
+                    <X size={24} />
+                </button>
+                <h2 className="font-teko text-4xl text-white uppercase mb-2 flex items-center gap-2">
+                    <Heart className="text-co-red" /> Support The Team
+                </h2>
+                <p className="text-zinc-400 text-sm mb-8">
+                    Your contribution helps provide equipment and scholarships for athletes in need.
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    {[10, 25, 50, 100].map(amt => (
+                        <button
+                            key={amt}
+                            onClick={() => { setDonationAmount(amt); setCustomAmount(''); }}
+                            className={`py-4 border rounded font-teko text-2xl transition-all ${donationAmount === amt ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-400 hover:border-zinc-500'}`}
+                        >
+                            ${amt}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="mb-6 relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+                    <input 
+                        type="number" 
+                        placeholder="Custom Amount" 
+                        value={customAmount}
+                        onChange={(e) => { setCustomAmount(e.target.value); setDonationAmount(''); }}
+                        className="w-full bg-black border border-zinc-700 rounded p-4 pl-8 text-white focus:border-co-yellow outline-none font-teko text-xl tracking-wide"
+                    />
+                </div>
+
+                <button 
+                    onClick={handleDonate}
+                    disabled={processingDonation}
+                    className="w-full bg-white hover:bg-zinc-200 text-black font-teko text-2xl uppercase py-4 rounded disabled:opacity-50 transition-colors"
+                >
+                    {processingDonation ? 'Processing...' : 'Proceed to Payment'}
+                </button>
+            </div>
+        </div>
+      )}
     </>
   );
 };

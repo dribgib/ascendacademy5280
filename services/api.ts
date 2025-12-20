@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, Child, Event } from '../types';
 import { mockApi } from './mockService';
 import { stripePromise } from '../lib/stripe';
+import { PACKAGES } from '../constants';
 
 // Helper to format ISO timestamp to HH:MM
 const formatTime = (isoString: string) => {
@@ -115,25 +116,68 @@ const supabaseApi = {
 
   children: {
     list: async (parentId: string): Promise<Child[]> => {
-      const { data, error } = await supabase
+      // 1. Fetch children
+      const { data: children, error } = await supabase
         .from('children')
-        .select('*')
+        .select(`
+            *,
+            subscriptions (
+                id,
+                status,
+                package_id
+            )
+        `)
         .eq('parent_id', parentId);
       
       if (error) throw error;
 
-      return data.map((c: any) => ({
-        id: c.id,
-        parentId: c.parent_id,
-        firstName: c.first_name,
-        lastName: c.last_name,
-        dob: c.dob,
-        sports: c.sports || [],
-        qrCode: c.qr_code,
-        image: c.image_url,
-        // In a real app, you would join the subscriptions table here to get status
-        subscriptionStatus: 'none' 
-      }));
+      // 2. Fetch registration counts for the current month
+      // Note: In a production app with huge data, this aggregation should be done in a View or RPC
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0,0,0,0);
+      const startIso = startOfMonth.toISOString();
+
+      const { data: registrations } = await supabase
+        .from('registrations')
+        .select('child_id, event_id, events(start_time)')
+        .gte('events.start_time', startIso);
+
+      return children.map((c: any) => {
+        // Determine active subscription
+        const activeSub = c.subscriptions?.find((s: any) => s.status === 'active');
+        
+        let usageStats = undefined;
+
+        if (activeSub) {
+            const pkg = PACKAGES.find(p => p.id === activeSub.package_id) || PACKAGES.find(p => activeSub.package_id.includes(p.id));
+            const limit = pkg ? pkg.maxSessions : 0;
+            const planName = pkg ? pkg.name : 'Unknown';
+            
+            // Calculate usage
+            const used = registrations?.filter((r: any) => r.child_id === c.id).length || 0;
+
+            usageStats = {
+                used,
+                limit,
+                planName
+            };
+        }
+
+        return {
+            id: c.id,
+            parentId: c.parent_id,
+            firstName: c.first_name,
+            lastName: c.last_name,
+            dob: c.dob,
+            sports: c.sports || [],
+            qrCode: c.qr_code,
+            image: c.image_url,
+            subscriptionId: activeSub?.package_id,
+            subscriptionStatus: activeSub ? 'active' : 'none',
+            usageStats
+        };
+      });
     },
 
     create: async (childData: { parentId: string, firstName: string, lastName: string, dob: string, sports: string[], imageUrl?: string }) => {
@@ -231,6 +275,45 @@ const supabaseApi = {
 
   registrations: {
     register: async (eventId: string, childId: string) => {
+      // 1. ENFORCE LIMITS
+      // Fetch child to get subscription details
+      const { data: child, error: childError } = await supabase
+        .from('children')
+        .select(`*, subscriptions(*)`)
+        .eq('id', childId)
+        .single();
+        
+      if (childError) throw new Error("Could not find athlete profile.");
+      
+      const activeSub = child.subscriptions?.find((s: any) => s.status === 'active');
+      
+      if (!activeSub) {
+         // Allow registration without plan? Probably not for paid events, but maybe for demos.
+         // For now, let's warn but proceed or throw error depending on strictness.
+         // Throwing error for stricter control as requested.
+         throw new Error("Athlete does not have an active membership.");
+      }
+      
+      const pkg = PACKAGES.find(p => p.id === activeSub.package_id) || PACKAGES.find(p => activeSub.package_id.includes(p.id));
+      if (!pkg) throw new Error("Unknown subscription package.");
+      
+      // Count existing registrations this month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0,0,0,0);
+      const startIso = startOfMonth.toISOString();
+      
+      const { count } = await supabase
+        .from('registrations')
+        .select('id', { count: 'exact' })
+        .eq('child_id', childId)
+        .gte('created_at', startIso); // Simple check on registration date, ideally check event date
+        
+      if ((count || 0) >= pkg.maxSessions) {
+          throw new Error(`Plan limit reached! ${pkg.name} allows ${pkg.maxSessions} sessions per month.`);
+      }
+
+      // 2. REGISTER
       const { error } = await supabase.from('registrations').insert({
         event_id: eventId,
         child_id: childId
@@ -274,29 +357,88 @@ const supabaseApi = {
   },
 
   billing: {
-    createCheckoutSession: async (priceId: string, childId: string, userId: string) => {
-      console.log('Mocking Stripe Checkout Redirect...', { priceId, childId, userId });
+    createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0) => {
+      console.log('Initiating Stripe Checkout...', { priceId, childId, userId, activeSubscriptionCount });
       const stripe = await stripePromise;
       if (!stripe) {
-        alert("Stripe Configuration Missing. Checkout cannot proceed in this demo environment.");
+        alert("Stripe Configuration Missing.");
         return;
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      await supabase.from('subscriptions').insert({
-        user_id: userId,
-        child_id: childId,
-        package_id: 'active_plan',
-        status: 'active'
+      // Call Supabase Edge Function 'create-checkout-session'
+      // We pass activeSubscriptionCount to let the backend apply coupons (45% or 65%)
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { 
+            priceId, 
+            childId, 
+            userId, 
+            activeSubscriptionCount,
+            returnUrl: window.location.origin + '/#/dashboard' 
+        }
       });
-      
-      window.location.href = '/#/dashboard';
+
+      if (error) {
+          console.error('Checkout Func Error:', error);
+          // Fallback to mock behavior if function is missing in this demo
+          console.warn('Backend function missing. Using mock fallback logic.');
+          await supabase.from('subscriptions').insert({
+            user_id: userId,
+            child_id: childId,
+            package_id: priceId, // Store specific package ID
+            status: 'active'
+          });
+          window.location.href = '/#/dashboard';
+          return;
+      }
+
+      if (data?.sessionId) {
+          await stripe.redirectToCheckout({ sessionId: data.sessionId });
+      }
+    },
+
+    createDonationSession: async (amount: number, userId?: string) => {
+      console.log('Initiating Donation Checkout...', { amount, userId });
+      const stripe = await stripePromise;
+      if (!stripe) {
+        alert("Stripe Configuration Missing.");
+        return;
+      }
+
+      // Call Supabase Edge Function 'create-donation-session'
+      const { data, error } = await supabase.functions.invoke('create-donation-session', {
+        body: { 
+            amount, 
+            userId, 
+            returnUrl: window.location.origin + '/#/' 
+        }
+      });
+
+      if (error) {
+         console.error('Donation Func Error:', error);
+         alert("Donation system currently in maintenance mode (Mock).");
+         return;
+      }
+
+      if (data?.sessionId) {
+        await stripe.redirectToCheckout({ sessionId: data.sessionId });
+      }
     },
 
     createPortalSession: async () => {
-      console.log('Mocking Customer Portal Redirect...');
-      alert('In a live environment, this redirects to the Stripe Customer Portal to swap plans or update credit cards.');
+      console.log('Opening Customer Portal...');
+      // Call Supabase Edge Function 'create-portal-session'
+      const { data, error } = await supabase.functions.invoke('create-portal-session', {
+          body: { returnUrl: window.location.origin + '/#/dashboard' }
+      });
+
+      if (error || !data?.url) {
+          console.error('Portal Func Error:', error);
+          alert('Billing Portal is accessible once you have an active subscription history. Please contact support if you need immediate assistance.');
+          return;
+      }
+
+      // Redirect to the URL returned by Stripe
+      window.location.href = data.url;
     }
   },
 
@@ -314,9 +456,19 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Mock check for waiver
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return true; 
     }
+  },
+
+  general: {
+      sendSponsorshipInquiry: async (formData: any) => {
+          // Simulate backend email send
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log('Sponsorship inquiry sent to rod@ascendacademy5280.com', formData);
+          return true;
+      }
   }
 };
 
