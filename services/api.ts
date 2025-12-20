@@ -1,5 +1,6 @@
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, Child, Event } from '../types';
+import { mockApi } from './mockService';
 
 // Helper to format ISO timestamp to HH:MM
 const formatTime = (isoString: string) => {
@@ -13,7 +14,8 @@ const formatDate = (isoString: string) => {
   return new Date(isoString).toISOString().split('T')[0];
 };
 
-export const api = {
+// --- REAL SUPABASE IMPLEMENTATION ---
+const supabaseApi = {
   auth: {
     getUser: async (): Promise<User | null> => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +53,7 @@ export const api = {
           data: {
             first_name: meta.firstName,
             last_name: meta.lastName,
-            phone: meta.phone // Note: Profile trigger handles mapping these to the profiles table
+            phone: meta.phone
           }
         }
       });
@@ -83,7 +85,6 @@ export const api = {
     },
 
     create: async (childData: { parentId: string, firstName: string, lastName: string, dob: string, sports: string[] }) => {
-      // Generate a unique string for QR code
       const qrCode = `ascend_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const { data, error } = await supabase
@@ -106,7 +107,6 @@ export const api = {
 
   events: {
     list: async (): Promise<Event[]> => {
-      // Fetch events with registrations to calculate slots
       const { data: events, error } = await supabase
         .from('events')
         .select(`
@@ -152,8 +152,6 @@ export const api = {
 
   registrations: {
     register: async (eventId: string, childId: string) => {
-      // Check if full first (Backend policy could enforce this, but simple check here)
-      // For now, simply insert. RLS or DB constraints can handle duplicates.
       const { error } = await supabase.from('registrations').insert({
         event_id: eventId,
         child_id: childId
@@ -162,7 +160,6 @@ export const api = {
     },
 
     checkIn: async (eventId: string, qrCode: string) => {
-      // 1. Find child by QR
       const { data: child, error: childError } = await supabase
         .from('children')
         .select('id, first_name, last_name')
@@ -171,7 +168,6 @@ export const api = {
 
       if (childError || !child) return { success: false, message: 'Invalid QR Code' };
 
-      // 2. Find registration
       const { data: reg, error: regError } = await supabase
         .from('registrations')
         .select('*')
@@ -180,13 +176,9 @@ export const api = {
         .maybeSingle();
 
       if (regError) return { success: false, message: 'Lookup error' };
-      
-      // Strict: Must be registered
       if (!reg) return { success: false, message: 'Athlete not registered for this session.' };
-      
       if (reg.checked_in) return { success: false, message: 'Already checked in.', childName: child.first_name };
 
-      // 3. Update check-in
       const { error: updateError } = await supabase
         .from('registrations')
         .update({ checked_in: true, checked_in_at: new Date().toISOString() })
@@ -198,8 +190,6 @@ export const api = {
     },
 
     sendReminder: async (eventId: string) => {
-        // In production, this would call a Supabase Edge Function that triggers Twilio
-        // For now, we simulate success
         return true;
     }
   },
@@ -216,3 +206,10 @@ export const api = {
     }
   }
 };
+
+// --- EXPORT API (REAL OR MOCK) ---
+export const api = isSupabaseConfigured ? supabaseApi : mockApi;
+
+if (!isSupabaseConfigured) {
+  console.warn('⚠️ SUPABASE NOT CONFIGURED: Using Mock Data Service. Transactions will not persist.');
+}

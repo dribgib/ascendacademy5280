@@ -3,9 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 // Access environment variables safely
 const env = (import.meta as any).env || {};
 
-// Standard Supabase Variables
-const supabaseUrl = env.VITE_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+// 1. Try Environment Variables (Vercel/Local .env)
+let supabaseUrl = env.VITE_PUBLIC_SUPABASE_URL;
+let supabaseAnonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+
+// 2. Fallback: Try Local Storage (For easier preview/demo setup without creating .env files)
+if (!supabaseUrl && typeof window !== 'undefined') {
+  supabaseUrl = localStorage.getItem('VITE_PUBLIC_SUPABASE_URL');
+}
+if (!supabaseAnonKey && typeof window !== 'undefined') {
+  supabaseAnonKey = localStorage.getItem('VITE_PUBLIC_SUPABASE_ANON_KEY');
+}
 
 export const isSupabaseConfigured = !!supabaseUrl && !!supabaseAnonKey;
 
@@ -16,7 +24,7 @@ if (!isSupabaseConfigured) {
   console.log('Anon Key:', supabaseAnonKey ? 'Present' : 'MISSING');
 } else {
   console.log('Supabase Configured');
-  console.log('URL:', supabaseUrl);
+  // console.log('URL:', supabaseUrl); // Uncomment for debugging
 }
 
 // Fallback to prevent crash during build, but app will not function without keys

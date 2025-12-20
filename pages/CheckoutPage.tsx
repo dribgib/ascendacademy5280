@@ -173,7 +173,7 @@ const CheckoutPage: React.FC = () => {
           {/* 2. Select Athletes */}
           <div className="mb-8">
             <h3 className="text-xl font-teko text-white uppercase mb-4 flex items-center gap-2">
-              <Users className="text-co-blue" /> Select Athletes
+              <Users className="text-zinc-500" /> Select Athletes
             </h3>
             {kids.length === 0 ? (
                <div className="bg-red-900/20 border border-red-900 p-4 rounded text-red-200 text-sm">
@@ -271,7 +271,7 @@ const CheckoutPage: React.FC = () => {
             )}
             
             {donationAmount > 0 && (
-              <div className="flex justify-between text-sm text-co-blue">
+              <div className="flex justify-between text-sm text-zinc-800 font-bold">
                 <span>Donation</span>
                 <span>+${donationAmount}</span>
               </div>
@@ -287,7 +287,7 @@ const CheckoutPage: React.FC = () => {
 
           <div className="flex justify-between items-center border-t border-gray-200 pt-4 mb-8">
             <span className="font-teko text-2xl uppercase">Total Due</span>
-            <span className="font-teko text-4xl font-bold text-co-blue">${total.toFixed(2)}</span>
+            <span className="font-teko text-4xl font-bold text-co-red">${total.toFixed(2)}</span>
           </div>
 
           {/* Promo Code Input */}
@@ -324,7 +324,7 @@ const CheckoutPage: React.FC = () => {
           <button 
             onClick={handlePayment}
             disabled={processing}
-            className="w-full bg-co-blue text-white py-4 font-teko text-2xl uppercase font-bold hover:bg-blue-900 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-co-red text-white py-4 font-teko text-2xl uppercase font-bold hover:bg-red-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
           </button>

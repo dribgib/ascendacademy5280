@@ -43,7 +43,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 120,
     billingPeriod: 'Monthly',
     description: 'Consistent training foundation.',
-    color: 'border-co-blue',
+    color: 'border-zinc-500',
     features: [
       '4 Sessions / Month',
       '1hr 15min Sessions',

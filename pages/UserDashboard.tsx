@@ -107,7 +107,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
           ) : (
             kids.map(kid => (
               <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-co-blue"></div>
+                <div className="absolute top-0 left-0 w-1 h-full bg-co-red"></div>
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="font-teko text-3xl text-white uppercase">{kid.firstName} {kid.lastName}</h3>
@@ -168,7 +168,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                   ? 'bg-green-900/30 text-green-500 border border-green-900 cursor-default' 
                                   : isFull 
                                     ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                                    : 'bg-zinc-800 hover:bg-co-blue hover:text-white text-zinc-300 border border-zinc-700'}
+                                    : 'bg-zinc-800 hover:bg-co-red hover:text-white text-zinc-300 border border-zinc-700'}
                               `}
                             >
                               {isRegistered ? (
@@ -220,7 +220,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                       type="button"
                       key={sport}
                       onClick={() => toggleSport(sport)}
-                      className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-blue border-co-blue text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
+                      className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
                       {sport}
                     </button>

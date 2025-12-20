@@ -157,7 +157,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         {/* Event List */}
         <div className="space-y-6">
           <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
-            <Calendar className="text-co-blue" /> Scheduled Sessions
+            <Calendar className="text-zinc-400" /> Scheduled Sessions
           </h2>
           {events.length === 0 && <div className="text-zinc-500 p-4">No events scheduled.</div>}
           {events.map(evt => (

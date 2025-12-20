@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut, Dumbbell } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -28,8 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           <div className="flex items-center justify-between h-20">
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
               <div className="flex items-center gap-2">
-                <Dumbbell className="h-8 w-8 text-co-yellow" />
-                <span className="font-teko text-3xl font-bold tracking-widest text-white">ASCEND<span className="text-co-yellow">5280</span></span>
+                <span className="font-teko text-3xl font-bold tracking-widest text-white">AscendAcademy<span className="text-co-yellow">5280</span></span>
               </div>
             </div>
             
@@ -59,7 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 ) : (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="ml-6 bg-co-blue hover:bg-blue-900 text-white px-6 py-2 rounded-none skew-x-[-12deg] font-teko text-xl transition-all duration-300 border border-transparent hover:border-co-yellow"
+                    className="ml-6 bg-co-red hover:bg-red-700 text-white px-6 py-2 rounded-none skew-x-[-12deg] font-teko text-xl transition-all duration-300 border border-transparent hover:border-co-yellow"
                   >
                     <span className="skew-x-[12deg] inline-block mt-1">Join The Squad</span>
                   </button>
@@ -88,7 +87,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               <a href="#schedule" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">Schedule</a>
               {user ? (
                 <>
-                  <button onClick={() => { navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow text-co-blue">Dashboard</button>
+                  <button onClick={() => { navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow text-co-red">Dashboard</button>
                   <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-co-red">Logout</button>
                 </>
               ) : (
@@ -108,8 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Dumbbell className="h-6 w-6 text-co-yellow" />
-                <span className="font-teko text-2xl font-bold tracking-widest text-white">ASCEND<span className="text-co-yellow">5280</span></span>
+                <span className="font-teko text-2xl font-bold tracking-widest text-white">AscendAcademy<span className="text-co-yellow">5280</span></span>
               </div>
               <p className="text-zinc-500 text-sm">
                 Developing the next generation of athletes in the heart of Colorado. 
@@ -124,9 +122,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             <div>
               <h3 className="font-teko text-xl text-white mb-4 uppercase">Community</h3>
               <div className="flex gap-4">
-                <button className="text-zinc-500 hover:text-co-blue transition-colors">Instagram</button>
-                <button className="text-zinc-500 hover:text-co-blue transition-colors">Twitter</button>
-                <button className="text-zinc-500 hover:text-co-blue transition-colors">Facebook</button>
+                <button className="text-zinc-500 hover:text-co-red transition-colors">Instagram</button>
+                <button className="text-zinc-500 hover:text-co-red transition-colors">Twitter</button>
+                <button className="text-zinc-500 hover:text-co-red transition-colors">Facebook</button>
               </div>
               <div className="mt-6">
                 <p className="text-xs text-zinc-600">© 2023 Ascend Academy 5280. All rights reserved.</p>

@@ -48,7 +48,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
   return (
     <div className="min-h-screen pt-20 flex items-center justify-center bg-dark-bg px-4">
       <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-co-blue via-co-red to-co-yellow"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-zinc-700 via-co-red to-co-yellow"></div>
         
         <div className="text-center mb-8">
           <h2 className="font-teko text-4xl text-white uppercase">{isLogin ? 'Member Login' : 'Join The Squad'}</h2>
@@ -97,7 +97,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-co-blue hover:bg-blue-900 text-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4"
+            className="w-full bg-co-red hover:bg-red-800 text-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4"
           >
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
           </button>

@@ -11,14 +11,14 @@ const HomePage: React.FC = () => {
         {/* Background Video/Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://api.ascendacademy5280.com/storage/v1/object/public/ascendacademy/Gemini_Generated_Image_uw538duw538duw53.png" 
+            src="https://api.ascendacademy5280.com/storage/v1/object/public/media/bg.png" 
             alt="Hero Background" 
             className="w-full h-full object-cover opacity-80"
           />
-          {/* Dark Overlay for Text Contrast - Increased opacity for readability */}
-          <div className="absolute inset-0 bg-black/70 mix-blend-multiply"></div>
+          {/* Dark Overlay for Text Contrast */}
+          <div className="absolute inset-0 bg-black/80"></div>
           {/* Gradient for smooth transition to content */}
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-black/50 to-black/30"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-transparent to-transparent"></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
@@ -40,7 +40,7 @@ const HomePage: React.FC = () => {
         </div>
         
         {/* Decorative elements */}
-        <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-co-blue via-co-red to-co-yellow"></div>
+        <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-black via-co-red to-co-yellow"></div>
       </section>
 
       {/* About Section */}
@@ -48,7 +48,7 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div className="relative">
-              <div className="absolute -inset-4 bg-co-blue/20 rounded-lg transform rotate-3"></div>
+              <div className="absolute -inset-4 bg-zinc-700/20 rounded-lg transform rotate-3"></div>
               <img 
                 src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop" 
                 alt="Trainer" 
@@ -161,7 +161,7 @@ const HomePage: React.FC = () => {
                 <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 px-4 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2">
                   Donate $10+
                 </button>
-                <button className="w-full border border-co-blue text-co-blue hover:bg-co-blue hover:text-white py-3 px-4 rounded text-sm font-medium transition-colors">
+                <button className="w-full border border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white py-3 px-4 rounded text-sm font-medium transition-colors">
                   Sponsor an Athlete (Tax Deductible)
                 </button>
               </div>
@@ -171,14 +171,14 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-co-blue relative overflow-hidden">
+      <section className="py-20 bg-co-red relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
         <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
           <h2 className="font-teko text-6xl text-white uppercase mb-6">Ready to Ascend?</h2>
-          <p className="text-blue-200 text-xl mb-10 max-w-2xl mx-auto">
+          <p className="text-red-100 text-xl mb-10 max-w-2xl mx-auto">
             Spots fill up fast. Create your account, register your athletes, and get to work.
           </p>
-          <Link to="/login" className="inline-block bg-white text-co-blue px-12 py-4 font-teko text-2xl uppercase font-bold hover:bg-zinc-100 shadow-xl transition-all hover:scale-105 rounded-sm">
+          <Link to="/login" className="inline-block bg-white text-co-red px-12 py-4 font-teko text-2xl uppercase font-bold hover:bg-zinc-100 shadow-xl transition-all hover:scale-105 rounded-sm">
             Join Now
           </Link>
         </div>
