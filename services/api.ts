@@ -464,9 +464,23 @@ const supabaseApi = {
 
   general: {
       sendSponsorshipInquiry: async (formData: any) => {
-          // Simulate backend email send
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          console.log('Sponsorship inquiry sent to rod@ascendacademy5280.com', formData);
+          // Transactional insert into 'inquiries' table
+          const { error } = await supabase
+            .from('inquiries')
+            .insert({
+                name: formData.name,
+                email: formData.email,
+                company: formData.company,
+                message: formData.message,
+                type: 'sponsorship'
+            });
+            
+          if (error) {
+              console.error("Sponsorship Error:", error);
+              // Fail gracefully? Or throw?
+              // If table doesn't exist in dev, log it.
+              return false;
+          }
           return true;
       }
   }

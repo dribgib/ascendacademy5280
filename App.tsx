@@ -65,9 +65,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
+    
+    // Safety timeout to prevent infinite loading screens
+    const safetyTimeout = setTimeout(() => {
+        if (mounted && (loading || authProcessing)) {
+            console.warn("Auth check timed out - forcing render.");
+            setLoading(false);
+            setAuthProcessing(false);
+        }
+    }, 5000); // 5 seconds max
 
     // Detect if we are returning from a Magic Link (access_token in hash)
-    // We set authProcessing to true to hide the app while Supabase parses the hash
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
       setAuthProcessing(true);
     }
@@ -90,7 +98,11 @@ const App: React.FC = () => {
       } finally {
         if (mounted) {
           setLoading(false);
-          setAuthProcessing(false);
+          // Don't turn off authProcessing yet if we are in a hash redirect flow, 
+          // allow the onAuthStateChange to handle completion if needed, or the timeout.
+          if (!window.location.hash.includes('access_token')) {
+             setAuthProcessing(false);
+          }
         }
       }
     };
@@ -100,20 +112,32 @@ const App: React.FC = () => {
     // 3. Listen for Auth Changes (Sign In, Sign Out, Token Refresh)
     if (isSupabaseConfigured) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        // Only react to explicit sign in/out events to avoid fighting with checkUser
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             const u = await api.auth.getUser(session?.user);
             if (mounted) {
               setUser(u);
-              setAuthProcessing(false); // Stop showing loader once signed in
+              setAuthProcessing(false); 
+              setLoading(false);
             }
         } else if (event === 'SIGNED_OUT') {
-            if (mounted) setUser(null);
+            if (mounted) {
+                setUser(null);
+                setLoading(false);
+                setAuthProcessing(false);
+            }
         }
       });
       return () => {
         mounted = false;
+        clearTimeout(safetyTimeout);
         subscription.unsubscribe();
       };
+    } else {
+        return () => {
+            mounted = false;
+            clearTimeout(safetyTimeout);
+        };
     }
   }, []);
 

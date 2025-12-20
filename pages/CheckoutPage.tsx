@@ -28,8 +28,8 @@ const CheckoutPage: React.FC = () => {
       if (!u) {
         const returnUrl = encodeURIComponent(location.pathname);
         navigate(`/login?redirect=${returnUrl}`);
-        // Important: Return here and do NOT set loading to false. 
-        // We want to stay in "loading" state (or unmount) while redirecting.
+        // We do NOT stop loading here, because we are redirecting.
+        // If we stop loading, the UI might flash before redirect.
         return;
       }
 
@@ -37,12 +37,16 @@ const CheckoutPage: React.FC = () => {
       const k = await api.children.list(u.id);
       setKids(k);
       
-      if (k.length > 0) setActiveKidId(k[0].id);
+      if (k.length > 0) {
+        setActiveKidId(k[0].id);
+      }
       
-      setLoading(false); // Only stop loading if we actually found a user
     } catch (e) {
       console.error(e);
-      setLoading(false);
+    } finally {
+       // CRITICAL: Always turn off loading even if no kids are found or error occurs
+       // This prevents the "PREPARING CHECKOUT..." stuck screen.
+       setLoading(false);
     }
   };
 
@@ -82,6 +86,15 @@ const CheckoutPage: React.FC = () => {
         </div>
     </div>
   );
+
+  // If no user (and redirect failed for some reason), don't crash
+  if (!user && !loading) {
+      return (
+          <div className="min-h-screen flex items-center justify-center bg-black text-white">
+              <p>Authentication Required.</p>
+          </div>
+      );
+  }
 
   const activeKid = kids.find(k => k.id === activeKidId);
   const otherActiveSubsCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;

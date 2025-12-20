@@ -54,6 +54,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     } catch (e) {
       console.error(e);
     } finally {
+      // Ensure loading stops even if data fetch fails
       setLoading(false);
     }
   };
