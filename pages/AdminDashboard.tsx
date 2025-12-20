@@ -5,11 +5,12 @@ import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle,
 
 interface AdminDashboardProps {
   user: User;
+  hideHeader?: boolean;
 }
 
 type TabView = 'schedule' | 'calendar' | 'users';
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = false }) => {
   const [activeTab, setActiveTab] = useState<TabView>('schedule');
   const [events, setEvents] = useState<Event[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -295,20 +296,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className={!hideHeader ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" : ""}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="font-teko text-5xl text-white uppercase">Coach's Dashboard</h1>
-          <p className="text-zinc-500">Welcome back, {user.firstName}.</p>
-        </div>
+        {!hideHeader && (
+          <div>
+            <h1 className="font-teko text-5xl text-white uppercase">Coach's Dashboard</h1>
+            <p className="text-zinc-500">Welcome back, {user.firstName}.</p>
+          </div>
+        )}
         
-        {/* Navigation Tabs */}
-        <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+        {/* Navigation Tabs - Adjusted width logic if header is hidden */}
+        <div className={`flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 ${hideHeader ? 'w-full md:w-auto' : ''}`}>
             {(['schedule', 'calendar', 'users'] as const).map(tab => (
                 <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-6 py-2 rounded font-teko text-xl uppercase transition-all ${activeTab === tab ? 'bg-co-yellow text-black font-bold shadow' : 'text-zinc-400 hover:text-white'}`}
+                    className={`px-6 py-2 rounded font-teko text-xl uppercase transition-all ${hideHeader ? 'flex-1 md:flex-none' : ''} ${activeTab === tab ? 'bg-co-yellow text-black font-bold shadow' : 'text-zinc-400 hover:text-white'}`}
                 >
                     {tab}
                 </button>
@@ -370,7 +373,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             {activeTab === 'users' && renderUsersTab()}
         </div>
       </div>
-
+      {/* ... (Modals remain unchanged but are included in full file) */}
       {/* Roster Management Modal */}
       {showRosterModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowRosterModal(null)}>

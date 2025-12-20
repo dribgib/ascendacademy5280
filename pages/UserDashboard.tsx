@@ -202,57 +202,75 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
-      {/* --- ADMIN TOGGLE --- */}
+      {/* --- TITLE SECTION --- */}
+      <div className="mb-6">
+        <h1 className="font-teko text-5xl text-white uppercase">
+            {isAdminView ? "Coach's Dashboard" : "My Team"}
+        </h1>
+        <p className="text-zinc-500">
+            {isAdminView 
+                ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
+                : "Manage your athletes, subscriptions, and schedules."
+            }
+        </p>
+      </div>
+
+      {/* --- ADMIN TOGGLE (Nav Row) --- */}
       {user.role === 'ADMIN' && (
-         <div className="flex justify-center mb-8">
-            <div className="bg-zinc-900 border border-zinc-700 p-1 rounded-full flex relative z-10">
+         <div className="mb-8">
+            <div className="inline-flex bg-zinc-900 border border-zinc-700 p-1 rounded-full">
                <button 
                   onClick={() => setIsAdminView(false)}
-                  className={`px-8 py-2 rounded-full font-teko text-xl uppercase tracking-wide transition-all ${!isAdminView ? 'bg-white text-black font-bold shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+                  className={`w-48 py-2 rounded-full font-teko text-xl uppercase tracking-wide transition-all ${!isAdminView ? 'bg-white text-black font-bold shadow-lg' : 'text-zinc-500 hover:text-white'}`}
                >
                   My Team
                </button>
                <button 
                   onClick={() => setIsAdminView(true)}
-                  className={`px-8 py-2 rounded-full font-teko text-xl uppercase tracking-wide transition-all flex items-center gap-2 ${isAdminView ? 'bg-co-yellow text-black font-bold shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+                  className={`w-48 py-2 rounded-full font-teko text-xl uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${isAdminView ? 'bg-co-yellow text-black font-bold shadow-lg' : 'text-zinc-500 hover:text-white'}`}
                >
-                  <Shield size={16} /> Coach's Dashboard
+                  <Shield size={16} /> Coach
                </button>
             </div>
          </div>
       )}
 
-      {/* --- ADMIN DASHBOARD VIEW --- */}
+      {/* --- CONTENT AREA --- */}
       {isAdminView ? (
-          <AdminDashboard user={user} />
+          <AdminDashboard user={user} hideHeader={true} />
       ) : (
-          /* --- REGULAR USER DASHBOARD VIEW --- */
+          /* --- REGULAR USER DASHBOARD CONTENT --- */
           <>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-                <div>
-                <h1 className="font-teko text-5xl text-white uppercase">My Team</h1>
-                <p className="text-zinc-500">Manage your athletes, subscriptions, and schedules.</p>
+            {/* Action Buttons for Regular User */}
+            <div className="flex flex-wrap justify-end gap-4 mb-8 -mt-20 pointer-events-none">
+                <div className="pointer-events-auto flex gap-4">
+                    <button 
+                        onClick={() => setShowAccountModal(true)}
+                        className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors bg-black"
+                    >
+                        <Settings size={18} /> Account
+                    </button>
+                    <button 
+                        onClick={handleManageBilling}
+                        className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors bg-black"
+                    >
+                        <CreditCard size={18} /> Billing
+                    </button>
+                    <button 
+                        onClick={() => setShowAddKidModal(true)}
+                        className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center gap-2 shadow-lg"
+                    >
+                        <Plus size={20} /> Add Athlete
+                    </button>
                 </div>
-                <div className="flex flex-wrap gap-4">
-                <button 
-                    onClick={() => setShowAccountModal(true)}
-                    className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors"
-                >
-                    <Settings size={18} /> Account
-                </button>
-                <button 
-                    onClick={handleManageBilling}
-                    className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors"
-                >
-                    <CreditCard size={18} /> Billing
-                </button>
-                <button 
-                    onClick={() => setShowAddKidModal(true)}
-                    className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center gap-2"
-                >
-                    <Plus size={20} /> Add Athlete
-                </button>
-                </div>
+            </div>
+            {/* Mobile Actions Backup (visible on small screens only) */}
+            <div className="md:hidden flex flex-col gap-2 mb-8">
+                 <button onClick={() => setShowAddKidModal(true)} className="w-full bg-co-yellow text-black py-3 uppercase font-teko text-xl font-bold rounded">Add Athlete</button>
+                 <div className="flex gap-2">
+                     <button onClick={() => setShowAccountModal(true)} className="flex-1 border border-zinc-700 py-2 uppercase font-teko text-lg rounded">Account</button>
+                     <button onClick={handleManageBilling} className="flex-1 border border-zinc-700 py-2 uppercase font-teko text-lg rounded">Billing</button>
+                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
