@@ -2,7 +2,20 @@ import { User, Child, Event } from '../types';
 import { MOCK_ADMIN, MOCK_PARENT, MOCK_EVENTS } from '../constants';
 
 // --- In-Memory Mock Database ---
-let currentUser: User | null = null;
+const STORAGE_KEY = 'ascend_mock_user';
+
+// Helper to get user from local storage to persist session on refresh
+const getStoredUser = (): User | null => {
+  try {
+    const item = localStorage.getItem(STORAGE_KEY);
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
+
+let currentUser: User | null = getStoredUser();
+
 let events = JSON.parse(JSON.stringify(MOCK_EVENTS)); // Deep copy to reset on reload
 let children: Child[] = [
   {
@@ -60,6 +73,9 @@ export const mockApi = {
       } else {
         currentUser = MOCK_PARENT;
       }
+      // PERSIST SESSION
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+      
       return { data: { user: currentUser }, error: null };
     },
     signUp: async (email: string, password: string, meta: { firstName: string, lastName: string, phone: string }) => {
@@ -74,6 +90,10 @@ export const mockApi = {
       };
       currentUser = newUser;
       users.push(newUser);
+      
+      // PERSIST SESSION
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+
       return { data: { user: newUser }, error: null };
     },
     
@@ -97,6 +117,9 @@ export const mockApi = {
       } else {
         currentUser = MOCK_PARENT; // Fallback login
       }
+
+      // PERSIST SESSION (Simulated after link click)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
       
       alert('MAGIC LINK SENT (Mock): In a real app, check your email. For this demo, clicking OK simulates clicking the link and setting your password.');
       
@@ -111,12 +134,17 @@ export const mockApi = {
     updateUser: async (attributes: any) => {
       await delay(500);
       console.log('Mock User updated:', attributes);
+      if (currentUser) {
+          currentUser = { ...currentUser, ...attributes };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+      }
       return { data: { user: currentUser }, error: null };
     },
 
     signOut: async () => {
       await delay(300);
       currentUser = null;
+      localStorage.removeItem(STORAGE_KEY);
       return { error: null };
     }
   },

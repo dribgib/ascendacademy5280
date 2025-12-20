@@ -56,7 +56,7 @@ const SetPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] pt-20 flex items-center justify-center bg-dark-bg px-4">
+    <div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl relative">
         
         <div className="text-center mb-8">

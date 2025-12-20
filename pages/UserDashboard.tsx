@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
 
 interface UserDashboardProps {
@@ -13,6 +13,7 @@ interface UserDashboardProps {
 
 const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Admin Toggle State
   const [isAdminView, setIsAdminView] = useState(false);
@@ -44,6 +45,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   // Waiver State
   const [verifyingWaiver, setVerifyingWaiver] = useState(false);
   const [waiverSigned, setWaiverSigned] = useState(false);
+
+  useEffect(() => {
+    // Check for query param to auto-switch to admin view
+    const params = new URLSearchParams(location.search);
+    if (params.get('view') === 'admin' && user.role === 'ADMIN') {
+        setIsAdminView(true);
+    }
+  }, [location.search, user.role]);
 
   useEffect(() => {
     // Only load family data if in Family View (or generally on mount)

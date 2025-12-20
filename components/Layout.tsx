@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube, Shield } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -84,6 +84,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 
                 {user ? (
                   <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700 h-8">
+                    {/* Admin Specific Link */}
+                    {user.role === 'ADMIN' && (
+                       <button 
+                        onClick={() => navigate('/dashboard?view=admin')}
+                        className="flex items-center gap-2 text-co-yellow hover:text-white transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4"
+                      >
+                        <Shield className="h-5 w-5" />
+                        Coach
+                      </button>
+                    )}
+
                     <button 
                       onClick={() => navigate('/dashboard')}
                       className="flex items-center gap-2 text-white hover:text-co-yellow transition-colors font-teko text-xl uppercase tracking-wide h-full"
@@ -141,7 +152,10 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               <button onClick={() => handleScrollTo('schedule')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</button>
               {user ? (
                 <>
-                  <button onClick={() => { navigate('/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl hover:text-co-yellow text-co-red uppercase">Dashboard</button>
+                  {user.role === 'ADMIN' && (
+                     <button onClick={() => { navigate('/dashboard?view=admin'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-co-yellow hover:text-white uppercase">Coach Dashboard</button>
+                  )}
+                  <button onClick={() => { navigate('/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl hover:text-co-yellow text-co-red uppercase">My Team</button>
                   <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-zinc-500 uppercase">Logout</button>
                 </>
               ) : (

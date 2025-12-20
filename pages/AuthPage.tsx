@@ -49,7 +49,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         // On success, we purposefully LEAVE loading=true.
         // The App component will detect the auth state change, update the user, 
         // and unmount this component (redirecting to dashboard).
-        // If we set loading=false here, the button flickers back to "Sign In" briefly.
       } else {
         // Magic Link Sign Up
         const env = (import.meta as any).env || {};
@@ -92,16 +91,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
           <div className="absolute inset-0 bg-black/90"></div>
         </div>
 
-        <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center mx-4">
-          <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Email</h2>
-          <p className="text-zinc-400 mb-6">
-            We've sent a magic link to <span className="text-white font-bold">{email}</span>.
-            <br />
-            Click the link in the email to verify your account and set your password.
-          </p>
-          <button onClick={() => setMagicLinkSent(false)} className="text-co-yellow underline mt-4">
-            Back to Login
-          </button>
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex justify-center">
+            <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
+                <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Email</h2>
+                <p className="text-zinc-400 mb-6">
+                    We've sent a magic link to <span className="text-white font-bold">{email}</span>.
+                    <br />
+                    Click the link in the email to verify your account and set your password.
+                </p>
+                <button onClick={() => setMagicLinkSent(false)} className="text-co-yellow underline mt-4">
+                    Back to Login
+                </button>
+            </div>
         </div>
       </div>
     );
@@ -120,85 +121,87 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         <div className="absolute inset-0 bg-black/85"></div>
       </div>
 
-      <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col mx-4 my-8">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-zinc-700 via-co-red to-co-yellow"></div>
-        
-        {/* Tabs */}
-        <div className="flex border-b border-zinc-800">
-          <button 
-            onClick={() => setIsLogin(true)}
-            className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
-          >
-            Login
-          </button>
-          <button 
-            onClick={() => setIsLogin(false)}
-            className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${!isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-red' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
-          >
-            Create Account
-          </button>
-        </div>
-
-        <div className="p-8">
-          <div className="text-center mb-6">
-            <h2 className="font-teko text-3xl text-white uppercase">{isLogin ? 'Welcome Back' : 'Join The Squad'}</h2>
-            <p className="text-zinc-500 text-sm mt-1">
-              {isLogin ? 'Access your athlete dashboard.' : 'Start your journey with Ascend Academy.'}
-            </p>
-          </div>
-
-          {error && (
-            <div className="bg-red-900/30 text-red-200 p-3 rounded text-sm mb-4 border border-red-900">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                  <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">First Name</label>
-                  <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
-                 </div>
-                 <div>
-                  <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Last Name</label>
-                  <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
-                 </div>
-              </div>
-            )}
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex justify-center py-8">
+          <div className="max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-zinc-700 via-co-red to-co-yellow"></div>
             
-            {!isLogin && (
-               <div>
-                <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Mobile Phone</label>
-                <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" placeholder="(555) 555-5555" />
-               </div>
-            )}
-
-            <div>
-              <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Email Address</label>
-              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+            {/* Tabs */}
+            <div className="flex border-b border-zinc-800">
+            <button 
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+            >
+                Login
+            </button>
+            <button 
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${!isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-red' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+            >
+                Create Account
+            </button>
             </div>
 
-            {/* Password only for Login */}
-            {isLogin && (
-              <div>
-                <div className="flex justify-between">
-                  <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Password</label>
-                  <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">Forgot?</a>
+            <div className="p-8">
+            <div className="text-center mb-6">
+                <h2 className="font-teko text-3xl text-white uppercase">{isLogin ? 'Welcome Back' : 'Join The Squad'}</h2>
+                <p className="text-zinc-500 text-sm mt-1">
+                {isLogin ? 'Access your athlete dashboard.' : 'Start your journey with Ascend Academy.'}
+                </p>
+            </div>
+
+            {error && (
+                <div className="bg-red-900/30 text-red-200 p-3 rounded text-sm mb-4 border border-red-900">
+                {error}
                 </div>
-                <input required type="password" minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
-              </div>
             )}
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className={`w-full text-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg ${isLogin ? 'bg-co-yellow text-black hover:bg-white' : 'bg-co-red hover:bg-red-800'}`}
-            >
-              {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Send Magic Link & Join')}
-            </button>
-          </form>
-        </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">First Name</label>
+                    <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                    </div>
+                    <div>
+                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Last Name</label>
+                    <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                    </div>
+                </div>
+                )}
+                
+                {!isLogin && (
+                <div>
+                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Mobile Phone</label>
+                    <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" placeholder="(555) 555-5555" />
+                </div>
+                )}
+
+                <div>
+                <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Email Address</label>
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                </div>
+
+                {/* Password only for Login */}
+                {isLogin && (
+                <div>
+                    <div className="flex justify-between">
+                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Password</label>
+                    <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">Forgot?</a>
+                    </div>
+                    <input required type="password" minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                </div>
+                )}
+
+                <button 
+                type="submit" 
+                disabled={loading}
+                className={`w-full text-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg ${isLogin ? 'bg-co-yellow text-black hover:bg-white' : 'bg-co-red hover:bg-red-800'}`}
+                >
+                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Send Magic Link & Join')}
+                </button>
+            </form>
+            </div>
+          </div>
       </div>
     </div>
   );

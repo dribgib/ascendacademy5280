@@ -76,16 +76,6 @@ const App: React.FC = () => {
     let authSubscription: any = null;
 
     const initAuth = async () => {
-      if (!isSupabaseConfigured) {
-        // Fallback for Demo Mode (Mock)
-        try {
-            const u = await api.auth.getUser();
-            if (mounted) setUser(u);
-        } catch(e) { console.error(e); } 
-        finally { if (mounted) setLoading(false); }
-        return;
-      }
-
       // Setup Supabase Listener
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         // Events: INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.
@@ -135,12 +125,6 @@ const App: React.FC = () => {
     <Router>
       <ScrollToTop />
       <AuthRedirectHandler user={user} />
-      
-      {!isSupabaseConfigured && (
-        <div className="fixed bottom-4 right-4 z-50 bg-co-yellow text-black text-xs font-bold px-3 py-1 rounded shadow-lg uppercase opacity-80 hover:opacity-100 pointer-events-none font-teko tracking-wide">
-          Demo Mode
-        </div>
-      )}
       
       <Layout user={user} setUser={setUser}>
         <Routes>

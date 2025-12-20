@@ -112,8 +112,8 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-poppins">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-dark-bg pt-24 pb-12 font-poppins">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center mb-12">

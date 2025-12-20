@@ -42,7 +42,7 @@ const SponsorPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg pt-28 pb-12 px-4">
+    <div className="pt-28 pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
             <h1 className="font-teko text-6xl text-white uppercase mb-4">Sponsor An Athlete</h1>

@@ -1,6 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, Child, Event } from '../types';
-import { mockApi } from './mockService';
 import { stripePromise } from '../lib/stripe';
 import { PACKAGES } from '../constants';
 
@@ -412,13 +411,7 @@ const supabaseApi = {
 
       if (error) {
           console.error('Checkout Func Error:', error);
-          await supabase.from('subscriptions').insert({
-            user_id: userId,
-            child_id: childId,
-            package_id: priceId, // Store specific package ID
-            status: 'active'
-          });
-          window.location.href = '/#/dashboard';
+          alert('Failed to initiate checkout. Please contact support.');
           return;
       }
 
@@ -436,7 +429,7 @@ const supabaseApi = {
       });
 
       if (error) {
-         alert("Donation system currently in maintenance mode (Mock).");
+         alert("Donation system currently unavailable.");
          return;
       }
 
@@ -472,6 +465,7 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
+        // In prod, this would likely be an Edge Function call to WaiverSign API
         await new Promise(resolve => setTimeout(resolve, 1000));
         return true; 
     }
@@ -493,8 +487,5 @@ const supabaseApi = {
   }
 };
 
-export const api = isSupabaseConfigured ? supabaseApi : mockApi;
-
-if (!isSupabaseConfigured) {
-  console.warn('⚠️ SUPABASE NOT CONFIGURED: Using Mock Data Service. Transactions will not persist.');
-}
+// EXPORT ONLY THE REAL API
+export const api = supabaseApi;
