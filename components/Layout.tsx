@@ -90,7 +90,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                     </button>
                     <button 
                       onClick={() => navigate('/login?mode=signup')}
-                      className="bg-co-red hover:bg-red-700 text-white px-6 py-1 rounded-none skew-x-[-12deg] transition-all duration-300 border-0 group"
+                      className="bg-co-red hover:bg-co-yellow hover:text-black text-white px-6 py-1 rounded-none skew-x-[-12deg] transition-all duration-300 border-0 group"
                     >
                       <span className="skew-x-[12deg] inline-block font-teko text-xl uppercase tracking-wide pt-1">
                         Join The Squad

@@ -18,6 +18,7 @@ export interface Child {
   dob: string;
   sports: string[];
   qrCode: string;
+  image?: string; // Profile image URL
   subscriptionId?: string; // Optional: link to active subscription
   subscriptionStatus?: 'active' | 'past_due' | 'canceled' | 'none';
 }

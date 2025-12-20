@@ -198,8 +198,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-           <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCreateModal(false)}
+        >
+           <div 
+             className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
+             onClick={(e) => e.stopPropagation()}
+           >
             <h2 className="font-teko text-3xl text-white uppercase mb-6">Create New Session</h2>
             <form onSubmit={handleCreateEvent} className="space-y-4">
               <div>

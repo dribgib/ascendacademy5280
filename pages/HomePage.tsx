@@ -187,9 +187,9 @@ const HomePage: React.FC = () => {
           </p>
           <Link 
             to="/login" 
-            className="inline-block bg-white text-co-red px-16 py-5 font-teko text-3xl uppercase font-bold hover:bg-black hover:text-white shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-sm transform hover:-translate-y-1"
+            className="group relative inline-block bg-white text-co-red px-16 py-5 font-teko text-3xl uppercase font-bold hover:bg-black hover:text-white shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300 transform -skew-x-12"
           >
-            Join Now
+             <span className="skew-x-12 inline-block">Join Now</span>
           </Link>
         </div>
       </section>

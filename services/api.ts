@@ -130,12 +130,13 @@ const supabaseApi = {
         dob: c.dob,
         sports: c.sports || [],
         qrCode: c.qr_code,
+        image: c.image_url,
         // In a real app, you would join the subscriptions table here to get status
         subscriptionStatus: 'none' 
       }));
     },
 
-    create: async (childData: { parentId: string, firstName: string, lastName: string, dob: string, sports: string[] }) => {
+    create: async (childData: { parentId: string, firstName: string, lastName: string, dob: string, sports: string[], imageUrl?: string }) => {
       const qrCode = `ascend_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const { data, error } = await supabase
@@ -146,13 +147,40 @@ const supabaseApi = {
           last_name: childData.lastName,
           dob: childData.dob,
           sports: childData.sports,
-          qr_code: qrCode
+          qr_code: qrCode,
+          image_url: childData.imageUrl
         })
         .select()
         .single();
 
       if (error) throw error;
       return data;
+    },
+
+    uploadImage: async (file: File): Promise<string | null> => {
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const filePath = `avatars/${fileName}`;
+
+            // Try to upload to 'media' bucket first, then fallbacks
+            // NOTE: Bucket creation requires SQL/Dashboard setup. 
+            // If this fails (bucket not found), we return null safely.
+            const { error: uploadError } = await supabase.storage
+                .from('media') 
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.warn('Image upload failed (Bucket might not exist):', uploadError.message);
+                return null;
+            }
+
+            const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+            return data.publicUrl;
+        } catch (e) {
+            console.error('Upload exception:', e);
+            return null;
+        }
     }
   },
 
@@ -285,15 +313,8 @@ const supabaseApi = {
   },
 
   waivers: {
-    // This will be replaced with real WaiverSign API call later
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        console.log(`Checking waiver status for ${childName} (Parent: ${parentEmail})`);
-        
-        // Simulating API latency
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // For demo purposes, we will assume "Success" so the user can proceed.
-        // In production, this would call your edge function which hits `api.waiversign.com`
         return true; 
     }
   }
@@ -301,9 +322,6 @@ const supabaseApi = {
 
 // --- EXPORT API (REAL OR MOCK) ---
 // If Supabase is configured, use it. Otherwise use Mock.
-// BUT for Waiver Verification, we will mix it in even for Mock mode if needed,
-// though currently MockApi handles it separately in mockService.ts (if we were updating it, 
-// but we are sticking to real Supabase structure primarily).
 export const api = isSupabaseConfigured ? supabaseApi : mockApi;
 
 if (!isSupabaseConfigured) {

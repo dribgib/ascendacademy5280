@@ -28,14 +28,24 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Check for "next" param in the hash query (HashRouter style: #/?next=...)
+    if (!user) return;
+
+    // 1. Check search params (e.g. site.com/?next=set-password#...)
+    // This is common when Supabase redirects back to the site root
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('next') === 'set-password') {
+       navigate('/set-password');
+       return;
+    }
+
+    // 2. Check hash params (e.g. site.com/#/?next=set-password)
+    // This is common if the app handles internal routing params
     const hashParts = window.location.hash.split('?');
     if (hashParts.length > 1) {
       const params = new URLSearchParams(hashParts[1]);
       const next = params.get('next');
       
-      if (user && next === 'set-password') {
-         // Clean the URL so we don't loop
+      if (next === 'set-password') {
          navigate('/set-password', { replace: true });
       }
     }
