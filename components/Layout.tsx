@@ -76,12 +76,20 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                     </button>
                   </div>
                 ) : (
-                  <button 
-                    onClick={() => navigate('/login')}
-                    className="ml-6 bg-co-red hover:bg-red-700 text-white px-6 py-2 rounded-none skew-x-[-12deg] font-teko text-xl transition-colors duration-300 border-0"
-                  >
-                    <span className="skew-x-[12deg] inline-block mt-1">Join The Squad</span>
-                  </button>
+                  <div className="flex items-center gap-6 ml-6">
+                    <button 
+                      onClick={() => navigate('/login?mode=login')}
+                      className="text-zinc-300 hover:text-white transition-colors uppercase font-medium tracking-wide text-sm"
+                    >
+                      Login
+                    </button>
+                    <button 
+                      onClick={() => navigate('/login?mode=signup')}
+                      className="bg-co-red hover:bg-red-700 text-white px-6 py-2 rounded-none skew-x-[-12deg] font-teko text-xl transition-colors duration-300 border-0"
+                    >
+                      <span className="skew-x-[12deg] inline-block mt-1">Join The Squad</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -111,7 +119,10 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                   <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-co-red">Logout</button>
                 </>
               ) : (
-                <button onClick={() => { navigate('/login'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-co-yellow">Login / Join</button>
+                <>
+                  <button onClick={() => { navigate('/login?mode=login'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white hover:text-co-yellow">Login</button>
+                  <button onClick={() => { navigate('/login?mode=signup'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-co-red hover:text-white">Join The Squad</button>
+                </>
               )}
             </div>
           </div>

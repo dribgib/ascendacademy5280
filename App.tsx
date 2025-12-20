@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
@@ -20,6 +20,27 @@ const ScrollToTop = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+  return null;
+};
+
+// Component to handle redirect logic after auth
+const AuthRedirectHandler = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check for 'next' param in search query (e.g. ?next=set-password)
+    // This is set in AuthPage.tsx when creating the magic link
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next');
+
+    if (next === 'set-password') {
+       // Clear the query param to avoid loops
+       window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+       navigate('/set-password');
+    }
+  }, [navigate, location]);
+
   return null;
 };
 
@@ -61,6 +82,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <ScrollToTop />
+      <AuthRedirectHandler />
       {/* Mock Mode Indicator */}
       {!isSupabaseConfigured && (
         <div className="fixed bottom-4 right-4 z-50 bg-co-yellow text-black text-xs font-bold px-3 py-1 rounded shadow-lg uppercase opacity-80 hover:opacity-100 pointer-events-none">
