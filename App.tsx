@@ -53,19 +53,29 @@ const App: React.FC = () => {
     let mounted = true;
 
     // 0. Safety Timeout: Ensure loading screen never hangs indefinitely
-    // Silently force entry after 2 seconds if auth hangs
+    // Silently force entry after 3 seconds if auth hangs
     const safetyTimer = setTimeout(() => {
       if (mounted && loading) {
         console.warn('Auth check timed out, forcing app load.');
         setLoading(false);
       }
-    }, 2000); 
+    }, 3000); 
 
     // 1. Check initial session
     const checkUser = async () => {
       try {
-        const u = await api.auth.getUser();
+        // CRITICAL: Use getSession() first as it handles parsing the URL hash for Magic Links
+        // api.auth.getUser() wraps supabase.auth.getUser() which only checks storage
+        let sessionUser = null;
+        
+        if (isSupabaseConfigured) {
+            const { data } = await supabase.auth.getSession();
+            sessionUser = data.session?.user;
+        }
+
+        const u = await api.auth.getUser(sessionUser);
         if (mounted) setUser(u);
+
       } catch (e) {
         console.error("Initial user check failed:", e);
       } finally {
