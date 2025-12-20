@@ -18,8 +18,21 @@ const formatDate = (isoString: string) => {
 // --- REAL SUPABASE IMPLEMENTATION ---
 const supabaseApi = {
   auth: {
-    getUser: async (): Promise<User | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
+    // Accepts optional user object to avoid double-fetching if we already have session
+    getUser: async (sessionUser?: any): Promise<User | null> => {
+      let user = sessionUser;
+      
+      // If not provided, try to get from current session
+      if (!user) {
+        try {
+            const { data } = await supabase.auth.getUser();
+            user = data.user;
+        } catch (e) {
+            console.warn('Error retrieving auth user:', e);
+            return null;
+        }
+      }
+
       if (!user) return null;
 
       // Try to fetch profile details
@@ -34,7 +47,10 @@ const supabaseApi = {
         if (!error && data) {
           profile = data;
         } else {
-            console.warn('Profile fetch failed or returned no data, falling back to metadata:', error);
+            // Only warn if it's not a "row not found" which is expected for new users
+            if (error.code !== 'PGRST116') {
+                console.warn('Profile fetch warning:', error.message);
+            }
         }
       } catch (e) {
         console.warn('Exception fetching profile:', e);

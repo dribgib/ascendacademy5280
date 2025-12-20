@@ -24,22 +24,23 @@ const ScrollToTop = () => {
 };
 
 // Component to handle redirect logic after auth
-const AuthRedirectHandler = () => {
+const AuthRedirectHandler = ({ user }: { user: User | null }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Check for 'next' param in search query (e.g. ?next=set-password)
-    // This is set in AuthPage.tsx when creating the magic link
     const params = new URLSearchParams(window.location.search);
     const next = params.get('next');
 
-    if (next === 'set-password') {
-       // Clear the query param to avoid loops
-       window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    // Only redirect if we have a destination AND a user is authenticated
+    // This ensures Supabase has processed the hash token before we navigate away and clear it
+    if (next === 'set-password' && user) {
+       // Clear the query param to clean up URL
+       const newUrl = window.location.pathname + window.location.hash;
+       window.history.replaceState({}, '', newUrl);
        navigate('/set-password');
     }
-  }, [navigate, location]);
+  }, [navigate, location, user]);
 
   return null;
 };
@@ -49,15 +50,25 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // 0. Safety Timeout: Ensure loading screen never hangs indefinitely
+    const safetyTimer = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('Auth check timed out, forcing app load.');
+        setLoading(false);
+      }
+    }, 4000); // 4 seconds max load time
+
     // 1. Check initial session
     const checkUser = async () => {
       try {
         const u = await api.auth.getUser();
-        setUser(u);
+        if (mounted) setUser(u);
       } catch (e) {
-        console.error(e);
+        console.error("Initial user check failed:", e);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
     checkUser();
@@ -65,24 +76,43 @@ const App: React.FC = () => {
     // 2. Listen for auth changes (Only valid if using real Supabase)
     if (isSupabaseConfigured) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) {
-          const u = await api.auth.getUser();
-          setUser(u);
-        } else {
-          setUser(null);
+        try {
+            // If we have a session user, optimize by passing it directly to avoid extra network call
+            if (session?.user) {
+              const u = await api.auth.getUser(session.user);
+              if (mounted) setUser(u);
+            } else if (event === 'SIGNED_OUT') {
+              if (mounted) setUser(null);
+            }
+        } catch (err) {
+            console.error("Auth state change error:", err);
+        } finally {
+            if (mounted) setLoading(false);
         }
-        setLoading(false);
       });
-      return () => subscription.unsubscribe();
+      return () => {
+        mounted = false;
+        clearTimeout(safetyTimer);
+        subscription.unsubscribe();
+      };
+    } else {
+        return () => { mounted = false; clearTimeout(safetyTimer); };
     }
   }, []);
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-co-yellow font-teko text-3xl animate-pulse">LOADING ACADEMY...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
+        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest">LOADING ACADEMY...</div>
+        <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
+        </div>
+    </div>
+  );
 
   return (
     <Router>
       <ScrollToTop />
-      <AuthRedirectHandler />
+      <AuthRedirectHandler user={user} />
       {/* Mock Mode Indicator */}
       {!isSupabaseConfigured && (
         <div className="fixed bottom-4 right-4 z-50 bg-co-yellow text-black text-xs font-bold px-3 py-1 rounded shadow-lg uppercase opacity-80 hover:opacity-100 pointer-events-none">
