@@ -66,81 +66,57 @@ const App: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     
-    // Safety timeout to prevent infinite loading screens.
-    // Increased to 8 seconds for cold starts on free tier databases.
-    const safetyTimeout = setTimeout(() => {
-        if (mounted && (loading || authProcessing)) {
-            console.warn("Auth check timed out - forcing render.");
-            setLoading(false);
-            setAuthProcessing(false);
-        }
-    }, 8000);
-
     // Detect if we are returning from a Magic Link (access_token in hash)
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
       setAuthProcessing(true);
     }
 
-    const checkUser = async () => {
-      try {
-        // 1. Get Session (Supabase handles URL hash parsing internally here)
-        let sessionUser = null;
-        if (isSupabaseConfigured) {
-            const { data } = await supabase.auth.getSession();
-            sessionUser = data.session?.user;
-        }
+    // Initialize Auth Listener
+    // This is the SINGLE source of truth for auth state to prevent race conditions
+    let authSubscription: any = null;
 
-        // 2. Fetch App User Profile
-        // This might fail or timeout if DB is cold, but we have the safety timeout.
-        const u = await api.auth.getUser(sessionUser);
-        if (mounted) setUser(u);
-
-      } catch (e) {
-        console.error("Initial user check failed:", e);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-          // Don't turn off authProcessing yet if we are in a hash redirect flow, 
-          // allow the onAuthStateChange to handle completion if needed, or the timeout.
-          if (!window.location.hash.includes('access_token')) {
-             setAuthProcessing(false);
-          }
-        }
+    const initAuth = async () => {
+      if (!isSupabaseConfigured) {
+        // Fallback for Demo Mode (Mock)
+        try {
+            const u = await api.auth.getUser();
+            if (mounted) setUser(u);
+        } catch(e) { console.error(e); } 
+        finally { if (mounted) setLoading(false); }
+        return;
       }
-    };
 
-    checkUser();
-
-    // 3. Listen for Auth Changes (Sign In, Sign Out, Token Refresh)
-    if (isSupabaseConfigured) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        // Only react to explicit sign in/out events to avoid fighting with checkUser
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            const u = await api.auth.getUser(session?.user);
-            if (mounted) {
-              setUser(u);
-              setAuthProcessing(false); 
-              setLoading(false);
-            }
-        } else if (event === 'SIGNED_OUT') {
-            if (mounted) {
-                setUser(null);
-                setLoading(false);
-                setAuthProcessing(false);
-            }
+      // Setup Supabase Listener
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        // Events: INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.
+        if (event === 'SIGNED_OUT') {
+           if (mounted) {
+             setUser(null);
+             setLoading(false);
+             setAuthProcessing(false);
+           }
+        } else if (session?.user) {
+           // For SIGNED_IN, TOKEN_REFRESHED, INITIAL_SESSION
+           const u = await api.auth.getUser(session.user);
+           if (mounted) {
+             setUser(u);
+             setLoading(false);
+             setAuthProcessing(false);
+           }
+        } else {
+           // No session found (e.g. initial load guest)
+           if (mounted) setLoading(false);
         }
       });
-      return () => {
-        mounted = false;
-        clearTimeout(safetyTimeout);
-        subscription.unsubscribe();
-      };
-    } else {
-        return () => {
-            mounted = false;
-            clearTimeout(safetyTimeout);
-        };
-    }
+      authSubscription = data.subscription;
+    };
+
+    initAuth();
+
+    return () => {
+      mounted = false;
+      if (authSubscription) authSubscription.unsubscribe();
+    };
   }, []);
 
   // Show Loader ONLY if initially loading or processing a magic link token

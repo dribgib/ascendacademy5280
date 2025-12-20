@@ -26,23 +26,36 @@ const supabaseApi = {
     getUser: async (sessionUser?: any): Promise<User | null> => {
       let user = sessionUser;
       
-      // If not provided, try to get from current session
+      // 1. If not provided, get from local session (Instant)
       if (!user) {
         try {
-            const { data } = await supabase.auth.getUser();
-            user = data.user;
+            const { data } = await supabase.auth.getSession();
+            user = data.session?.user;
         } catch (e) {
-            console.warn('Error retrieving auth user:', e);
+            console.warn('Error retrieving session:', e);
             return null;
         }
       }
 
       if (!user) return null;
 
-      // Try to fetch profile details with a timeout to prevent hanging
-      let profile = null;
+      // 2. Extract Metadata immediately (Fastest Source of Truth)
+      const meta = user.user_metadata || {};
+      
+      // Default User Object from Metadata
+      const appUser: User = {
+        id: user.id,
+        email: user.email!,
+        firstName: meta.first_name || meta.firstName || '',
+        lastName: meta.last_name || meta.lastName || '',
+        phone: meta.phone || '',
+        role: meta.role || 'PARENT', // Default to PARENT if not found
+        stripeCustomerId: meta.stripe_customer_id
+      };
+
+      // 3. Try to fetch extended profile details (Database)
+      // We use a SHORT timeout (1s). If DB is cold/slow, we skip this and use metadata to keep UI snappy.
       try {
-        // Race the DB call against a 5-second timeout
         const profileFetch = supabase
           .from('profiles')
           .select('*')
@@ -51,34 +64,23 @@ const supabaseApi = {
           
         const { data, error } = await Promise.race([
             profileFetch, 
-            timeoutPromise(5000).then(() => ({ data: null, error: { code: 'TIMEOUT', message: 'Profile fetch timed out' } }))
+            timeoutPromise(1000).then(() => ({ data: null, error: { code: 'TIMEOUT' } }))
         ]) as any;
         
         if (!error && data) {
-          profile = data;
-        } else {
-            // Only warn if it's not a "row not found" which is expected for new users
-            if (error?.code !== 'PGRST116' && error?.code !== 'TIMEOUT') {
-                console.warn('Profile fetch warning:', error?.message);
-            }
+          // Merge DB profile data over metadata
+          appUser.firstName = data.first_name || appUser.firstName;
+          appUser.lastName = data.last_name || appUser.lastName;
+          appUser.phone = data.phone || appUser.phone;
+          appUser.role = data.role || appUser.role;
+          appUser.stripeCustomerId = data.stripe_customer_id || appUser.stripeCustomerId;
         }
       } catch (e) {
-        console.warn('Exception fetching profile:', e);
+        // Silently fail on profile fetch and proceed with Auth data
+        // This prevents the "Stuck on Processing" screen
       }
 
-      // Fallback: If profile table fails (500 error, trigger missing, etc), use Auth Metadata
-      // This ensures the user stays logged in so they can reach Set Password page
-      const meta = user.user_metadata || {};
-
-      return {
-        id: user.id,
-        email: user.email!,
-        firstName: profile?.first_name || meta.first_name || meta.firstName || '',
-        lastName: profile?.last_name || meta.last_name || meta.lastName || '',
-        phone: profile?.phone || meta.phone || '',
-        role: profile?.role || 'PARENT',
-        stripeCustomerId: profile?.stripe_customer_id
-      };
+      return appUser;
     },
 
     signIn: async (email: string, password: string) => {
