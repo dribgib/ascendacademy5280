@@ -26,12 +26,16 @@ const ScrollToTop = () => {
 // Component to handle redirect logic after auth
 const AuthRedirectHandler = ({ user }: { user: User | null }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     if (!user) return;
+    
+    // Check if we are ALREADY on the set-password page. 
+    // If so, do not try to redirect there again, otherwise we get a loop.
+    if (location.pathname === '/set-password') return;
 
     // 1. Check search params (e.g. site.com/?next=set-password#...)
-    // This is common when Supabase redirects back to the site root
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('next') === 'set-password') {
        navigate('/set-password');
@@ -39,7 +43,6 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
     }
 
     // 2. Check hash params (e.g. site.com/#/?next=set-password)
-    // This is common if the app handles internal routing params
     const hashParts = window.location.hash.split('?');
     if (hashParts.length > 1) {
       const params = new URLSearchParams(hashParts[1]);
@@ -49,7 +52,7 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
          navigate('/set-password', { replace: true });
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   return null;
 };

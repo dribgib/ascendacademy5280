@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
@@ -31,6 +31,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await api.auth.signOut();
@@ -38,7 +39,25 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
     navigate('/');
   };
 
-  const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-teko text-xl uppercase tracking-wide";
+  const handleScrollTo = (id: string) => {
+    setIsMenuOpen(false);
+    
+    // If not on home page, go there first
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation to complete then scroll
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      // Already on home, just scroll
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-teko text-xl uppercase tracking-wide cursor-pointer";
 
   return (
     <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-poppins selection:bg-co-yellow selection:text-black">
@@ -59,9 +78,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center">
               <div className="ml-10 flex items-baseline space-x-6">
-                <a href="#about" className={navLinkClass}>About</a>
-                <a href="#packages" className={navLinkClass}>Training</a>
-                <a href="#schedule" className={navLinkClass}>Schedule</a>
+                <button onClick={() => handleScrollTo('about')} className={navLinkClass}>About</button>
+                <button onClick={() => handleScrollTo('packages')} className={navLinkClass}>Training</button>
+                <button onClick={() => handleScrollTo('schedule')} className={navLinkClass}>Schedule</button>
                 
                 {user ? (
                   <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700">
@@ -117,9 +136,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
         {isMenuOpen && (
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <a href="#about" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">About</a>
-              <a href="#packages" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Training</a>
-              <a href="#schedule" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</a>
+              <button onClick={() => handleScrollTo('about')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">About</button>
+              <button onClick={() => handleScrollTo('packages')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Training</button>
+              <button onClick={() => handleScrollTo('schedule')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</button>
               {user ? (
                 <>
                   <button onClick={() => { navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl hover:text-co-yellow text-co-red uppercase">Dashboard</button>

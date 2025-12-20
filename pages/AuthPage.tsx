@@ -78,7 +78,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
   if (magicLinkSent) {
     return (
-      <div className="flex-grow flex items-center justify-center relative w-full">
+      <div className="flex-grow flex items-center justify-center relative w-full min-h-[80vh]">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -105,7 +105,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
   }
 
   return (
-    <div className="flex-grow flex items-center justify-center relative w-full min-h-[calc(100vh-5rem)]">
+    <div className="flex-grow flex items-center justify-center relative w-full min-h-[80vh]">
       {/* Background Image & Overlay */}
       <div className="absolute inset-0 z-0">
         <img 

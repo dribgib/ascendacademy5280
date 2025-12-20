@@ -10,7 +10,13 @@ const SetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Ensure user is actually logged in before trying to update password
+    // 1. Strip the `?next=set-password` param immediately to prevent App.tsx from redirecting us back here later
+    if (window.location.search.includes('next=')) {
+        const newUrl = window.location.origin + window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+    }
+
+    // 2. Ensure user is logged in
     const checkSession = async () => {
         const user = await api.auth.getUser();
         if (!user) {
@@ -38,8 +44,9 @@ const SetPasswordPage: React.FC = () => {
       const { error } = await api.auth.updateUser({ password });
       if (error) throw error;
       
-      alert("Password set successfully! Redirecting to dashboard...");
-      navigate('/dashboard');
+      alert("Password set successfully!");
+      // Force replace history to ensure we don't go back to this page
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to update password');
@@ -49,7 +56,7 @@ const SetPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-dark-bg px-4">
+    <div className="min-h-[80vh] pt-20 flex items-center justify-center bg-dark-bg px-4">
       <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl relative">
         
         <div className="text-center mb-8">

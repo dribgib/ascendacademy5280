@@ -1,7 +1,5 @@
 {
   "name": "Ascend Academy 5280",
   "description": "Elite youth sports performance training web platform. Features class scheduling, athlete management, and administrative tools.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "requestFramePermissions": []
 }
