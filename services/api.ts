@@ -53,7 +53,7 @@ const supabaseApi = {
       };
 
       // 3. Try to fetch extended profile details (Database)
-      // We use a SHORT timeout (1s). If DB is cold/slow, we skip this and use metadata to keep UI snappy.
+      // We use a LONGER timeout (5s) to ensure we get the Admin role if it exists in DB.
       try {
         const profileFetch = supabase
           .from('profiles')
@@ -63,19 +63,24 @@ const supabaseApi = {
           
         const { data, error } = await Promise.race([
             profileFetch, 
-            timeoutPromise(1000).then(() => ({ data: null, error: { code: 'TIMEOUT' } }))
+            timeoutPromise(5000).then(() => ({ data: null, error: { code: 'TIMEOUT' } }))
         ]) as any;
         
+        if (error && error.code !== 'TIMEOUT' && error.code !== 'PGRST116') {
+             // Log actual DB errors (like RLS) to console for debugging
+             console.error('Profile fetch error:', error);
+        }
+
         if (!error && data) {
           // Merge DB profile data over metadata
           appUser.firstName = data.first_name || appUser.firstName;
           appUser.lastName = data.last_name || appUser.lastName;
           appUser.phone = data.phone || appUser.phone;
-          appUser.role = data.role || appUser.role;
+          appUser.role = data.role || appUser.role; // This is where ADMIN role gets applied
           appUser.stripeCustomerId = data.stripe_customer_id || appUser.stripeCustomerId;
         }
       } catch (e) {
-        // Silently fail on profile fetch and proceed with Auth data
+        console.warn('Profile fetch exception:', e);
       }
 
       return appUser;
@@ -404,7 +409,7 @@ const supabaseApi = {
             childId, 
             userId, 
             activeSubscriptionCount,
-            returnUrl: window.location.origin + '/#/dashboard' 
+            returnUrl: window.location.origin + '/dashboard' 
         }
       });
 
@@ -423,7 +428,7 @@ const supabaseApi = {
       if (!stripe) return;
 
       const { data, error } = await supabase.functions.invoke('create-donation-session', {
-        body: { amount, userId, returnUrl: window.location.origin + '/#/' }
+        body: { amount, userId, returnUrl: window.location.origin + '/' }
       });
 
       if (error) {
@@ -437,7 +442,7 @@ const supabaseApi = {
 
     createPortalSession: async () => {
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
-          body: { returnUrl: window.location.origin + '/#/dashboard' }
+          body: { returnUrl: window.location.origin + '/dashboard' }
       });
 
       if (error || !data?.url) {

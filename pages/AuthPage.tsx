@@ -54,10 +54,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         const env = (import.meta as any).env || {};
         const siteUrl = env.VITE_SITE_URL || window.location.origin;
         
-        // IMPORTANT: For HashRouter apps, Supabase should just redirect to the root.
-        // We will append ?next=set-password as a query param so App.tsx can handle it
+        // IMPORTANT: For BrowserRouter, we can point directly to the path
         const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
-        const redirectUrl = `${baseUrl}/?next=set-password`;
+        const redirectUrl = `${baseUrl}/set-password`;
         
         console.log('Initiating Magic Link with redirect:', redirectUrl);
 
@@ -195,7 +194,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 <button 
                 type="submit" 
                 disabled={loading}
-                className={`w-full text-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg ${isLogin ? 'bg-co-yellow text-black hover:bg-white' : 'bg-co-red hover:bg-red-800'}`}
+                className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg ${isLogin ? 'bg-co-yellow text-black hover:bg-white' : 'bg-co-red text-white hover:bg-red-800'}`}
                 >
                 {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Send Magic Link & Join')}
                 </button>

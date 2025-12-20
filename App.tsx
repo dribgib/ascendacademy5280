@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
@@ -38,22 +38,16 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
     // If so, do not try to redirect there again, otherwise we get a loop.
     if (location.pathname === '/set-password') return;
 
-    // 1. Check search params (e.g. site.com/?next=set-password#...)
+    // 1. Check search params (e.g. site.com/?next=set-password)
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('next') === 'set-password') {
        navigate('/set-password');
        return;
     }
 
-    // 2. Check hash params (e.g. site.com/#/?next=set-password)
-    const hashParts = window.location.hash.split('?');
-    if (hashParts.length > 1) {
-      const params = new URLSearchParams(hashParts[1]);
-      const next = params.get('next');
-      
-      if (next === 'set-password') {
-         navigate('/set-password', { replace: true });
-      }
+    // 2. Check hash params fallback (just in case old links exist)
+    if (window.location.hash.includes('next=set-password')) {
+       navigate('/set-password', { replace: true });
     }
   }, [user, navigate, location.pathname]);
 
