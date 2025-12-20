@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PACKAGES } from '../constants';
 import { api } from '../services/api';
 import { Child, User } from '../types';
@@ -7,6 +7,9 @@ import { Check, Shield, AlertCircle, CreditCard, User as UserIcon } from 'lucide
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { packageId } = useParams<{ packageId: string }>();
+  
   const [user, setUser] = useState<User | null>(null);
   const [kids, setKids] = useState<Child[]>([]);
   const [activeKidId, setActiveKidId] = useState<string | null>(null);
@@ -20,25 +23,32 @@ const CheckoutPage: React.FC = () => {
   const loadData = async () => {
     try {
       const u = await api.auth.getUser();
+      
+      // If no user, redirect to login but save the current location so we can return
       if (!u) {
-        navigate(`/login?redirect=/checkout/all`);
+        const returnUrl = encodeURIComponent(location.pathname);
+        navigate(`/login?redirect=${returnUrl}`);
+        // Important: Return here and do NOT set loading to false. 
+        // We want to stay in "loading" state (or unmount) while redirecting.
         return;
       }
+
       setUser(u);
       const k = await api.children.list(u.id);
       setKids(k);
       
       if (k.length > 0) setActiveKidId(k[0].id);
+      
+      setLoading(false); // Only stop loading if we actually found a user
     } catch (e) {
       console.error(e);
-    } finally {
       setLoading(false);
     }
   };
 
-  const handleSubscribe = async (packageId: string) => {
+  const handleSubscribe = async (pkgId: string) => {
     if (!activeKidId || !user) return;
-    const pkg = PACKAGES.find(p => p.id === packageId);
+    const pkg = PACKAGES.find(p => p.id === pkgId);
     if (!pkg) return;
 
     setProcessing(true);
@@ -51,7 +61,23 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-co-yellow font-teko text-2xl">LOADING DASHBOARD...</div>;
+  // Pre-select the package from URL if it matches one of the cards
+  useEffect(() => {
+    if (!loading && activeKidId && packageId && packageId !== 'all') {
+        // Logic to scroll to or highlight could go here
+    }
+  }, [loading, activeKidId, packageId]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
+        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center">
+          PREPARING CHECKOUT...
+        </div>
+        <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
+        </div>
+    </div>
+  );
 
   const activeKid = kids.find(k => k.id === activeKidId);
 
@@ -109,13 +135,15 @@ const CheckoutPage: React.FC = () => {
             {PACKAGES.map((pkg) => {
               // Highlight if this kid has this specific active plan (mock logic)
               const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); // Loose matching for demo
+              const isSelectedFromUrl = packageId === pkg.id;
 
               return (
                 <div 
                   key={pkg.id} 
                   className={`
-                    relative bg-zinc-900 border p-6 flex flex-col rounded-lg
+                    relative bg-zinc-900 border p-6 flex flex-col rounded-lg transition-all duration-300
                     ${pkg.name === 'Elite' ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-zinc-800'}
+                    ${isSelectedFromUrl ? 'ring-2 ring-co-yellow scale-105 z-10' : ''}
                   `}
                 >
                   {pkg.name === 'Elite' && (
@@ -157,7 +185,7 @@ const CheckoutPage: React.FC = () => {
                           : 'bg-white text-black hover:bg-zinc-200'}
                       `}
                     >
-                      {processing ? 'Processing...' : 'Subscribe'}
+                      {processing ? 'Processing...' : (isSelectedFromUrl ? 'Select This Plan' : 'Subscribe')}
                     </button>
                   )}
                 </div>

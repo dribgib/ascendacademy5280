@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
@@ -26,23 +26,34 @@ const ScrollToTop = () => {
 // Component to handle redirect logic after auth
 const AuthRedirectHandler = ({ user }: { user: User | null }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-
+  const processedRef = useRef(false);
+  
   useEffect(() => {
+    if (processedRef.current) return;
+
     const params = new URLSearchParams(window.location.search);
     const next = params.get('next');
-
-    // Only redirect if we have a destination AND a user is authenticated
-    // This ensures Supabase has processed the hash token before we navigate away and clear it
-    if (next === 'set-password' && user) {
-       // Clear the query param to clean up URL
-       const newUrl = window.location.pathname + window.location.hash;
-       window.history.replaceState({}, '', newUrl);
-       navigate('/set-password');
+    
+    // Only proceed if we have a destination and a user
+    if (user && next === 'set-password') {
+       console.log('User authenticated, executing redirect to:', next);
+       processedRef.current = true;
+       // Small timeout to ensure state is settled
+       setTimeout(() => {
+         navigate('/set-password');
+       }, 100);
     }
-  }, [navigate, location, user]);
+  }, [user, navigate]);
 
   return null;
+};
+
+// Helper to determine where to send the user after login
+const getPostLoginRedirect = (user: User) => {
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect');
+  if (redirect) return decodeURIComponent(redirect);
+  return user.role === 'ADMIN' ? "/admin" : "/dashboard";
 };
 
 const App: React.FC = () => {
@@ -52,25 +63,28 @@ const App: React.FC = () => {
   useEffect(() => {
     let mounted = true;
 
-    // 0. Safety Timeout: Ensure loading screen never hangs indefinitely
-    // Silently force entry after 3 seconds if auth hangs
+    // Check if we are in the middle of a hash-based auth redirect (Magic Link)
+    // If so, we want to extend the loading state slightly to allow Supabase to parse the hash
+    const hasAuthHash = window.location.hash && window.location.hash.includes('access_token');
+    
+    // 0. Safety Timeout
     const safetyTimer = setTimeout(() => {
       if (mounted && loading) {
         console.warn('Auth check timed out, forcing app load.');
         setLoading(false);
       }
-    }, 3000); 
+    }, hasAuthHash ? 5000 : 2000); // Give more time if processing a token
 
     // 1. Check initial session
     const checkUser = async () => {
       try {
-        // CRITICAL: Use getSession() first as it handles parsing the URL hash for Magic Links
-        // api.auth.getUser() wraps supabase.auth.getUser() which only checks storage
         let sessionUser = null;
         
         if (isSupabaseConfigured) {
+            // getSession automatically parses the URL hash for tokens!
             const { data } = await supabase.auth.getSession();
             sessionUser = data.session?.user;
+            if (sessionUser) console.log("Session restored from storage/url");
         }
 
         const u = await api.auth.getUser(sessionUser);
@@ -84,11 +98,11 @@ const App: React.FC = () => {
     };
     checkUser();
 
-    // 2. Listen for auth changes (Only valid if using real Supabase)
+    // 2. Listen for auth changes
     if (isSupabaseConfigured) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth State Change:', event);
         try {
-            // If we have a session user, optimize by passing it directly to avoid extra network call
             if (session?.user) {
               const u = await api.auth.getUser(session.user);
               if (mounted) setUser(u);
@@ -114,7 +128,7 @@ const App: React.FC = () => {
   if (loading) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
         <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center">
-          LOADING ACADEMY...
+          {window.location.hash.includes('access_token') ? 'VERIFYING LINK...' : 'LOADING ACADEMY...'}
         </div>
         
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
@@ -137,7 +151,10 @@ const App: React.FC = () => {
       <Layout user={user} setUser={setUser}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={!user ? <AuthPage setUser={setUser} /> : <Navigate to={user.role === 'ADMIN' ? "/admin" : "/dashboard"} />} />
+          <Route 
+            path="/login" 
+            element={!user ? <AuthPage setUser={setUser} /> : <Navigate to={getPostLoginRedirect(user)} replace />} 
+          />
           
           <Route 
             path="/dashboard" 

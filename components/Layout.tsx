@@ -55,9 +55,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             {/* Desktop Menu */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                <a href="#about" className="hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-medium uppercase tracking-wide text-sm">About</a>
-                <a href="#packages" className="hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-medium uppercase tracking-wide text-sm">Training</a>
-                <a href="#schedule" className="hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-medium uppercase tracking-wide text-sm">Schedule</a>
+                <a href="/#about" className="hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-medium uppercase tracking-wide text-sm">About</a>
+                <a href="/#packages" className="hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-medium uppercase tracking-wide text-sm">Training</a>
+                <a href="/#schedule" className="hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-medium uppercase tracking-wide text-sm">Schedule</a>
                 
                 {user ? (
                   <div className="flex items-center gap-4 ml-6">
@@ -110,9 +110,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
         {isMenuOpen && (
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <a href="#about" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">About</a>
-              <a href="#packages" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">Training</a>
-              <a href="#schedule" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">Schedule</a>
+              <a href="/#about" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">About</a>
+              <a href="/#packages" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">Training</a>
+              <a href="/#schedule" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow">Schedule</a>
               {user ? (
                 <>
                   <button onClick={() => { navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:text-co-yellow text-co-red">Dashboard</button>
@@ -129,7 +129,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
         )}
       </nav>
 
-      <main className="flex-grow pt-20">
+      {/* Main Content Area - Flex grow ensures it fills available space */}
+      <main className="flex-grow pt-20 flex flex-col w-full">
         {children}
       </main>
 

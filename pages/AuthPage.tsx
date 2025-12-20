@@ -73,7 +73,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
   if (magicLinkSent) {
     return (
-      <div className="flex-grow flex items-center justify-center relative py-12 px-4">
+      <div className="flex-grow flex items-center justify-center relative w-full">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -84,7 +84,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
           <div className="absolute inset-0 bg-black/90"></div>
         </div>
 
-        <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
+        <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center mx-4">
           <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Email</h2>
           <p className="text-zinc-400 mb-6">
             We've sent a magic link to <span className="text-white font-bold">{email}</span>.
@@ -100,7 +100,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
   }
 
   return (
-    <div className="flex-grow flex items-center justify-center relative py-12 px-4">
+    <div className="flex-grow flex items-center justify-center relative w-full min-h-[calc(100vh-5rem)]">
       {/* Background Image & Overlay */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -109,10 +109,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
           className="w-full h-full object-cover"
         />
         {/* Darker Overlay as requested */}
-        <div className="absolute inset-0 bg-black/90"></div>
+        <div className="absolute inset-0 bg-black/85"></div>
       </div>
 
-      <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col mx-4 my-8">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-zinc-700 via-co-red to-co-yellow"></div>
         
         {/* Tabs */}
