@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2 } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate } from 'react-router-dom';
@@ -18,9 +18,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   
   // New Kid Form State
+  const [addStep, setAddStep] = useState(1); // 1 = Details, 2 = Waiver
   const [newKidName, setNewKidName] = useState({ first: '', last: '' });
   const [newKidDob, setNewKidDob] = useState('');
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  
+  // Waiver State
+  const [verifyingWaiver, setVerifyingWaiver] = useState(false);
+  const [waiverSigned, setWaiverSigned] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -49,26 +54,54 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
-  const handleAddKid = async (e: React.FormEvent) => {
+  // Step 1: Proceed to Waiver
+  const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setAddStep(2);
+  };
+
+  // Step 2: Verify Waiver & Add Kid
+  const handleVerifyAndAdd = async () => {
+    setVerifyingWaiver(true);
     try {
-      await api.children.create({
-        parentId: user.id,
-        firstName: newKidName.first,
-        lastName: newKidName.last,
-        dob: newKidDob,
-        sports: selectedSports
-      });
-      setShowAddKidModal(false);
-      loadData();
-      // Reset form
-      setNewKidName({ first: '', last: '' });
-      setSelectedSports([]);
-      setNewKidDob('');
+        // 1. Check API
+        // Note: We use the mock API here which currently returns TRUE automatically after delay
+        const isSigned = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
+        
+        if (isSigned) {
+            setWaiverSigned(true);
+            
+            // 2. Create Child in DB
+            await api.children.create({
+                parentId: user.id,
+                firstName: newKidName.first,
+                lastName: newKidName.last,
+                dob: newKidDob,
+                sports: selectedSports
+            });
+            
+            // 3. Cleanup
+            setShowAddKidModal(false);
+            loadData();
+            resetForm();
+            alert("Athlete added successfully!");
+        } else {
+            alert("Waiver signature not found. Please sign the document in the new tab and try again.");
+        }
     } catch (e) {
-      console.error(e);
-      alert('Error adding child');
+        console.error(e);
+        alert('Error verifying waiver or adding child.');
+    } finally {
+        setVerifyingWaiver(false);
     }
+  };
+
+  const resetForm = () => {
+    setNewKidName({ first: '', last: '' });
+    setSelectedSports([]);
+    setNewKidDob('');
+    setAddStep(1);
+    setWaiverSigned(false);
   };
 
   const toggleSport = (sport: string) => {
@@ -226,44 +259,92 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
       {/* Add Kid Modal */}
       {showAddKidModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
-            <form onSubmit={handleAddKid} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-zinc-400 text-xs uppercase mb-1">First Name</label>
-                  <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.first} onChange={e => setNewKidName({...newKidName, first: e.target.value})} />
+            
+            {/* Step Indicator */}
+            <div className="flex items-center gap-2 mb-8 text-sm">
+                <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : 'text-green-500'}`}>1. Details</span>
+                <span className="text-zinc-600">/</span>
+                <span className={`font-bold ${addStep === 2 ? 'text-co-yellow' : 'text-zinc-600'}`}>2. Waiver</span>
+            </div>
+
+            {addStep === 1 && (
+                <>
+                <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
+                <form onSubmit={handleDetailsSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-1">First Name</label>
+                    <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.first} onChange={e => setNewKidName({...newKidName, first: e.target.value})} />
+                    </div>
+                    <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-1">Last Name</label>
+                    <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.last} onChange={e => setNewKidName({...newKidName, last: e.target.value})} />
+                    </div>
                 </div>
                 <div>
-                  <label className="block text-zinc-400 text-xs uppercase mb-1">Last Name</label>
-                  <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.last} onChange={e => setNewKidName({...newKidName, last: e.target.value})} />
+                    <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
+                    <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
                 </div>
-              </div>
-              <div>
-                <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
-                <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-zinc-400 text-xs uppercase mb-2">Interests (Select all that apply)</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {POPULAR_SPORTS.map(sport => (
-                    <button
-                      type="button"
-                      key={sport}
-                      onClick={() => toggleSport(sport)}
-                      className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
-                    >
-                      {sport}
+                <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {POPULAR_SPORTS.map(sport => (
+                        <button
+                        type="button"
+                        key={sport}
+                        onClick={() => toggleSport(sport)}
+                        className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
+                        >
+                        {sport}
+                        </button>
+                    ))}
+                    </div>
+                </div>
+                <div className="flex gap-4 pt-4">
+                    <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2">
+                        Next: Sign Waiver <ArrowRight size={18} />
                     </button>
-                  ))}
                 </div>
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setShowAddKidModal(false)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                <button type="submit" className="flex-1 bg-co-yellow hover:bg-yellow-400 text-black py-3 uppercase font-teko text-xl font-bold rounded">Save Profile</button>
-              </div>
-            </form>
+                </form>
+                </>
+            )}
+
+            {addStep === 2 && (
+                <div className="text-center">
+                    <h2 className="font-teko text-3xl text-white uppercase mb-2">Liability Waiver</h2>
+                    <p className="text-zinc-500 text-sm mb-8">
+                        Participation in Ascend Academy 5280 requires a signed liability waiver for <span className="text-white font-bold">{newKidName.first} {newKidName.last}</span>.
+                    </p>
+
+                    <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
+                        <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
+                        <p className="text-zinc-400 text-sm mb-4">Please click the link below to sign the document on WaiverSign.</p>
+                        
+                        <a 
+                            href="https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide"
+                        >
+                            Open Waiver Form <ExternalLink size={16} />
+                        </a>
+                    </div>
+
+                    <div className="flex gap-4">
+                         <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                         <button 
+                            onClick={handleVerifyAndAdd}
+                            disabled={verifyingWaiver}
+                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {verifyingWaiver ? <Loader2 className="animate-spin" /> : 'Verify & Add Athlete'}
+                        </button>
+                    </div>
+                </div>
+            )}
           </div>
         </div>
       )}

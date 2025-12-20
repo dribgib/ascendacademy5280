@@ -246,31 +246,16 @@ const supabaseApi = {
   },
 
   billing: {
-    // 1. Initiate Checkout Session (Calls Supabase Edge Function)
     createCheckoutSession: async (priceId: string, childId: string, userId: string) => {
-      // IN PRODUCTION: Call Supabase Edge Function
-      // const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-      //   body: { priceId, childId, userId }
-      // });
-      // if (error) throw error;
-      // const stripe = await stripePromise;
-      // await stripe?.redirectToCheckout({ sessionId: data.sessionId });
-
-      // MOCK IMPLEMENTATION FOR DEMO (Since we don't have Edge Functions running)
       console.log('Mocking Stripe Checkout Redirect...', { priceId, childId, userId });
-      
       const stripe = await stripePromise;
       if (!stripe) {
-        // If Stripe Key is missing, alert the user instead of crashing
         alert("Stripe Configuration Missing. Checkout cannot proceed in this demo environment.");
         return;
       }
       
-      // We can't actually redirect to a real Stripe session without a backend to create it securely.
-      // So we will simulate a success save and redirect to dashboard.
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Save subscription record manually (In real app, Stripe Webhook does this)
       await supabase.from('subscriptions').insert({
         user_id: userId,
         child_id: childId,
@@ -281,20 +266,13 @@ const supabaseApi = {
       window.location.href = '/#/dashboard';
     },
 
-    // 2. Manage Billing (Customer Portal)
     createPortalSession: async () => {
-       // IN PRODUCTION: Call Supabase Edge Function
-      // const { data, error } = await supabase.functions.invoke('create-portal-session');
-      // if (error) throw error;
-      // window.location.href = data.url;
-
       console.log('Mocking Customer Portal Redirect...');
       alert('In a live environment, this redirects to the Stripe Customer Portal to swap plans or update credit cards.');
     }
   },
 
   subscriptions: {
-    // Legacy/Mock method kept for types compatibility
     create: async (userId: string, childId: string | null, packageId: string) => {
       const { error } = await supabase.from('subscriptions').insert({
         user_id: userId,
@@ -304,10 +282,28 @@ const supabaseApi = {
       });
       if (error) throw error;
     }
+  },
+
+  waivers: {
+    // This will be replaced with real WaiverSign API call later
+    checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
+        console.log(`Checking waiver status for ${childName} (Parent: ${parentEmail})`);
+        
+        // Simulating API latency
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // For demo purposes, we will assume "Success" so the user can proceed.
+        // In production, this would call your edge function which hits `api.waiversign.com`
+        return true; 
+    }
   }
 };
 
 // --- EXPORT API (REAL OR MOCK) ---
+// If Supabase is configured, use it. Otherwise use Mock.
+// BUT for Waiver Verification, we will mix it in even for Mock mode if needed,
+// though currently MockApi handles it separately in mockService.ts (if we were updating it, 
+// but we are sticking to real Supabase structure primarily).
 export const api = isSupabaseConfigured ? supabaseApi : mockApi;
 
 if (!isSupabaseConfigured) {

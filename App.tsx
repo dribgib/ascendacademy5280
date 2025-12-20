@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { TriangleAlert, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -26,119 +26,91 @@ const ScrollToTop = () => {
 // Component to handle redirect logic after auth
 const AuthRedirectHandler = ({ user }: { user: User | null }) => {
   const navigate = useNavigate();
-  const processedRef = useRef(false);
   
   useEffect(() => {
-    if (processedRef.current) return;
-
-    // In HashRouter, query params might be after the hash
-    // We check both standard location search and hash-based search if needed
-    const params = new URLSearchParams(window.location.search);
-    let next = params.get('next');
-    
-    // Also check if the 'next' param is embedded in the hash part (common in some auth flows)
-    if (!next && window.location.hash.includes('next=')) {
-        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
-        next = hashParams.get('next');
-    }
-
-    // Only proceed if we have a destination and a user
-    if (user && next === 'set-password') {
-       console.log('User authenticated, executing redirect to:', next);
-       processedRef.current = true;
-       setTimeout(() => {
-         navigate('/set-password');
-       }, 100);
+    // Check for "next" param in the hash query (HashRouter style: #/?next=...)
+    const hashParts = window.location.hash.split('?');
+    if (hashParts.length > 1) {
+      const params = new URLSearchParams(hashParts[1]);
+      const next = params.get('next');
+      
+      if (user && next === 'set-password') {
+         // Clean the URL so we don't loop
+         navigate('/set-password', { replace: true });
+      }
     }
   }, [user, navigate]);
 
   return null;
 };
 
-// Helper to determine where to send the user after login
-const getPostLoginRedirect = (user: User) => {
-  // Check for redirect param
-  const params = new URLSearchParams(window.location.search);
-  const redirect = params.get('redirect');
-  if (redirect) return decodeURIComponent(redirect);
-  
-  return user.role === 'ADMIN' ? "/admin" : "/dashboard";
-};
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authProcessing, setAuthProcessing] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
-    // Check if we are in the middle of a hash-based auth redirect (Magic Link)
-    const hasAuthHash = window.location.hash && window.location.hash.includes('access_token');
-    
-    // Safety Timeout
-    const safetyTimer = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn('Auth check timed out, forcing app load.');
-        setLoading(false);
-      }
-    }, hasAuthHash ? 5000 : 2000); 
+    // Detect if we are returning from a Magic Link (access_token in hash)
+    // We set authProcessing to true to hide the app while Supabase parses the hash
+    if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+      setAuthProcessing(true);
+    }
 
-    // 1. Check initial session
     const checkUser = async () => {
       try {
+        // 1. Get Session (Supabase handles URL hash parsing internally here)
         let sessionUser = null;
-        
         if (isSupabaseConfigured) {
             const { data } = await supabase.auth.getSession();
             sessionUser = data.session?.user;
-            if (sessionUser) console.log("Session restored");
         }
 
+        // 2. Fetch App User Profile
         const u = await api.auth.getUser(sessionUser);
         if (mounted) setUser(u);
 
       } catch (e) {
         console.error("Initial user check failed:", e);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setAuthProcessing(false);
+        }
       }
     };
+
     checkUser();
 
-    // 2. Listen for auth changes
+    // 3. Listen for Auth Changes (Sign In, Sign Out, Token Refresh)
     if (isSupabaseConfigured) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        try {
-            if (session?.user) {
-              const u = await api.auth.getUser(session.user);
-              if (mounted) setUser(u);
-            } else if (event === 'SIGNED_OUT') {
-              if (mounted) setUser(null);
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            const u = await api.auth.getUser(session?.user);
+            if (mounted) {
+              setUser(u);
+              setAuthProcessing(false); // Stop showing loader once signed in
             }
-        } catch (err) {
-            console.error("Auth state change error:", err);
-        } finally {
-            if (mounted) setLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+            if (mounted) setUser(null);
         }
       });
       return () => {
         mounted = false;
-        clearTimeout(safetyTimer);
         subscription.unsubscribe();
       };
-    } else {
-        return () => { mounted = false; clearTimeout(safetyTimer); };
     }
   }, []);
 
-  if (loading) return (
+  // Show Loader ONLY if initially loading or processing a magic link token
+  if (loading || authProcessing) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
         <div className="text-co-yellow font-teko text-5xl animate-pulse tracking-widest text-center uppercase">
-          {window.location.hash.includes('access_token') ? 'Verifying...' : 'Ascend Academy'}
+          {authProcessing ? 'Verifying Link...' : 'Ascend Academy'}
         </div>
-        
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
+            <div className="h-full bg-co-red animate-[shimmer_0.5s_infinite] w-1/2"></div>
         </div>
     </div>
   );
@@ -159,7 +131,7 @@ const App: React.FC = () => {
           <Route path="/" element={<HomePage />} />
           <Route 
             path="/login" 
-            element={!user ? <AuthPage setUser={setUser} /> : <Navigate to={getPostLoginRedirect(user)} replace />} 
+            element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 
           />
           
           <Route 

@@ -49,6 +49,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         // Magic Link Sign Up
         const env = (import.meta as any).env || {};
         const siteUrl = env.VITE_SITE_URL || window.location.origin;
+        
+        // IMPORTANT: For HashRouter apps, Supabase should just redirect to the root.
+        // We will append ?next=set-password as a query param so App.tsx can handle it
+        // BUT Supabase will append the hash fragment #access_token=... to the end.
+        // Final Result: siteUrl/?next=set-password#access_token=...
         const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
         const redirectUrl = `${baseUrl}/?next=set-password`;
         
