@@ -18,6 +18,12 @@ const formatDate = (isoString: string) => {
 // Helper: Timeout promise
 const timeoutPromise = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms));
 
+// Safe Env Access
+const getEnvVar = (key: string) => {
+  const env = (import.meta as any).env || {};
+  return env[key] || '';
+};
+
 // --- REAL SUPABASE IMPLEMENTATION ---
 const supabaseApi = {
   auth: {
@@ -404,6 +410,8 @@ const supabaseApi = {
         throw new Error("Stripe Configuration Missing.");
       }
       
+      // Explicitly set headers in case of custom domain issues
+      const anonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY');
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
             priceId, 
@@ -411,6 +419,9 @@ const supabaseApi = {
             userId, 
             activeSubscriptionCount,
             returnUrl: window.location.origin + '/dashboard' 
+        },
+        headers: {
+            'apikey': anonKey 
         }
       });
 
@@ -428,8 +439,12 @@ const supabaseApi = {
       const stripe = await stripePromise;
       if (!stripe) return;
 
+      const anonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY');
       const { data, error } = await supabase.functions.invoke('create-donation-session', {
-        body: { amount, userId, returnUrl: window.location.origin + '/' }
+        body: { amount, userId, returnUrl: window.location.origin + '/' },
+        headers: {
+            'apikey': anonKey 
+        }
       });
 
       if (error) {
@@ -442,8 +457,12 @@ const supabaseApi = {
     },
 
     createPortalSession: async () => {
+      const anonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY');
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
-          body: { returnUrl: window.location.origin + '/dashboard' }
+          body: { returnUrl: window.location.origin + '/dashboard' },
+          headers: {
+            'apikey': anonKey 
+          }
       });
 
       if (error || !data?.url) {

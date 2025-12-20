@@ -10,7 +10,7 @@ import GlobalModal from './components/GlobalModal';
 
 // Pages
 import HomePage from './pages/HomePage';
-import UserDashboard from './pages/UserDashboard';
+import { UserDashboard } from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';

@@ -12,7 +12,7 @@ interface UserDashboardProps {
   user: User;
 }
 
-const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
+export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const { showAlert, showConfirm } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,9 +81,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       
       setKids(kidsData);
       setEvents(eventsData);
-
-      // If both are empty, it might be a system error (or just new user)
-      // Check if API threw a 500 recently
     } catch (e: any) {
       console.error("Critical Dashboard Load Error:", e);
       setSystemError("Unable to load dashboard data. Please check your internet connection.");
@@ -229,31 +226,31 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 border-b border-zinc-800 pb-8">
-        <div>
-           <div className="flex items-center gap-4">
-              <h1 className="font-teko text-5xl text-white uppercase leading-none">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
+        <div className="flex-1">
+           <div className="flex flex-wrap items-center gap-4">
+              <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none">
                 {isAdminView ? "Coach's Dashboard" : "My Team"}
               </h1>
-              {/* Admin Toggle (Only visible if Admin) */}
+              {/* Admin Toggle */}
               {user.role === 'ADMIN' && (
-                 <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg">
+                 <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg scale-90 origin-left">
                     <button 
                        onClick={() => setIsAdminView(false)}
-                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                       className={`px-3 py-1 rounded-md font-teko text-lg uppercase transition-all ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
                     >
                        My Team
                     </button>
                     <button 
                        onClick={() => setIsAdminView(true)}
-                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                       className={`px-3 py-1 rounded-md font-teko text-lg uppercase transition-all ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
                     >
                        Coach
                     </button>
                  </div>
               )}
            </div>
-           <p className="text-zinc-500 mt-2">
+           <p className="text-zinc-500 mt-2 max-w-xl">
               {isAdminView 
                   ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
                   : "Manage your athletes, subscriptions, and schedules."
@@ -261,24 +258,24 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
            </p>
         </div>
 
-        {/* Action Buttons (Hidden on Admin View) */}
+        {/* Action Buttons */}
         {!isAdminView && (
-            <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
                 <button 
                     onClick={() => setShowAccountModal(true)}
-                    className="flex-1 lg:flex-none border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors"
+                    className="border border-zinc-700 text-zinc-300 px-4 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
                 >
                     <Settings size={18} /> Account
                 </button>
                 <button 
                     onClick={handleManageBilling}
-                    className="flex-1 lg:flex-none border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors"
+                    className="border border-zinc-700 text-zinc-300 px-4 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
                 >
                     <CreditCard size={18} /> Billing
                 </button>
                 <button 
                     onClick={() => setShowAddKidModal(true)}
-                    className="w-full lg:w-auto bg-co-yellow text-black px-8 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg"
+                    className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap"
                 >
                     <Plus size={20} /> Add Athlete
                 </button>
@@ -301,11 +298,10 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
           <AdminDashboard user={user} hideHeader={true} />
       ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Left Col: Kids & QR Codes */}
+                {/* Left Col: Kids */}
                 <div className="lg:col-span-1 space-y-6">
                 {kids.length === 0 ? (
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-12 text-center">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-10 text-center">
                         <KidIcon className="mx-auto text-zinc-700 mb-4" size={48} />
                         <h3 className="text-white font-teko text-2xl uppercase mb-2">No Athletes Found</h3>
                         <p className="text-zinc-500 text-sm mb-6">Add your child to start scheduling sessions.</p>
@@ -330,58 +326,55 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                             )}
                             </div>
 
-                            <div className="flex-1">
-                            <h3 className="font-teko text-3xl text-white uppercase leading-none mt-1">{kid.firstName} {kid.lastName}</h3>
-                            <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
-                            
-                            {/* Subscription Status & Limits */}
-                            <div className="mt-3">
-                                {kid.subscriptionStatus === 'active' && kid.usageStats ? (
-                                <div>
-                                    <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
-                                        {kid.usageStats.planName} Plan
-                                    </span>
-                                    {/* Usage Bar */}
-                                    <div className="mt-2">
-                                        <div className="flex justify-between text-[10px] text-zinc-400 mb-1 uppercase tracking-wider">
-                                            <span>Usage</span>
-                                            <span>{kid.usageStats.used} / {kid.usageStats.limit} Sessions</span>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-teko text-3xl text-white uppercase leading-none mt-1 truncate">{kid.firstName} {kid.lastName}</h3>
+                                <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
+                                
+                                {/* Subscription Status & Limits */}
+                                <div className="mt-3">
+                                    {kid.subscriptionStatus === 'active' && kid.usageStats ? (
+                                    <div>
+                                        <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
+                                            {kid.usageStats.planName} Plan
+                                        </span>
+                                        {/* Usage Bar */}
+                                        <div className="mt-2">
+                                            <div className="flex justify-between text-[10px] text-zinc-400 mb-1 uppercase tracking-wider">
+                                                <span>Usage</span>
+                                                <span>{kid.usageStats.used} / {kid.usageStats.limit}</span>
+                                            </div>
+                                            <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full ${kid.usageStats.used >= kid.usageStats.limit ? 'bg-co-red' : 'bg-co-yellow'}`} 
+                                                    style={{ width: `${Math.min((kid.usageStats.used / kid.usageStats.limit) * 100, 100)}%` }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full ${kid.usageStats.used >= kid.usageStats.limit ? 'bg-co-red' : 'bg-co-yellow'}`} 
-                                                style={{ width: `${Math.min((kid.usageStats.used / kid.usageStats.limit) * 100, 100)}%` }}
-                                            ></div>
-                                        </div>
-                                        {kid.usageStats.used >= kid.usageStats.limit && (
-                                            <p className="text-co-red text-[10px] mt-1 font-bold">Monthly limit reached.</p>
-                                        )}
                                     </div>
+                                    ) : (
+                                    <button 
+                                        onClick={() => navigate('/checkout/p_elite')} 
+                                        className="text-[10px] uppercase font-bold bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
+                                    >
+                                        No Active Plan <ExternalLink size={10} />
+                                    </button>
+                                    )}
                                 </div>
-                                ) : (
-                                <button 
-                                    onClick={() => navigate('/checkout/p_elite')} // Default to Elite, let them choose
-                                    className="text-[10px] uppercase font-bold bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
-                                >
-                                    No Active Plan <ExternalLink size={10} />
-                                </button>
-                                )}
-                            </div>
                             </div>
                         </div>
                         </div>
                         
                         <div className="flex flex-col items-center bg-white/5 p-4 rounded-lg mt-4">
-                        <p className="text-xs text-zinc-400 mb-2 uppercase tracking-widest">Access Pass</p>
-                        <QRCodeDisplay value={kid.qrCode} size={120} />
-                        <p className="text-[10px] text-zinc-500 mt-2 font-mono">{kid.qrCode}</p>
+                            <p className="text-xs text-zinc-400 mb-2 uppercase tracking-widest">Access Pass</p>
+                            <QRCodeDisplay value={kid.qrCode} size={120} />
+                            <p className="text-[10px] text-zinc-500 mt-2 font-mono">{kid.qrCode}</p>
                         </div>
                     </div>
                     ))
                 )}
                 </div>
 
-                {/* Right Col: Schedule / Register */}
+                {/* Right Col: Schedule */}
                 <div className="lg:col-span-2">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
                     <h2 className="font-teko text-3xl text-white uppercase mb-6 flex items-center gap-2">
@@ -394,7 +387,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         return (
                         <div key={evt.id} className="bg-black border border-zinc-800 p-5 rounded hover:border-zinc-700 transition-colors">
                             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                            <div>
+                            <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-1">
                                 <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-1 rounded font-mono">{evt.date}</span>
                                 <span className="text-co-yellow font-bold text-sm">{evt.startTime} - {evt.endTime}</span>
@@ -638,5 +631,3 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     </div>
   );
 };
-
-export default UserDashboard;
