@@ -1,33 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Access environment variables safely
+// Direct access ensures Vite replaces these at build time
+// We use || {} to prevent crashes if import.meta.env is undefined in specific environments
 const env = (import.meta as any).env || {};
+const supabaseUrl = env.VITE_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
-// 1. Try Environment Variables (Vercel/Local .env)
-let supabaseUrl = env.VITE_PUBLIC_SUPABASE_URL;
-let supabaseAnonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+export const isSupabaseConfigured = !!supabaseUrl && !!supabaseAnonKey && supabaseUrl !== 'undefined' && supabaseAnonKey !== 'undefined';
 
-// 2. Fallback: Try Local Storage (For easier preview/demo setup without creating .env files)
-if (!supabaseUrl && typeof window !== 'undefined') {
-  supabaseUrl = localStorage.getItem('VITE_PUBLIC_SUPABASE_URL');
-}
-if (!supabaseAnonKey && typeof window !== 'undefined') {
-  supabaseAnonKey = localStorage.getItem('VITE_PUBLIC_SUPABASE_ANON_KEY');
-}
-
-export const isSupabaseConfigured = !!supabaseUrl && !!supabaseAnonKey;
-
-// Debug logging to help troubleshoot connection
 if (!isSupabaseConfigured) {
-  console.log('Ascend Academy Config Status: INCOMPLETE');
-  console.log('Target URL:', supabaseUrl || 'MISSING (Check Vercel Vars)'); 
-  console.log('Anon Key:', supabaseAnonKey ? 'Present' : 'MISSING');
+  console.log('Ascend Academy Config Status: INCOMPLETE (Using Mock Data)');
 } else {
-  console.log('Supabase Configured');
-  // console.log('URL:', supabaseUrl); // Uncomment for debugging
+  console.log('Ascend Academy Config Status: CONNECTED');
 }
 
-// Fallback to prevent crash during build, but app will not function without keys
+// Fallback to avoid crashes, but API service will switch to mock if this is invalid
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co', 
   supabaseAnonKey || 'placeholder'

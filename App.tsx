@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
@@ -31,14 +31,21 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
   useEffect(() => {
     if (processedRef.current) return;
 
+    // In HashRouter, query params might be after the hash
+    // We check both standard location search and hash-based search if needed
     const params = new URLSearchParams(window.location.search);
-    const next = params.get('next');
+    let next = params.get('next');
     
+    // Also check if the 'next' param is embedded in the hash part (common in some auth flows)
+    if (!next && window.location.hash.includes('next=')) {
+        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+        next = hashParams.get('next');
+    }
+
     // Only proceed if we have a destination and a user
     if (user && next === 'set-password') {
        console.log('User authenticated, executing redirect to:', next);
        processedRef.current = true;
-       // Small timeout to ensure state is settled
        setTimeout(() => {
          navigate('/set-password');
        }, 100);
@@ -50,9 +57,11 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
 
 // Helper to determine where to send the user after login
 const getPostLoginRedirect = (user: User) => {
+  // Check for redirect param
   const params = new URLSearchParams(window.location.search);
   const redirect = params.get('redirect');
   if (redirect) return decodeURIComponent(redirect);
+  
   return user.role === 'ADMIN' ? "/admin" : "/dashboard";
 };
 
@@ -64,16 +73,15 @@ const App: React.FC = () => {
     let mounted = true;
 
     // Check if we are in the middle of a hash-based auth redirect (Magic Link)
-    // If so, we want to extend the loading state slightly to allow Supabase to parse the hash
     const hasAuthHash = window.location.hash && window.location.hash.includes('access_token');
     
-    // 0. Safety Timeout
+    // Safety Timeout
     const safetyTimer = setTimeout(() => {
       if (mounted && loading) {
         console.warn('Auth check timed out, forcing app load.');
         setLoading(false);
       }
-    }, hasAuthHash ? 5000 : 2000); // Give more time if processing a token
+    }, hasAuthHash ? 5000 : 2000); 
 
     // 1. Check initial session
     const checkUser = async () => {
@@ -81,10 +89,9 @@ const App: React.FC = () => {
         let sessionUser = null;
         
         if (isSupabaseConfigured) {
-            // getSession automatically parses the URL hash for tokens!
             const { data } = await supabase.auth.getSession();
             sessionUser = data.session?.user;
-            if (sessionUser) console.log("Session restored from storage/url");
+            if (sessionUser) console.log("Session restored");
         }
 
         const u = await api.auth.getUser(sessionUser);
@@ -101,7 +108,6 @@ const App: React.FC = () => {
     // 2. Listen for auth changes
     if (isSupabaseConfigured) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth State Change:', event);
         try {
             if (session?.user) {
               const u = await api.auth.getUser(session.user);
@@ -127,8 +133,8 @@ const App: React.FC = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
-        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center">
-          {window.location.hash.includes('access_token') ? 'VERIFYING LINK...' : 'LOADING ACADEMY...'}
+        <div className="text-co-yellow font-teko text-5xl animate-pulse tracking-widest text-center uppercase">
+          {window.location.hash.includes('access_token') ? 'Verifying...' : 'Ascend Academy'}
         </div>
         
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
@@ -141,9 +147,9 @@ const App: React.FC = () => {
     <Router>
       <ScrollToTop />
       <AuthRedirectHandler user={user} />
-      {/* Mock Mode Indicator */}
+      
       {!isSupabaseConfigured && (
-        <div className="fixed bottom-4 right-4 z-50 bg-co-yellow text-black text-xs font-bold px-3 py-1 rounded shadow-lg uppercase opacity-80 hover:opacity-100 pointer-events-none">
+        <div className="fixed bottom-4 right-4 z-50 bg-co-yellow text-black text-xs font-bold px-3 py-1 rounded shadow-lg uppercase opacity-80 hover:opacity-100 pointer-events-none font-teko tracking-wide">
           Demo Mode
         </div>
       )}
@@ -175,6 +181,9 @@ const App: React.FC = () => {
             path="/set-password" 
             element={<SetPasswordPage />} 
           />
+          
+          {/* Catch-all route to redirect back home if 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
     </Router>
