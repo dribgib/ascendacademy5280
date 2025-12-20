@@ -10,4 +10,5 @@ if (!STRIPE_KEY) {
   console.warn('Stripe Publishable Key is missing. Checkout will not function.');
 }
 
-export const stripePromise = loadStripe(STRIPE_KEY);
+// Only call loadStripe if we have a key, otherwise return a null promise
+export const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : Promise.resolve(null);

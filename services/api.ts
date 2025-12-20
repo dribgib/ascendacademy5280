@@ -22,23 +22,36 @@ const supabaseApi = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Fetch profile details
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Try to fetch profile details
+      let profile = null;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (!error && data) {
+          profile = data;
+        } else {
+            console.warn('Profile fetch failed or returned no data, falling back to metadata:', error);
+        }
+      } catch (e) {
+        console.warn('Exception fetching profile:', e);
+      }
 
-      if (!profile) return null;
+      // Fallback: If profile table fails (500 error, trigger missing, etc), use Auth Metadata
+      // This ensures the user stays logged in so they can reach Set Password page
+      const meta = user.user_metadata || {};
 
       return {
         id: user.id,
         email: user.email!,
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        phone: profile.phone,
-        role: profile.role,
-        stripeCustomerId: profile.stripe_customer_id
+        firstName: profile?.first_name || meta.first_name || meta.firstName || '',
+        lastName: profile?.last_name || meta.last_name || meta.lastName || '',
+        phone: profile?.phone || meta.phone || '',
+        role: profile?.role || 'PARENT',
+        stripeCustomerId: profile?.stripe_customer_id
       };
     },
 
@@ -232,7 +245,9 @@ const supabaseApi = {
       
       const stripe = await stripePromise;
       if (!stripe) {
-        throw new Error("Stripe failed to load");
+        // If Stripe Key is missing, alert the user instead of crashing
+        alert("Stripe Configuration Missing. Checkout cannot proceed in this demo environment.");
+        return;
       }
       
       // We can't actually redirect to a real Stripe session without a backend to create it securely.

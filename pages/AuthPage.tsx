@@ -87,9 +87,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
             <br />
             Click the link in the email to verify your account and set your password.
           </p>
-          <div className="text-xs text-zinc-600 mt-4 border-t border-zinc-800 pt-4">
-             <p>Note: Ensure <strong>{window.location.origin}</strong> is whitelisted in your Supabase Redirect URLs.</p>
-          </div>
           <button onClick={() => setMagicLinkSent(false)} className="text-co-yellow underline mt-4">
             Back to Login
           </button>
