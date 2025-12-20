@@ -9,12 +9,12 @@ const supabaseAnonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 export const isSupabaseConfigured = !!supabaseUrl && !!supabaseAnonKey && supabaseUrl !== 'undefined' && supabaseAnonKey !== 'undefined';
 
 if (!isSupabaseConfigured) {
-  console.log('Ascend Academy Config Status: INCOMPLETE (Using Mock Data)');
+  console.warn('Ascend Academy: Supabase Environment Variables Missing. Check VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.');
 } else {
-  console.log('Ascend Academy Config Status: CONNECTED');
+  console.log('Ascend Academy: Supabase Configured.');
 }
 
-// Fallback to avoid crashes, but API service will switch to mock if this is invalid
+// Fallback to avoid crashes, but API service will fail gracefully if keys are invalid
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co', 
   supabaseAnonKey || 'placeholder'

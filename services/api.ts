@@ -39,6 +39,7 @@ const supabaseApi = {
       if (!user) return null;
 
       // 2. Extract Metadata immediately (Fastest Source of Truth)
+      // If DB is 500ing, we rely on this.
       const meta = user.user_metadata || {};
       
       // Default User Object from Metadata
@@ -48,12 +49,12 @@ const supabaseApi = {
         firstName: meta.first_name || meta.firstName || '',
         lastName: meta.last_name || meta.lastName || '',
         phone: meta.phone || '',
-        role: meta.role || 'PARENT', // Default to PARENT if not found
+        role: meta.role || 'PARENT', // Fallback role
         stripeCustomerId: meta.stripe_customer_id
       };
 
       // 3. Try to fetch extended profile details (Database)
-      // We use a LONGER timeout (5s) to ensure we get the Admin role if it exists in DB.
+      // If the DB has RLS recursion (500 error), we catch it and use appUser (metadata) instead.
       try {
         const profileFetch = supabase
           .from('profiles')
@@ -63,24 +64,24 @@ const supabaseApi = {
           
         const { data, error } = await Promise.race([
             profileFetch, 
-            timeoutPromise(5000).then(() => ({ data: null, error: { code: 'TIMEOUT' } }))
+            timeoutPromise(3000).then(() => ({ data: null, error: { code: 'TIMEOUT' } }))
         ]) as any;
         
-        if (error && error.code !== 'TIMEOUT' && error.code !== 'PGRST116') {
-             // Log actual DB errors (like RLS) to console for debugging
-             console.error('Profile fetch error:', error);
-        }
-
-        if (!error && data) {
+        if (error) {
+           // 500 errors often mean recursive RLS policies.
+           console.warn('[Profile Fetch Warning] DB fetch failed, using Auth Metadata.', error);
+        } else if (data) {
           // Merge DB profile data over metadata
           appUser.firstName = data.first_name || appUser.firstName;
           appUser.lastName = data.last_name || appUser.lastName;
           appUser.phone = data.phone || appUser.phone;
-          appUser.role = data.role || appUser.role; // This is where ADMIN role gets applied
+          appUser.role = data.role || appUser.role; // DB Role takes precedence if successful
           appUser.stripeCustomerId = data.stripe_customer_id || appUser.stripeCustomerId;
+          
+          console.log(`[Profile Fetch] Loaded user ${appUser.email} with role: ${appUser.role}`);
         }
       } catch (e) {
-        console.warn('Profile fetch exception:', e);
+        console.warn('Profile fetch exception (Using fallback):', e);
       }
 
       return appUser;

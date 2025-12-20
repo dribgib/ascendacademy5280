@@ -194,7 +194,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 <button 
                 type="submit" 
                 disabled={loading}
-                className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg ${isLogin ? 'bg-co-yellow text-black hover:bg-white' : 'bg-co-red text-white hover:bg-red-800'}`}
+                className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg 
+                    ${isLogin 
+                        ? 'bg-co-yellow !text-black font-bold hover:bg-white' 
+                        : 'bg-co-red text-white hover:bg-red-800'
+                    }`}
                 >
                 {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Send Magic Link & Join')}
                 </button>

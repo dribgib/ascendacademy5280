@@ -60,6 +60,7 @@ const App: React.FC = () => {
   const [authProcessing, setAuthProcessing] = useState(false);
 
   useEffect(() => {
+    console.log("Ascend Academy App v2.1 (Production/Real DB) Loaded");
     let mounted = true;
     
     // Detect if we are returning from a Magic Link (access_token in hash)

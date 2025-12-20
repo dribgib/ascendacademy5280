@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -23,6 +23,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   // Standard User Dashboard State
   const [kids, setKids] = useState<Child[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [systemError, setSystemError] = useState<string | null>(null);
   
   // Modals
   const [showAddKidModal, setShowAddKidModal] = useState(false);
@@ -64,17 +65,29 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   }, [user.id, isAdminView]);
 
   const loadData = async () => {
+    setSystemError(null);
     try {
-      const [kidsData, eventsData] = await Promise.all([
-        api.children.list(user.id),
-        api.events.list()
-      ]);
+      // Fetch concurrently but handle errors individually so one failure doesn't break the page
+      const kidsPromise = api.children.list(user.id).catch(e => {
+          console.error("Children fetch failed:", e);
+          return [];
+      });
+      const eventsPromise = api.events.list().catch(e => {
+          console.error("Events fetch failed:", e);
+          return [];
+      });
+
+      const [kidsData, eventsData] = await Promise.all([kidsPromise, eventsPromise]);
+      
       setKids(kidsData);
       setEvents(eventsData);
-    } catch (e) {
-      console.error(e);
+
+      // If both are empty, it might be a system error (or just new user)
+      // Check if API threw a 500 recently
+    } catch (e: any) {
+      console.error("Critical Dashboard Load Error:", e);
+      setSystemError("Unable to load dashboard data. Please check your internet connection.");
     } finally {
-      // Ensure loading stops even if data fetch fails
       setLoading(false);
     }
   };
@@ -213,86 +226,92 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
-      {/* --- TITLE SECTION --- */}
-      <div className="mb-6">
-        <h1 className="font-teko text-5xl text-white uppercase">
-            {isAdminView ? "Coach's Dashboard" : "My Team"}
-        </h1>
-        <p className="text-zinc-500">
-            {isAdminView 
-                ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
-                : "Manage your athletes, subscriptions, and schedules."
-            }
-        </p>
+      {/* --- HEADER SECTION --- */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 border-b border-zinc-800 pb-8">
+        <div>
+           <div className="flex items-center gap-4">
+              <h1 className="font-teko text-5xl text-white uppercase leading-none">
+                {isAdminView ? "Coach's Dashboard" : "My Team"}
+              </h1>
+              {/* Admin Toggle (Only visible if Admin) */}
+              {user.role === 'ADMIN' && (
+                 <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg">
+                    <button 
+                       onClick={() => setIsAdminView(false)}
+                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                       My Team
+                    </button>
+                    <button 
+                       onClick={() => setIsAdminView(true)}
+                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                       Coach
+                    </button>
+                 </div>
+              )}
+           </div>
+           <p className="text-zinc-500 mt-2">
+              {isAdminView 
+                  ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
+                  : "Manage your athletes, subscriptions, and schedules."
+              }
+           </p>
+        </div>
+
+        {/* Action Buttons (Hidden on Admin View) */}
+        {!isAdminView && (
+            <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                <button 
+                    onClick={() => setShowAccountModal(true)}
+                    className="flex-1 lg:flex-none border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors"
+                >
+                    <Settings size={18} /> Account
+                </button>
+                <button 
+                    onClick={handleManageBilling}
+                    className="flex-1 lg:flex-none border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors"
+                >
+                    <CreditCard size={18} /> Billing
+                </button>
+                <button 
+                    onClick={() => setShowAddKidModal(true)}
+                    className="w-full lg:w-auto bg-co-yellow text-black px-8 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg"
+                >
+                    <Plus size={20} /> Add Athlete
+                </button>
+            </div>
+        )}
       </div>
 
-      {/* --- ADMIN TOGGLE (Nav Row) --- */}
-      {user.role === 'ADMIN' && (
-         <div className="mb-8">
-            <div className="inline-flex bg-zinc-900 border border-zinc-700 p-1 rounded-full">
-               <button 
-                  onClick={() => setIsAdminView(false)}
-                  className={`w-48 py-2 rounded-full font-teko text-xl uppercase tracking-wide transition-all ${!isAdminView ? 'bg-white text-black font-bold shadow-lg' : 'text-zinc-500 hover:text-white'}`}
-               >
-                  My Team
-               </button>
-               <button 
-                  onClick={() => setIsAdminView(true)}
-                  className={`w-48 py-2 rounded-full font-teko text-xl uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${isAdminView ? 'bg-co-yellow text-black font-bold shadow-lg' : 'text-zinc-500 hover:text-white'}`}
-               >
-                  <Shield size={16} /> Coach
-               </button>
-            </div>
-         </div>
+      {systemError && (
+          <div className="bg-red-900/20 border border-red-900 p-4 rounded-lg mb-8 flex items-center gap-4 text-red-200">
+              <AlertTriangle size={24} />
+              <div>
+                  <h3 className="font-bold uppercase">System Alert</h3>
+                  <p className="text-sm opacity-80">{systemError}</p>
+              </div>
+          </div>
       )}
 
       {/* --- CONTENT AREA --- */}
       {isAdminView ? (
           <AdminDashboard user={user} hideHeader={true} />
       ) : (
-          /* --- REGULAR USER DASHBOARD CONTENT --- */
-          <>
-            {/* Action Buttons for Regular User */}
-            <div className="flex flex-wrap justify-end gap-4 mb-8 -mt-20 pointer-events-none">
-                <div className="pointer-events-auto flex gap-4">
-                    <button 
-                        onClick={() => setShowAccountModal(true)}
-                        className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors bg-black"
-                    >
-                        <Settings size={18} /> Account
-                    </button>
-                    <button 
-                        onClick={handleManageBilling}
-                        className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors bg-black"
-                    >
-                        <CreditCard size={18} /> Billing
-                    </button>
-                    <button 
-                        onClick={() => setShowAddKidModal(true)}
-                        className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center gap-2 shadow-lg"
-                    >
-                        <Plus size={20} /> Add Athlete
-                    </button>
-                </div>
-            </div>
-            {/* Mobile Actions Backup (visible on small screens only) */}
-            <div className="md:hidden flex flex-col gap-2 mb-8">
-                 <button onClick={() => setShowAddKidModal(true)} className="w-full bg-co-yellow text-black py-3 uppercase font-teko text-xl font-bold rounded">Add Athlete</button>
-                 <div className="flex gap-2">
-                     <button onClick={() => setShowAccountModal(true)} className="flex-1 border border-zinc-700 py-2 uppercase font-teko text-lg rounded">Account</button>
-                     <button onClick={handleManageBilling} className="flex-1 border border-zinc-700 py-2 uppercase font-teko text-lg rounded">Billing</button>
-                 </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {/* Left Col: Kids & QR Codes */}
                 <div className="lg:col-span-1 space-y-6">
                 {kids.length === 0 ? (
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
-                    <p className="text-zinc-500">No athletes added yet.</p>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-12 text-center">
+                        <KidIcon className="mx-auto text-zinc-700 mb-4" size={48} />
+                        <h3 className="text-white font-teko text-2xl uppercase mb-2">No Athletes Found</h3>
+                        <p className="text-zinc-500 text-sm mb-6">Add your child to start scheduling sessions.</p>
+                        <button onClick={() => setShowAddKidModal(true)} className="text-co-yellow underline uppercase font-teko text-xl">
+                            Add First Athlete
+                        </button>
                     </div>
                 ) : (
                     kids.map(kid => (
@@ -370,7 +389,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </h2>
 
                     <div className="space-y-4">
-                    {events.length === 0 ? <p className="text-zinc-500">No events scheduled.</p> : events.map(evt => {
+                    {events.length === 0 ? <p className="text-zinc-500">No events scheduled or system offline.</p> : events.map(evt => {
                         const isFull = evt.bookedSlots >= evt.maxSlots;
                         return (
                         <div key={evt.id} className="bg-black border border-zinc-800 p-5 rounded hover:border-zinc-700 transition-colors">
@@ -431,192 +450,190 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
                 </div>
                 </div>
+      )}
+
+      {/* Account Modal */}
+      {showAccountModal && (
+        <div 
+        className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+        onClick={() => setShowAccountModal(false)}
+        >
+        <div 
+            className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-sm w-full relative"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <button 
+                onClick={() => setShowAccountModal(false)}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+            >
+                &times;
+            </button>
+            <h2 className="font-teko text-3xl text-white uppercase mb-6">Manage Account</h2>
+            
+            <div className="mb-6 pb-6 border-b border-zinc-800">
+                <p className="text-zinc-400 text-xs uppercase mb-1">Email Address</p>
+                <p className="text-white font-mono">{user.email}</p>
+                <p className="text-zinc-600 text-[10px] mt-2">To change email, please contact support.</p>
             </div>
 
-            {/* Account Modal */}
-            {showAccountModal && (
-                <div 
-                className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-                onClick={() => setShowAccountModal(false)}
-                >
-                <div 
-                    className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-sm w-full relative"
-                    onClick={(e) => e.stopPropagation()}
-                >
+            <form onSubmit={handleUpdatePassword}>
+                <p className="text-co-yellow text-sm uppercase font-bold mb-4">Reset Password</p>
+                <div className="space-y-4">
+                    <div>
+                        <input 
+                            required 
+                            type="password" 
+                            placeholder="New Password"
+                            minLength={6} 
+                            value={newPassword} 
+                            onChange={e => setNewPassword(e.target.value)} 
+                            className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm" 
+                        />
+                    </div>
+                    <div>
+                        <input 
+                            required 
+                            type="password" 
+                            placeholder="Confirm Password"
+                            minLength={6} 
+                            value={confirmPassword} 
+                            onChange={e => setConfirmPassword(e.target.value)} 
+                            className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm" 
+                        />
+                    </div>
                     <button 
-                        onClick={() => setShowAccountModal(false)}
-                        className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                        type="submit" 
+                        className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-2 uppercase font-teko text-xl transition-colors"
                     >
-                        &times;
+                        Update Password
                     </button>
-                    <h2 className="font-teko text-3xl text-white uppercase mb-6">Manage Account</h2>
-                    
-                    <div className="mb-6 pb-6 border-b border-zinc-800">
-                        <p className="text-zinc-400 text-xs uppercase mb-1">Email Address</p>
-                        <p className="text-white font-mono">{user.email}</p>
-                        <p className="text-zinc-600 text-[10px] mt-2">To change email, please contact support.</p>
-                    </div>
+                </div>
+                {accountMsg && (
+                    <p className={`mt-4 text-center text-xs ${accountMsg.includes('success') ? 'text-green-500' : 'text-co-red'}`}>
+                        {accountMsg}
+                    </p>
+                )}
+            </form>
+        </div>
+        </div>
+      )}
 
-                    <form onSubmit={handleUpdatePassword}>
-                        <p className="text-co-yellow text-sm uppercase font-bold mb-4">Reset Password</p>
-                        <div className="space-y-4">
-                            <div>
-                                <input 
-                                    required 
-                                    type="password" 
-                                    placeholder="New Password"
-                                    minLength={6} 
-                                    value={newPassword} 
-                                    onChange={e => setNewPassword(e.target.value)} 
-                                    className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm" 
-                                />
-                            </div>
-                            <div>
-                                <input 
-                                    required 
-                                    type="password" 
-                                    placeholder="Confirm Password"
-                                    minLength={6} 
-                                    value={confirmPassword} 
-                                    onChange={e => setConfirmPassword(e.target.value)} 
-                                    className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm" 
-                                />
-                            </div>
-                            <button 
-                                type="submit" 
-                                className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-2 uppercase font-teko text-xl transition-colors"
-                            >
-                                Update Password
-                            </button>
-                        </div>
-                        {accountMsg && (
-                            <p className={`mt-4 text-center text-xs ${accountMsg.includes('success') ? 'text-green-500' : 'text-co-red'}`}>
-                                {accountMsg}
-                            </p>
+      {/* Add Kid Modal */}
+      {showAddKidModal && (
+        <div 
+        className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+        onClick={() => setShowAddKidModal(false)}
+        >
+        <div 
+            className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+        >
+            
+            {/* Step Indicator */}
+            <div className="flex items-center gap-2 mb-8 text-sm">
+                <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : 'text-green-500'}`}>1. Details</span>
+                <span className="text-zinc-600">/</span>
+                <span className={`font-bold ${addStep === 2 ? 'text-co-yellow' : 'text-zinc-600'}`}>2. Waiver</span>
+            </div>
+
+            {addStep === 1 && (
+                <>
+                <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
+                <form onSubmit={handleDetailsSubmit} className="space-y-4">
+                
+                {/* Image Upload Field */}
+                <div className="flex items-center gap-6 mb-6 p-4 bg-black rounded border border-zinc-800">
+                    <div className="h-20 w-20 rounded-full overflow-hidden bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 relative">
+                        {kidImagePreview ? (
+                            <img src={kidImagePreview} alt="Preview" className="h-full w-full object-cover" />
+                        ) : (
+                            <Camera className="text-zinc-600" />
                         )}
-                    </form>
+                    </div>
+                    <div className="flex-1">
+                        <label className="block text-zinc-400 text-xs uppercase mb-2">Profile Photo (Optional)</label>
+                        <label className="cursor-pointer inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-xs uppercase font-bold text-zinc-300 transition-colors">
+                            <Upload size={14} /> Choose Image
+                            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                        </label>
+                        {kidImage && <p className="text-[10px] text-green-500 mt-2">Image Selected</p>}
+                    </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-1">First Name</label>
+                    <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.first} onChange={e => setNewKidName({...newKidName, first: e.target.value})} />
+                    </div>
+                    <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-1">Last Name</label>
+                    <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.last} onChange={e => setNewKidName({...newKidName, last: e.target.value})} />
+                    </div>
                 </div>
+                <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
+                    <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
+                </div>
+                <div>
+                    <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {POPULAR_SPORTS.map(sport => (
+                        <button
+                        type="button"
+                        key={sport}
+                        onClick={() => toggleSport(sport)}
+                        className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
+                        >
+                        {sport}
+                        </button>
+                    ))}
+                    </div>
+                </div>
+                <div className="flex gap-4 pt-4">
+                    <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2">
+                        Next: Sign Waiver <ArrowRight size={18} />
+                    </button>
+                </div>
+                </form>
+                </>
             )}
 
-            {/* Add Kid Modal */}
-            {showAddKidModal && (
-                <div 
-                className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-                onClick={() => setShowAddKidModal(false)}
-                >
-                <div 
-                    className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    
-                    {/* Step Indicator */}
-                    <div className="flex items-center gap-2 mb-8 text-sm">
-                        <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : 'text-green-500'}`}>1. Details</span>
-                        <span className="text-zinc-600">/</span>
-                        <span className={`font-bold ${addStep === 2 ? 'text-co-yellow' : 'text-zinc-600'}`}>2. Waiver</span>
+            {addStep === 2 && (
+                <div className="text-center">
+                    <h2 className="font-teko text-3xl text-white uppercase mb-2">Liability Waiver</h2>
+                    <p className="text-zinc-500 text-sm mb-8">
+                        Participation in Ascend Academy 5280 requires a signed liability waiver for <span className="text-white font-bold">{newKidName.first} {newKidName.last}</span>.
+                    </p>
+
+                    <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
+                        <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
+                        <p className="text-zinc-400 text-sm mb-4">Please click the link below to sign the document on WaiverSign.</p>
+                        
+                        <a 
+                            href="https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide"
+                        >
+                            Open Waiver Form <ExternalLink size={16} />
+                        </a>
                     </div>
 
-                    {addStep === 1 && (
-                        <>
-                        <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
-                        <form onSubmit={handleDetailsSubmit} className="space-y-4">
-                        
-                        {/* Image Upload Field */}
-                        <div className="flex items-center gap-6 mb-6 p-4 bg-black rounded border border-zinc-800">
-                            <div className="h-20 w-20 rounded-full overflow-hidden bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 relative">
-                                {kidImagePreview ? (
-                                    <img src={kidImagePreview} alt="Preview" className="h-full w-full object-cover" />
-                                ) : (
-                                    <Camera className="text-zinc-600" />
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-zinc-400 text-xs uppercase mb-2">Profile Photo (Optional)</label>
-                                <label className="cursor-pointer inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-xs uppercase font-bold text-zinc-300 transition-colors">
-                                    <Upload size={14} /> Choose Image
-                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                                </label>
-                                {kidImage && <p className="text-[10px] text-green-500 mt-2">Image Selected</p>}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                            <label className="block text-zinc-400 text-xs uppercase mb-1">First Name</label>
-                            <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.first} onChange={e => setNewKidName({...newKidName, first: e.target.value})} />
-                            </div>
-                            <div>
-                            <label className="block text-zinc-400 text-xs uppercase mb-1">Last Name</label>
-                            <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.last} onChange={e => setNewKidName({...newKidName, last: e.target.value})} />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
-                            <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {POPULAR_SPORTS.map(sport => (
-                                <button
-                                type="button"
-                                key={sport}
-                                onClick={() => toggleSport(sport)}
-                                className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
-                                >
-                                {sport}
-                                </button>
-                            ))}
-                            </div>
-                        </div>
-                        <div className="flex gap-4 pt-4">
-                            <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                            <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2">
-                                Next: Sign Waiver <ArrowRight size={18} />
-                            </button>
-                        </div>
-                        </form>
-                        </>
-                    )}
-
-                    {addStep === 2 && (
-                        <div className="text-center">
-                            <h2 className="font-teko text-3xl text-white uppercase mb-2">Liability Waiver</h2>
-                            <p className="text-zinc-500 text-sm mb-8">
-                                Participation in Ascend Academy 5280 requires a signed liability waiver for <span className="text-white font-bold">{newKidName.first} {newKidName.last}</span>.
-                            </p>
-
-                            <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
-                                <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
-                                <p className="text-zinc-400 text-sm mb-4">Please click the link below to sign the document on WaiverSign.</p>
-                                
-                                <a 
-                                    href="https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide"
-                                >
-                                    Open Waiver Form <ExternalLink size={16} />
-                                </a>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
-                                <button 
-                                    onClick={handleVerifyAndAdd}
-                                    disabled={verifyingWaiver || imageUploading}
-                                    className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'Verify & Add Athlete'}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                    <div className="flex gap-4">
+                        <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                        <button 
+                            onClick={handleVerifyAndAdd}
+                            disabled={verifyingWaiver || imageUploading}
+                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'Verify & Add Athlete'}
+                        </button>
+                    </div>
                 </div>
             )}
-          </>
+        </div>
+        </div>
       )}
     </div>
   );
