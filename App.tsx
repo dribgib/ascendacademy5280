@@ -150,11 +150,13 @@ const App: React.FC = () => {
             element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 
           />
           
+          {/* Dashboard is now the unified hub for Parents AND Admins */}
           <Route 
             path="/dashboard" 
-            element={user && user.role === 'PARENT' ? <UserDashboard user={user} /> : <Navigate to={user?.role === 'ADMIN' ? "/admin" : "/login"} replace />} 
+            element={user ? <UserDashboard user={user} /> : <Navigate to="/login" replace />} 
           />
           
+          {/* Admin Route preserved as direct access, but typically reached via Dashboard tabs */}
           <Route 
             path="/admin" 
             element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/login" replace />} 

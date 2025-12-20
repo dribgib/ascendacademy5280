@@ -77,7 +77,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center">
-              <div className="ml-10 flex items-baseline space-x-6">
+              <div className="ml-10 flex items-center space-x-6">
                 <button onClick={() => handleScrollTo('about')} className={navLinkClass}>About</button>
                 <button onClick={() => handleScrollTo('packages')} className={navLinkClass}>Training</button>
                 <button onClick={() => handleScrollTo('schedule')} className={navLinkClass}>Schedule</button>
@@ -85,7 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 {user ? (
                   <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700 h-8">
                     <button 
-                      onClick={() => navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard')}
+                      onClick={() => navigate('/dashboard')}
                       className="flex items-center gap-2 text-white hover:text-co-yellow transition-colors font-teko text-xl uppercase tracking-wide h-full"
                     >
                       <UserIcon className="h-5 w-5" />
@@ -141,7 +141,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               <button onClick={() => handleScrollTo('schedule')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</button>
               {user ? (
                 <>
-                  <button onClick={() => { navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl hover:text-co-yellow text-co-red uppercase">Dashboard</button>
+                  <button onClick={() => { navigate('/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl hover:text-co-yellow text-co-red uppercase">Dashboard</button>
                   <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-zinc-500 uppercase">Logout</button>
                 </>
               ) : (

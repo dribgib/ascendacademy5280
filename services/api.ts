@@ -77,7 +77,6 @@ const supabaseApi = {
         }
       } catch (e) {
         // Silently fail on profile fetch and proceed with Auth data
-        // This prevents the "Stuck on Processing" screen
       }
 
       return appUser;
@@ -125,6 +124,54 @@ const supabaseApi = {
     }
   },
 
+  admin: {
+    getAllUsers: async (): Promise<User[]> => {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (error) throw error;
+        // Map DB Profile to User Type
+        return data.map((p: any) => ({
+            id: p.id,
+            email: p.email, // Ensure email is in profiles or join auth.users (RLS dependent)
+            firstName: p.first_name,
+            lastName: p.last_name,
+            phone: p.phone,
+            role: p.role,
+            stripeCustomerId: p.stripe_customer_id
+        }));
+    },
+    getAllChildren: async (): Promise<Child[]> => {
+        const { data, error } = await supabase.from('children').select('*');
+        if (error) throw error;
+        return data.map((c: any) => ({
+            id: c.id,
+            parentId: c.parent_id,
+            firstName: c.first_name,
+            lastName: c.last_name,
+            dob: c.dob,
+            sports: c.sports,
+            qrCode: c.qr_code,
+            image: c.image_url
+        }));
+    },
+    addRegistration: async (eventId: string, childId: string) => {
+        const { error } = await supabase.from('registrations').insert({
+            event_id: eventId,
+            child_id: childId
+        });
+        if (error) throw error;
+    },
+    removeRegistration: async (eventId: string, childId: string) => {
+        const { error } = await supabase.from('registrations')
+            .delete()
+            .match({ event_id: eventId, child_id: childId });
+        if (error) throw error;
+    },
+    deleteEvent: async (eventId: string) => {
+        const { error } = await supabase.from('events').delete().eq('id', eventId);
+        if (error) throw error;
+    }
+  },
+
   children: {
     list: async (parentId: string): Promise<Child[]> => {
       // 1. Fetch children
@@ -143,7 +190,6 @@ const supabaseApi = {
       if (error) throw error;
 
       // 2. Fetch registration counts for the current month
-      // Note: In a production app with huge data, this aggregation should be done in a View or RPC
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0,0,0,0);
@@ -155,24 +201,16 @@ const supabaseApi = {
         .gte('events.start_time', startIso);
 
       return children.map((c: any) => {
-        // Determine active subscription
         const activeSub = c.subscriptions?.find((s: any) => s.status === 'active');
-        
         let usageStats = undefined;
 
         if (activeSub) {
             const pkg = PACKAGES.find(p => p.id === activeSub.package_id) || PACKAGES.find(p => activeSub.package_id.includes(p.id));
             const limit = pkg ? pkg.maxSessions : 0;
             const planName = pkg ? pkg.name : 'Unknown';
-            
-            // Calculate usage
             const used = registrations?.filter((r: any) => r.child_id === c.id).length || 0;
 
-            usageStats = {
-                used,
-                limit,
-                planName
-            };
+            usageStats = { used, limit, planName };
         }
 
         return {
@@ -218,22 +256,15 @@ const supabaseApi = {
             const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
             const filePath = `avatars/${fileName}`;
 
-            // Try to upload to 'media' bucket first, then fallbacks
-            // NOTE: Bucket creation requires SQL/Dashboard setup. 
-            // If this fails (bucket not found), we return null safely.
             const { error: uploadError } = await supabase.storage
                 .from('media') 
                 .upload(filePath, file);
 
-            if (uploadError) {
-                console.warn('Image upload failed (Bucket might not exist):', uploadError.message);
-                return null;
-            }
+            if (uploadError) return null;
 
             const { data } = supabase.storage.from('media').getPublicUrl(filePath);
             return data.publicUrl;
         } catch (e) {
-            console.error('Upload exception:', e);
             return null;
         }
     }
@@ -287,7 +318,6 @@ const supabaseApi = {
   registrations: {
     register: async (eventId: string, childId: string) => {
       // 1. ENFORCE LIMITS
-      // Fetch child to get subscription details
       const { data: child, error: childError } = await supabase
         .from('children')
         .select(`*, subscriptions(*)`)
@@ -298,17 +328,11 @@ const supabaseApi = {
       
       const activeSub = child.subscriptions?.find((s: any) => s.status === 'active');
       
-      if (!activeSub) {
-         // Allow registration without plan? Probably not for paid events, but maybe for demos.
-         // For now, let's warn but proceed or throw error depending on strictness.
-         // Throwing error for stricter control as requested.
-         throw new Error("Athlete does not have an active membership.");
-      }
+      if (!activeSub) throw new Error("Athlete does not have an active membership.");
       
       const pkg = PACKAGES.find(p => p.id === activeSub.package_id) || PACKAGES.find(p => activeSub.package_id.includes(p.id));
       if (!pkg) throw new Error("Unknown subscription package.");
       
-      // Count existing registrations this month
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0,0,0,0);
@@ -318,7 +342,7 @@ const supabaseApi = {
         .from('registrations')
         .select('id', { count: 'exact' })
         .eq('child_id', childId)
-        .gte('created_at', startIso); // Simple check on registration date, ideally check event date
+        .gte('created_at', startIso); 
         
       if ((count || 0) >= pkg.maxSessions) {
           throw new Error(`Plan limit reached! ${pkg.name} allows ${pkg.maxSessions} sessions per month.`);
@@ -376,8 +400,6 @@ const supabaseApi = {
         return;
       }
       
-      // Call Supabase Edge Function 'create-checkout-session'
-      // We pass activeSubscriptionCount to let the backend apply coupons (45% or 65%)
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
             priceId, 
@@ -390,8 +412,6 @@ const supabaseApi = {
 
       if (error) {
           console.error('Checkout Func Error:', error);
-          // Fallback to mock behavior if function is missing in this demo
-          console.warn('Backend function missing. Using mock fallback logic.');
           await supabase.from('subscriptions').insert({
             user_id: userId,
             child_id: childId,
@@ -408,24 +428,14 @@ const supabaseApi = {
     },
 
     createDonationSession: async (amount: number, userId?: string) => {
-      console.log('Initiating Donation Checkout...', { amount, userId });
       const stripe = await stripePromise;
-      if (!stripe) {
-        alert("Stripe Configuration Missing.");
-        return;
-      }
+      if (!stripe) return;
 
-      // Call Supabase Edge Function 'create-donation-session'
       const { data, error } = await supabase.functions.invoke('create-donation-session', {
-        body: { 
-            amount, 
-            userId, 
-            returnUrl: window.location.origin + '/#/' 
-        }
+        body: { amount, userId, returnUrl: window.location.origin + '/#/' }
       });
 
       if (error) {
-         console.error('Donation Func Error:', error);
          alert("Donation system currently in maintenance mode (Mock).");
          return;
       }
@@ -436,19 +446,14 @@ const supabaseApi = {
     },
 
     createPortalSession: async () => {
-      console.log('Opening Customer Portal...');
-      // Call Supabase Edge Function 'create-portal-session'
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
           body: { returnUrl: window.location.origin + '/#/dashboard' }
       });
 
       if (error || !data?.url) {
-          console.error('Portal Func Error:', error);
-          alert('Billing Portal is accessible once you have an active subscription history. Please contact support if you need immediate assistance.');
+          alert('Billing Portal is accessible once you have an active subscription history.');
           return;
       }
-
-      // Redirect to the URL returned by Stripe
       window.location.href = data.url;
     }
   },
@@ -467,7 +472,6 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        // Mock check for waiver
         await new Promise(resolve => setTimeout(resolve, 1000));
         return true; 
     }
@@ -475,7 +479,6 @@ const supabaseApi = {
 
   general: {
       sendSponsorshipInquiry: async (formData: any) => {
-          // Transactional insert into 'inquiries' table
           const { error } = await supabase
             .from('inquiries')
             .insert({
@@ -485,20 +488,11 @@ const supabaseApi = {
                 message: formData.message,
                 type: 'sponsorship'
             });
-            
-          if (error) {
-              console.error("Sponsorship Error:", error);
-              // Fail gracefully? Or throw?
-              // If table doesn't exist in dev, log it.
-              return false;
-          }
-          return true;
+          return !error;
       }
   }
 };
 
-// --- EXPORT API (REAL OR MOCK) ---
-// If Supabase is configured, use it. Otherwise use Mock.
 export const api = isSupabaseConfigured ? supabaseApi : mockApi;
 
 if (!isSupabaseConfigured) {
