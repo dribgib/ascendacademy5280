@@ -3,8 +3,10 @@ import { PACKAGES } from '../constants';
 import { Check, Star, Trophy, Users, Heart, DollarSign, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useModal } from '../context/ModalContext';
 
 const HomePage: React.FC = () => {
+  const { showAlert } = useModal();
   const navigate = useNavigate();
   const [showDonateModal, setShowDonateModal] = useState(false);
   const [donationAmount, setDonationAmount] = useState<number | ''>('');
@@ -14,14 +16,15 @@ const HomePage: React.FC = () => {
   const handleDonate = async () => {
     const amount = Number(customAmount) || Number(donationAmount);
     if (!amount || amount <= 0) {
-        alert("Please select or enter a valid donation amount.");
+        showAlert('Invalid Amount', "Please select or enter a valid donation amount.", 'error');
         return;
     }
     setProcessingDonation(true);
     try {
         await api.billing.createDonationSession(amount);
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
+        showAlert('Donation Failed', e.message || 'Could not initiate donation.', 'error');
         setProcessingDonation(false);
     }
   };

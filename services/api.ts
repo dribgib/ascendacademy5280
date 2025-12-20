@@ -395,8 +395,7 @@ const supabaseApi = {
       console.log('Initiating Stripe Checkout...', { priceId, childId, userId, activeSubscriptionCount });
       const stripe = await stripePromise;
       if (!stripe) {
-        alert("Stripe Configuration Missing.");
-        return;
+        throw new Error("Stripe Configuration Missing.");
       }
       
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -411,8 +410,7 @@ const supabaseApi = {
 
       if (error) {
           console.error('Checkout Func Error:', error);
-          alert('Failed to initiate checkout. Please contact support.');
-          return;
+          throw new Error('Failed to initiate checkout. Please contact support.');
       }
 
       if (data?.sessionId) {
@@ -429,8 +427,7 @@ const supabaseApi = {
       });
 
       if (error) {
-         alert("Donation system currently unavailable.");
-         return;
+         throw new Error("Donation system currently unavailable.");
       }
 
       if (data?.sessionId) {
@@ -444,8 +441,7 @@ const supabaseApi = {
       });
 
       if (error || !data?.url) {
-          alert('Billing Portal is accessible once you have an active subscription history.');
-          return;
+          throw new Error('Billing Portal is accessible once you have an active subscription history.');
       }
       window.location.href = data.url;
     }

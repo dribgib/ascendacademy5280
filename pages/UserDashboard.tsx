@@ -6,12 +6,14 @@ import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
+import { useModal } from '../context/ModalContext';
 
 interface UserDashboardProps {
   user: User;
 }
 
 const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
+  const { showAlert, showConfirm } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -81,8 +83,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     try {
       setLoading(true);
       await api.billing.createPortalSession();
-    } catch (e) {
-      alert('Unable to open billing portal');
+    } catch (e: any) {
+      showAlert('Billing Error', e.message || 'Unable to open billing portal', 'error');
     } finally {
       setLoading(false);
     }
@@ -157,13 +159,13 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             setShowAddKidModal(false);
             loadData();
             resetForm();
-            alert("Athlete added successfully!");
+            showAlert('Success', 'Athlete added successfully!', 'success');
         } else {
-            alert("Waiver signature not found. Please sign the document in the new tab and try again.");
+            showAlert('Waiver Required', "Waiver signature not found. Please sign the document in the new tab and try again.", 'error');
         }
     } catch (e) {
         console.error(e);
-        alert('Error verifying waiver or adding child.');
+        showAlert('Error', 'Error verifying waiver or adding child.', 'error');
     } finally {
         setVerifyingWaiver(false);
         setImageUploading(false);
@@ -189,14 +191,16 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   };
 
   const handleRegister = async (eventId: string, kidId: string) => {
-    if (!confirm(`Confirm registration for this session?`)) return;
+    const confirmed = await showConfirm("Confirm Registration", "Register for this session?");
+    if (!confirmed) return;
+
     try {
       await api.registrations.register(eventId, kidId);
       loadData();
-      alert("Registration Successful!");
+      showAlert('Success', 'Registration Successful!', 'success');
     } catch (e: any) {
       console.error(e);
-      alert(e.message || 'Registration failed. Please try again.');
+      showAlert('Registration Failed', e.message || 'Please try again.', 'error');
     }
   };
 

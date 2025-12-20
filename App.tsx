@@ -5,6 +5,8 @@ import { User } from './types';
 import { api } from './services/api';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
+import { ModalProvider } from './context/ModalContext';
+import GlobalModal from './components/GlobalModal';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -122,50 +124,55 @@ const App: React.FC = () => {
   );
 
   return (
-    <Router>
-      <ScrollToTop />
-      <AuthRedirectHandler user={user} />
-      
-      <Layout user={user} setUser={setUser}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route 
-            path="/login" 
-            element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 
-          />
-          
-          {/* Dashboard is now the unified hub for Parents AND Admins */}
-          <Route 
-            path="/dashboard" 
-            element={user ? <UserDashboard user={user} /> : <Navigate to="/login" replace />} 
-          />
-          
-          {/* Admin Route preserved as direct access, but typically reached via Dashboard tabs */}
-          <Route 
-            path="/admin" 
-            element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/login" replace />} 
-          />
+    <ModalProvider>
+      <Router>
+        <ScrollToTop />
+        <AuthRedirectHandler user={user} />
+        
+        <Layout user={user} setUser={setUser}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route 
+              path="/login" 
+              element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 
+            />
+            
+            {/* Dashboard is now the unified hub for Parents AND Admins */}
+            <Route 
+              path="/dashboard" 
+              element={user ? <UserDashboard user={user} /> : <Navigate to="/login" replace />} 
+            />
+            
+            {/* Admin Route preserved as direct access, but typically reached via Dashboard tabs */}
+            <Route 
+              path="/admin" 
+              element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/login" replace />} 
+            />
 
-          <Route 
-            path="/checkout/:packageId" 
-            element={<CheckoutPage />} 
-          />
+            <Route 
+              path="/checkout/:packageId" 
+              element={<CheckoutPage />} 
+            />
 
-          <Route 
-            path="/set-password" 
-            element={<SetPasswordPage />} 
-          />
+            <Route 
+              path="/set-password" 
+              element={<SetPasswordPage />} 
+            />
 
-          <Route 
-            path="/sponsor" 
-            element={<SponsorPage />} 
-          />
-          
-          {/* Catch-all route to redirect back home if 404 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
-    </Router>
+            <Route 
+              path="/sponsor" 
+              element={<SponsorPage />} 
+            />
+            
+            {/* Catch-all route to redirect back home if 404 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
+        
+        {/* Render Global Modal above everything */}
+        <GlobalModal />
+      </Router>
+    </ModalProvider>
   );
 };
 

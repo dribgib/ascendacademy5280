@@ -4,8 +4,10 @@ import { PACKAGES } from '../constants';
 import { api } from '../services/api';
 import { Child, User } from '../types';
 import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag } from 'lucide-react';
+import { useModal } from '../context/ModalContext';
 
 const CheckoutPage: React.FC = () => {
+  const { showAlert } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const { packageId } = useParams<{ packageId: string }>();
@@ -63,8 +65,8 @@ const CheckoutPage: React.FC = () => {
     try {
       // Direct call to Billing Service which handles Stripe Checkout
       await api.billing.createCheckoutSession(pkg.stripePriceId, activeKidId, user.id, activeSubscriptionCount);
-    } catch (e) {
-      alert('Checkout initiation failed.');
+    } catch (e: any) {
+      showAlert('Checkout Error', e.message || 'Checkout initiation failed.', 'error');
       setProcessing(false);
     }
   };

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useModal } from '../context/ModalContext';
 
 const SetPasswordPage: React.FC = () => {
+  const { showAlert } = useModal();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,7 +46,7 @@ const SetPasswordPage: React.FC = () => {
       const { error } = await api.auth.updateUser({ password });
       if (error) throw error;
       
-      alert("Password set successfully!");
+      showAlert('Success', "Password set successfully!", 'success');
       // Force replace history to ensure we don't go back to this page
       navigate('/dashboard', { replace: true });
     } catch (err: any) {

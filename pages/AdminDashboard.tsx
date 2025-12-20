@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Event, Child } from '../types';
 import { api } from '../services/api';
 import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, UserPlus, Grid, List } from 'lucide-react';
+import { useModal } from '../context/ModalContext';
 
 interface AdminDashboardProps {
   user: User;
@@ -11,6 +12,7 @@ interface AdminDashboardProps {
 type TabView = 'schedule' | 'calendar' | 'users';
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = false }) => {
+  const { showAlert, showConfirm } = useModal();
   const [activeTab, setActiveTab] = useState<TabView>('schedule');
   const [events, setEvents] = useState<Event[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -89,15 +91,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       setShowCreateModal(false);
       loadData();
       setNewEvent({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20 });
-    } catch (e) {
-      alert('Failed to create event.');
+      showAlert('Success', 'Event created successfully.', 'success');
+    } catch (e: any) {
+      showAlert('Error', e.message || 'Failed to create event.', 'error');
     }
   };
 
   const handleDeleteEvent = async (id: string) => {
-      if(!confirm("Are you sure you want to cancel and delete this session?")) return;
-      await (api as any).admin.deleteEvent(id);
-      loadData();
+      const confirmed = await showConfirm("Delete Session?", "Are you sure you want to cancel and delete this session? This cannot be undone.");
+      if (!confirmed) return;
+
+      try {
+        await (api as any).admin.deleteEvent(id);
+        loadData();
+        showAlert('Deleted', 'Session has been cancelled.', 'success');
+      } catch (e: any) {
+          showAlert('Error', e.message, 'error');
+      }
   };
 
   const handleAddKidToRoster = async () => {
@@ -119,7 +129,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   };
 
   const handleRemoveKidFromRoster = async (childId: string) => {
-      if (!showRosterModal || !confirm("Remove athlete from roster?")) return;
+      if (!showRosterModal) return;
+      const confirmed = await showConfirm("Remove Athlete", "Are you sure you want to remove this athlete from the roster?");
+      if (!confirmed) return;
+
       await (api as any).admin.removeRegistration(showRosterModal.id, childId);
 
        // Update local state
