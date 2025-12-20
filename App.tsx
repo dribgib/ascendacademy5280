@@ -4,7 +4,7 @@ import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert, Loader2 } from 'lucide-react';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -48,6 +48,7 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [longLoad, setLongLoad] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -58,7 +59,12 @@ const App: React.FC = () => {
         console.warn('Auth check timed out, forcing app load.');
         setLoading(false);
       }
-    }, 4000); // 4 seconds max load time
+    }, 2000); // Reduced to 2 seconds
+
+    // Show "Click to enter" if it takes more than 1s
+    const longLoadTimer = setTimeout(() => {
+      if (mounted && loading) setLongLoad(true);
+    }, 1000);
 
     // 1. Check initial session
     const checkUser = async () => {
@@ -93,19 +99,33 @@ const App: React.FC = () => {
       return () => {
         mounted = false;
         clearTimeout(safetyTimer);
+        clearTimeout(longLoadTimer);
         subscription.unsubscribe();
       };
     } else {
-        return () => { mounted = false; clearTimeout(safetyTimer); };
+        return () => { mounted = false; clearTimeout(safetyTimer); clearTimeout(longLoadTimer); };
     }
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest">LOADING ACADEMY...</div>
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
+        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center">
+          LOADING ACADEMY...
+        </div>
+        
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
         </div>
+
+        {/* Escape Hatch for stuck loading screens */}
+        {longLoad && (
+          <button 
+            onClick={() => setLoading(false)}
+            className="mt-8 text-zinc-500 text-sm underline hover:text-white transition-colors"
+          >
+            Taking too long? Click here to enter
+          </button>
+        )}
     </div>
   );
 
