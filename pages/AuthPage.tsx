@@ -47,14 +47,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         // Auth listener in App.tsx will handle the rest
       } else {
         // Magic Link Sign Up
-        // We use a query param 'next' to handle the redirect after login
-        // This avoids hash collisions with the access_token Supabase appends
-        
-        // Use VITE_SITE_URL env var if available, otherwise current origin
         const env = (import.meta as any).env || {};
         const siteUrl = env.VITE_SITE_URL || window.location.origin;
-        
-        // Ensure no trailing slash
         const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
         const redirectUrl = `${baseUrl}/?next=set-password`;
         
@@ -79,8 +73,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-dark-bg px-4">
-        <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
+      <div className="min-h-screen flex items-center justify-center bg-black px-4 relative">
+        {/* Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://api.ascendacademy5280.com/storage/v1/object/public/media/rod2.png" 
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/90"></div>
+        </div>
+
+        <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
           <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Email</h2>
           <p className="text-zinc-400 mb-6">
             We've sent a magic link to <span className="text-white font-bold">{email}</span>.
@@ -96,8 +100,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center bg-dark-bg px-4 py-12">
-      <div className="max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl relative overflow-hidden flex flex-col">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 relative">
+      {/* Background Image & Overlay */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://api.ascendacademy5280.com/storage/v1/object/public/media/rod2.png" 
+          alt="Background" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/85"></div>
+      </div>
+
+      <div className="relative z-10 max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col my-8">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-zinc-700 via-co-red to-co-yellow"></div>
         
         {/* Tabs */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
@@ -48,23 +48,18 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [longLoad, setLongLoad] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     // 0. Safety Timeout: Ensure loading screen never hangs indefinitely
+    // Silently force entry after 2 seconds if auth hangs
     const safetyTimer = setTimeout(() => {
       if (mounted && loading) {
         console.warn('Auth check timed out, forcing app load.');
         setLoading(false);
       }
-    }, 2000); // Reduced to 2 seconds
-
-    // Show "Click to enter" if it takes more than 1s
-    const longLoadTimer = setTimeout(() => {
-      if (mounted && loading) setLongLoad(true);
-    }, 1000);
+    }, 2000); 
 
     // 1. Check initial session
     const checkUser = async () => {
@@ -99,11 +94,10 @@ const App: React.FC = () => {
       return () => {
         mounted = false;
         clearTimeout(safetyTimer);
-        clearTimeout(longLoadTimer);
         subscription.unsubscribe();
       };
     } else {
-        return () => { mounted = false; clearTimeout(safetyTimer); clearTimeout(longLoadTimer); };
+        return () => { mounted = false; clearTimeout(safetyTimer); };
     }
   }, []);
 
@@ -116,16 +110,6 @@ const App: React.FC = () => {
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
         </div>
-
-        {/* Escape Hatch for stuck loading screens */}
-        {longLoad && (
-          <button 
-            onClick={() => setLoading(false)}
-            className="mt-8 text-zinc-500 text-sm underline hover:text-white transition-colors"
-          >
-            Taking too long? Click here to enter
-          </button>
-        )}
     </div>
   );
 
