@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, Child, Event } from '../types';
 import { mockApi } from './mockService';
+import { stripePromise } from '../lib/stripe';
 
 // Helper to format ISO timestamp to HH:MM
 const formatTime = (isoString: string) => {
@@ -45,6 +46,21 @@ const supabaseApi = {
       return await supabase.auth.signInWithPassword({ email, password });
     },
 
+    // Magic Link Sign In / Sign Up
+    signInWithOtp: async (email: string, meta?: any, redirectTo?: string) => {
+      return await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          data: meta ? {
+            first_name: meta.firstName,
+            last_name: meta.lastName,
+            phone: meta.phone
+          } : undefined,
+          emailRedirectTo: redirectTo
+        }
+      });
+    },
+
     signUp: async (email: string, password: string, meta: { firstName: string, lastName: string, phone: string }) => {
       return await supabase.auth.signUp({
         email,
@@ -57,6 +73,10 @@ const supabaseApi = {
           }
         }
       });
+    },
+
+    updateUser: async (attributes: { password?: string }) => {
+      return await supabase.auth.updateUser(attributes);
     },
 
     signOut: async () => {
@@ -80,7 +100,9 @@ const supabaseApi = {
         lastName: c.last_name,
         dob: c.dob,
         sports: c.sports || [],
-        qrCode: c.qr_code
+        qrCode: c.qr_code,
+        // In a real app, you would join the subscriptions table here to get status
+        subscriptionStatus: 'none' 
       }));
     },
 
@@ -194,7 +216,54 @@ const supabaseApi = {
     }
   },
 
+  billing: {
+    // 1. Initiate Checkout Session (Calls Supabase Edge Function)
+    createCheckoutSession: async (priceId: string, childId: string, userId: string) => {
+      // IN PRODUCTION: Call Supabase Edge Function
+      // const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      //   body: { priceId, childId, userId }
+      // });
+      // if (error) throw error;
+      // const stripe = await stripePromise;
+      // await stripe?.redirectToCheckout({ sessionId: data.sessionId });
+
+      // MOCK IMPLEMENTATION FOR DEMO (Since we don't have Edge Functions running)
+      console.log('Mocking Stripe Checkout Redirect...', { priceId, childId, userId });
+      
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error("Stripe failed to load");
+      }
+      
+      // We can't actually redirect to a real Stripe session without a backend to create it securely.
+      // So we will simulate a success save and redirect to dashboard.
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Save subscription record manually (In real app, Stripe Webhook does this)
+      await supabase.from('subscriptions').insert({
+        user_id: userId,
+        child_id: childId,
+        package_id: 'active_plan',
+        status: 'active'
+      });
+      
+      window.location.href = '/#/dashboard';
+    },
+
+    // 2. Manage Billing (Customer Portal)
+    createPortalSession: async () => {
+       // IN PRODUCTION: Call Supabase Edge Function
+      // const { data, error } = await supabase.functions.invoke('create-portal-session');
+      // if (error) throw error;
+      // window.location.href = data.url;
+
+      console.log('Mocking Customer Portal Redirect...');
+      alert('In a live environment, this redirects to the Stripe Customer Portal to swap plans or update credit cards.');
+    }
+  },
+
   subscriptions: {
+    // Legacy/Mock method kept for types compatibility
     create: async (userId: string, childId: string | null, packageId: string) => {
       const { error } = await supabase.from('subscriptions').insert({
         user_id: userId,

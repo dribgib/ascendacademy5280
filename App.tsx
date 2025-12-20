@@ -12,6 +12,7 @@ import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
+import SetPasswordPage from './pages/SetPasswordPage';
 
 // Scroll to top helper
 const ScrollToTop = () => {
@@ -85,6 +86,11 @@ const App: React.FC = () => {
           <Route 
             path="/checkout/:packageId" 
             element={<CheckoutPage />} 
+          />
+
+          <Route 
+            path="/set-password" 
+            element={<SetPasswordPage />} 
           />
         </Routes>
       </Layout>

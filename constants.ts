@@ -7,9 +7,11 @@ export const POPULAR_SPORTS = [
   "Boxing", "MMA", "Powerlifting", "Rugby"
 ];
 
+// Real Stripe Price IDs
 export const PACKAGES: TrainingPackage[] = [
   {
     id: 'p_elite',
+    stripePriceId: 'price_1SgU61IQ7QGupvoPTnwh2LCN', 
     name: 'Elite',
     price: 310,
     billingPeriod: 'Monthly',
@@ -25,6 +27,7 @@ export const PACKAGES: TrainingPackage[] = [
   },
   {
     id: 'p_all_pro',
+    stripePriceId: 'price_1SgU5ZIQ7QGupvoP2XQ6JvOB',
     name: 'All-Pro',
     price: 215,
     billingPeriod: 'Monthly',
@@ -39,6 +42,7 @@ export const PACKAGES: TrainingPackage[] = [
   },
   {
     id: 'p_pro',
+    stripePriceId: 'price_1SgU5DIQ7QGupvoPjxNtibuT',
     name: 'Pro',
     price: 120,
     billingPeriod: 'Monthly',
@@ -52,6 +56,7 @@ export const PACKAGES: TrainingPackage[] = [
   },
   {
     id: 'p_rookie',
+    stripePriceId: 'price_1SgU4sIQ7QGupvoPibE6fbry',
     name: 'Rookie',
     price: 100,
     billingPeriod: 'Monthly',
@@ -69,7 +74,7 @@ export const PACKAGES: TrainingPackage[] = [
 // MOCK DATA for Demo Purposes
 export const MOCK_ADMIN: User = {
   id: 'admin_123',
-  firstName: 'Roderick',
+  firstName: 'Roderrick',
   lastName: 'Jackson',
   email: 'admin@ascend5280.com',
   role: 'ADMIN',

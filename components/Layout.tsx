@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube, Video } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -9,6 +9,24 @@ interface LayoutProps {
   user: User | null;
   setUser: (u: User | null) => void;
 }
+
+// Custom TikTok Icon since it might vary in lucide versions
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
 
 const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,7 +46,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           <div className="flex items-center justify-between h-20">
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
               <div className="flex items-center gap-2">
-                <span className="font-teko text-3xl font-bold tracking-widest text-white">AscendAcademy<span className="text-co-yellow">5280</span></span>
+                <span className="font-teko text-4xl font-bold tracking-tight uppercase text-white">
+                  AscendAcademy<span className="text-co-yellow">5280</span>
+                </span>
               </div>
             </div>
             
@@ -58,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 ) : (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="ml-6 bg-co-red hover:bg-red-700 text-white px-6 py-2 rounded-none skew-x-[-12deg] font-teko text-xl transition-all duration-300 border border-transparent hover:border-co-yellow"
+                    className="ml-6 bg-co-red hover:bg-red-700 text-white px-6 py-2 rounded-none skew-x-[-12deg] font-teko text-xl transition-colors duration-300 border-0"
                   >
                     <span className="skew-x-[12deg] inline-block mt-1">Join The Squad</span>
                   </button>
@@ -107,7 +127,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <span className="font-teko text-2xl font-bold tracking-widest text-white">AscendAcademy<span className="text-co-yellow">5280</span></span>
+                <span className="font-teko text-3xl font-bold tracking-tight uppercase text-white">
+                  AscendAcademy<span className="text-co-yellow">5280</span>
+                </span>
               </div>
               <p className="text-zinc-500 text-sm">
                 Developing the next generation of athletes in the heart of Colorado. 
@@ -117,14 +139,20 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             <div>
               <h3 className="font-teko text-xl text-white mb-4 uppercase">Contact</h3>
               <p className="text-zinc-500 text-sm mb-2">Denver, Colorado</p>
-              <p className="text-zinc-500 text-sm mb-2">coach@ascend5280.com</p>
+              <p className="text-zinc-500 text-sm mb-2">rod@ascendacademy5280.com</p>
             </div>
             <div>
               <h3 className="font-teko text-xl text-white mb-4 uppercase">Community</h3>
-              <div className="flex gap-4">
-                <button className="text-zinc-500 hover:text-co-red transition-colors">Instagram</button>
-                <button className="text-zinc-500 hover:text-co-red transition-colors">Twitter</button>
-                <button className="text-zinc-500 hover:text-co-red transition-colors">Facebook</button>
+              <div className="flex gap-6">
+                <a href="#" className="text-zinc-500 hover:text-co-red transition-colors duration-300">
+                  <Instagram className="w-6 h-6" />
+                </a>
+                <a href="#" className="text-zinc-500 hover:text-co-red transition-colors duration-300">
+                  <TikTokIcon className="w-6 h-6" />
+                </a>
+                <a href="#" className="text-zinc-500 hover:text-co-red transition-colors duration-300">
+                  <Youtube className="w-6 h-6" />
+                </a>
               </div>
               <div className="mt-6">
                 <p className="text-xs text-zinc-600">© 2023 Ascend Academy 5280. All rights reserved.</p>

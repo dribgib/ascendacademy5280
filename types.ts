@@ -18,10 +18,13 @@ export interface Child {
   dob: string;
   sports: string[];
   qrCode: string;
+  subscriptionId?: string; // Optional: link to active subscription
+  subscriptionStatus?: 'active' | 'past_due' | 'canceled' | 'none';
 }
 
 export interface TrainingPackage {
   id: string;
+  stripePriceId: string; // ID from Stripe Dashboard
   name: string;
   price: number;
   description: string;

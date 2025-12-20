@@ -49,6 +49,45 @@ export const mockApi = {
       currentUser = newUser;
       return { data: { user: newUser }, error: null };
     },
+    
+    // MOCK MAGIC LINK
+    signInWithOtp: async (email: string, meta?: any, redirectTo?: string) => {
+      await delay(1000);
+      console.log('Mock sending magic link to:', email);
+      console.log('Redirecting to:', redirectTo);
+      
+      // Create user if meta exists (simulating signup)
+      if (meta) {
+        currentUser = {
+           id: `user_${Date.now()}`,
+           email,
+           firstName: meta.firstName,
+           lastName: meta.lastName,
+           phone: meta.phone,
+           role: 'PARENT'
+        };
+      } else {
+        currentUser = MOCK_PARENT; // Fallback login
+      }
+      
+      alert('MAGIC LINK SENT (Mock): In a real app, check your email. For this demo, clicking OK simulates clicking the link and setting your password.');
+      
+      // Simulate redirect logic
+      if (redirectTo) {
+        // Parse the hash path from the full URL if present
+        const path = redirectTo.split('#')[1] || '/dashboard';
+        window.location.hash = path;
+      }
+      
+      return { data: {}, error: null };
+    },
+
+    updateUser: async (attributes: any) => {
+      await delay(500);
+      console.log('Mock User updated:', attributes);
+      return { data: { user: currentUser }, error: null };
+    },
+
     signOut: async () => {
       await delay(300);
       currentUser = null;
@@ -59,7 +98,14 @@ export const mockApi = {
   children: {
     list: async (parentId: string): Promise<Child[]> => {
       await delay(400);
-      return children.filter(c => c.parentId === parentId);
+      // In mock, verify subscription status based on mock subscriptions
+      return children.filter(c => c.parentId === parentId).map(child => {
+         const hasSub = subscriptions.some(s => s.childId === child.id && s.status === 'active');
+         return {
+           ...child,
+           subscriptionStatus: hasSub ? 'active' : 'none'
+         };
+      });
     },
     create: async (childData: { parentId: string, firstName: string, lastName: string, dob: string, sports: string[] }) => {
       await delay(600);
@@ -130,6 +176,28 @@ export const mockApi = {
     sendReminder: async (eventId: string) => {
       await delay(1000);
       return true;
+    }
+  },
+
+  billing: {
+    createCheckoutSession: async (priceId: string, childId: string, userId: string) => {
+      await delay(1000);
+      console.log(`[Mock] Creating checkout session for package ${priceId} user ${userId} child ${childId}`);
+      // Simulate "success" by adding a subscription locally
+      subscriptions.push({
+        id: `sub_${Date.now()}`,
+        userId,
+        childId,
+        packageId: priceId,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      });
+      // Redirect to dashboard to see changes
+      window.location.href = '/#/dashboard';
+    },
+    createPortalSession: async () => {
+      await delay(500);
+      alert('Mock Billing Portal: In production, this redirects to the Stripe Customer Portal.');
     }
   },
 

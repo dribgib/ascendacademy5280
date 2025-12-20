@@ -26,13 +26,13 @@ const HomePage: React.FC = () => {
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-red">The Competition</span>
           </h1>
-          <p className="mt-4 text-xl md:text-2xl text-zinc-200 max-w-3xl mx-auto font-light tracking-wide drop-shadow-md">
-            Elite athletic performance training in Colorado. Join the Academy.
+          <p className="mt-4 text-xl md:text-2xl text-zinc-200 max-w-3xl mx-auto font-light tracking-wide drop-shadow-md leading-relaxed">
+            Elite athletic performance training in Colorado. <br className="block mt-2" /> Join the Academy.
           </p>
           <div className="mt-10 flex justify-center gap-6">
             <a 
               href="#packages"
-              className="bg-co-yellow text-black px-10 py-4 font-teko text-2xl uppercase tracking-wider font-bold hover:bg-yellow-400 transition-transform hover:scale-105 -skew-x-12 shadow-lg shadow-yellow-900/20"
+              className="bg-co-yellow text-black px-10 py-4 font-teko text-2xl uppercase tracking-wider font-bold hover:bg-white transition-colors duration-300 -skew-x-12 shadow-lg"
             >
               <span className="skew-x-12 inline-block">Start Training</span>
             </a>
@@ -50,12 +50,12 @@ const HomePage: React.FC = () => {
             <div className="relative">
               <div className="absolute -inset-4 bg-zinc-700/20 rounded-lg transform rotate-3"></div>
               <img 
-                src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop" 
+                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/rod1.png" 
                 alt="Trainer" 
                 className="relative rounded-lg shadow-2xl grayscale hover:grayscale-0 transition-all duration-500"
               />
               <div className="absolute -bottom-6 -right-6 bg-zinc-950 p-6 border-l-4 border-co-yellow">
-                <p className="font-teko text-4xl text-white">RODERICK JACKSON</p>
+                <p className="font-teko text-4xl text-white">RODERRICK JACKSON</p>
                 <p className="text-zinc-400 text-sm tracking-widest uppercase">Head Trainer</p>
               </div>
             </div>
@@ -66,7 +66,7 @@ const HomePage: React.FC = () => {
               </div>
               <h2 className="font-teko text-5xl md:text-6xl text-white mb-6 uppercase">Built Different.</h2>
               <p className="text-zinc-400 text-lg mb-6 leading-relaxed">
-                Former D1 football player at Wyoming and Arena League veteran, Roderick Jackson brings professional-grade intensity and knowledge to youth fitness.
+                Former D1 football player at Wyoming and Arena League veteran, Roderrick Jackson brings professional-grade intensity and knowledge to youth fitness.
               </p>
               <p className="text-zinc-400 text-lg mb-8 leading-relaxed">
                 Ascend Academy 5280 isn't just a gym. It's a laboratory for building better athletes and better people. We focus on speed, agility, strength, and mental toughness.
@@ -103,7 +103,7 @@ const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {PACKAGES.map((pkg) => (
-              <div key={pkg.id} className={`bg-card-bg border-t-4 ${pkg.color} p-8 flex flex-col relative group hover:transform hover:-translate-y-2 transition-all duration-300`}>
+              <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow`}>
                 <h3 className="font-teko text-4xl text-white uppercase mb-2">{pkg.name}</h3>
                 <div className="flex items-baseline mb-6">
                   <span className="text-3xl font-bold text-white">$</span>
@@ -119,7 +119,10 @@ const HomePage: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to={`/checkout/${pkg.id}`} className="block w-full py-3 border border-zinc-700 text-center uppercase font-teko text-xl text-white hover:bg-white hover:text-black transition-colors">
+                <Link 
+                  to={`/checkout/${pkg.id}`} 
+                  className="block w-full py-3 bg-transparent border border-zinc-700 text-center uppercase font-teko text-xl text-white hover:bg-white hover:text-black hover:border-transparent transition-colors duration-300"
+                >
                   Select Plan
                 </Link>
               </div>
@@ -131,7 +134,7 @@ const HomePage: React.FC = () => {
             <div className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-lg">
               <div className="flex items-center gap-4 mb-4">
                 <Star className="text-co-yellow" size={32} />
-                <h3 className="font-teko text-3xl text-white uppercase">Family Discounts</h3>
+                <h3 className="font-teko text-3xl text-white uppercase">Sibling Discounts</h3>
               </div>
               <p className="text-zinc-400 mb-4">Building a legacy? We support athletic families.</p>
               <ul className="text-sm text-zinc-300 space-y-2">
@@ -142,10 +145,6 @@ const HomePage: React.FC = () => {
                 <li className="flex justify-between border-b border-zinc-800 pb-2">
                   <span>Additional Siblings</span>
                   <span className="text-co-yellow font-bold">65% OFF</span>
-                </li>
-                <li className="flex justify-between pt-2">
-                  <span>Friends & Family</span>
-                  <span className="text-co-yellow font-bold">50% OFF</span>
                 </li>
               </ul>
             </div>
@@ -158,10 +157,10 @@ const HomePage: React.FC = () => {
               <p className="text-zinc-400 mb-6">Every kid deserves a chance to compete. Donate to sponsor an athlete.</p>
               
               <div className="flex flex-col gap-4">
-                <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 px-4 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 px-4 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2 hover:bg-white hover:text-black duration-300">
                   Donate $10+
                 </button>
-                <button className="w-full border border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white py-3 px-4 rounded text-sm font-medium transition-colors">
+                <button className="w-full border border-zinc-600 text-zinc-300 hover:bg-white hover:text-black hover:border-transparent py-3 px-4 rounded text-sm font-medium transition-colors duration-300">
                   Sponsor an Athlete (Tax Deductible)
                 </button>
               </div>
@@ -178,7 +177,10 @@ const HomePage: React.FC = () => {
           <p className="text-red-100 text-xl mb-10 max-w-2xl mx-auto">
             Spots fill up fast. Create your account, register your athletes, and get to work.
           </p>
-          <Link to="/login" className="inline-block bg-white text-co-red px-12 py-4 font-teko text-2xl uppercase font-bold hover:bg-zinc-100 shadow-xl transition-all hover:scale-105 rounded-sm">
+          <Link 
+            to="/login" 
+            className="inline-block bg-white text-co-red px-12 py-4 font-teko text-2xl uppercase font-bold hover:bg-black hover:text-white shadow-xl transition-colors duration-300 rounded-sm"
+          >
             Join Now
           </Link>
         </div>

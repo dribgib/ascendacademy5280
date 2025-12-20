@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
+import { useNavigate } from 'react-router-dom';
 
 interface UserDashboardProps {
   user: User;
 }
 
 const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
+  const navigate = useNavigate();
   const [kids, setKids] = useState<Child[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [showAddKidModal, setShowAddKidModal] = useState(false);
@@ -36,6 +38,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    try {
+      await api.billing.createPortalSession();
+    } catch (e) {
+      alert('Unable to open billing portal');
     }
   };
 
@@ -83,17 +93,25 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div>
           <h1 className="font-teko text-5xl text-white uppercase">My Team</h1>
-          <p className="text-zinc-500">Manage your athletes and schedules.</p>
+          <p className="text-zinc-500">Manage your athletes, subscriptions, and schedules.</p>
         </div>
-        <button 
-          onClick={() => setShowAddKidModal(true)}
-          className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-yellow-400 flex items-center gap-2"
-        >
-          <Plus size={20} /> Add Athlete
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={handleManageBilling}
+            className="border border-zinc-700 text-zinc-300 px-6 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center gap-2 transition-colors"
+          >
+            <CreditCard size={18} /> Manage Billing
+          </button>
+          <button 
+            onClick={() => setShowAddKidModal(true)}
+            className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center gap-2"
+          >
+            <Plus size={20} /> Add Athlete
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -106,19 +124,33 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             </div>
           ) : (
             kids.map(kid => (
-              <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-co-red"></div>
+              <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group hover:border-zinc-600 transition-colors">
+                <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : 'bg-zinc-700'}`}></div>
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="font-teko text-3xl text-white uppercase">{kid.firstName} {kid.lastName}</h3>
                     <p className="text-zinc-500 text-sm">{kid.sports.join(', ')}</p>
+                    
+                    {/* Subscription Status Pill */}
+                    <div className="mt-2">
+                       {kid.subscriptionStatus === 'active' ? (
+                         <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50">Active Membership</span>
+                       ) : (
+                         <button 
+                           onClick={() => navigate('/checkout/p_elite')} // Default to Elite, let them choose
+                           className="text-[10px] uppercase font-bold bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
+                         >
+                           No Active Plan <ExternalLink size={10} />
+                         </button>
+                       )}
+                    </div>
                   </div>
                   <div className="bg-zinc-800 p-2 rounded-full">
                     <KidIcon size={20} className="text-zinc-400" />
                   </div>
                 </div>
                 
-                <div className="flex flex-col items-center bg-white/5 p-4 rounded-lg">
+                <div className="flex flex-col items-center bg-white/5 p-4 rounded-lg mt-4">
                   <p className="text-xs text-zinc-400 mb-2 uppercase tracking-widest">Access Pass</p>
                   <QRCodeDisplay value={kid.qrCode} size={120} />
                   <p className="text-[10px] text-zinc-500 mt-2 font-mono">{kid.qrCode}</p>

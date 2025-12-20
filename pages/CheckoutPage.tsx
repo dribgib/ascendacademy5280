@@ -3,26 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PACKAGES } from '../constants';
 import { api } from '../services/api';
 import { Child, User } from '../types';
-import { Check, Shield, Trophy, Heart, Users, CreditCard } from 'lucide-react';
+import { Check, Shield, AlertCircle, CreditCard, User as UserIcon } from 'lucide-react';
 
 const CheckoutPage: React.FC = () => {
-  const { packageId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [kids, setKids] = useState<Child[]>([]);
-  const [selectedKidIds, setSelectedKidIds] = useState<string[]>([]);
-  
-  // Extra Options
-  const [donationAmount, setDonationAmount] = useState<number>(0);
-  const [isSponsorship, setIsSponsorship] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
-
-  // Loading
-  const [loading, setLoading] = useState(true);
+  const [activeKidId, setActiveKidId] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-
-  const selectedPackage = PACKAGES.find(p => p.id === packageId);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -32,17 +21,14 @@ const CheckoutPage: React.FC = () => {
     try {
       const u = await api.auth.getUser();
       if (!u) {
-        // Redirect to login if not authenticated, keeping the return url
-        navigate(`/login?redirect=/checkout/${packageId}`);
+        navigate(`/login?redirect=/checkout/all`);
         return;
       }
       setUser(u);
-      
       const k = await api.children.list(u.id);
       setKids(k);
       
-      // Auto-select first kid if exists
-      if (k.length > 0) setSelectedKidIds([k[0].id]);
+      if (k.length > 0) setActiveKidId(k[0].id);
     } catch (e) {
       console.error(e);
     } finally {
@@ -50,285 +36,212 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  const toggleKid = (id: string) => {
-    if (selectedKidIds.includes(id)) {
-      setSelectedKidIds(selectedKidIds.filter(k => k !== id));
-    } else {
-      setSelectedKidIds([...selectedKidIds, id]);
-    }
-  };
-
-  const handleApplyPromo = () => {
-    if (promoCode.toLowerCase() === 'family5280') {
-      setAppliedPromo('FRIENDS_FAMILY');
-      alert('Friends & Family Discount Applied: 50% OFF!');
-    } else {
-      alert('Invalid code');
-      setAppliedPromo(null);
-    }
-  };
-
-  // --- PRICING LOGIC ---
-  const calculateTotal = () => {
-    if (!selectedPackage) return 0;
-    
-    let subtotal = 0;
-    const basePrice = selectedPackage.price;
-
-    if (appliedPromo === 'FRIENDS_FAMILY') {
-      // Flat 50% off everything
-      subtotal = (basePrice * 0.5) * selectedKidIds.length;
-    } else {
-      // Sibling Discount Logic
-      // 1st Kid: Full Price
-      // 2nd Kid: 45% Off (price * 0.55)
-      // 3rd+ Kid: 65% Off (price * 0.35)
-      selectedKidIds.forEach((_, index) => {
-        if (index === 0) {
-          subtotal += basePrice;
-        } else if (index === 1) {
-          subtotal += basePrice * 0.55; 
-        } else {
-          subtotal += basePrice * 0.35;
-        }
-      });
-    }
-
-    // Sponsorship
-    if (isSponsorship) {
-       // Sponsorship adds 1 full base price
-       subtotal += basePrice; 
-    }
-
-    return subtotal + donationAmount;
-  };
-
-  const handlePayment = async () => {
-    if (selectedKidIds.length === 0 && !isSponsorship && donationAmount === 0) {
-      alert('Please select an athlete or a donation option.');
-      return;
-    }
+  const handleSubscribe = async (packageId: string) => {
+    if (!activeKidId || !user) return;
+    const pkg = PACKAGES.find(p => p.id === packageId);
+    if (!pkg) return;
 
     setProcessing(true);
-
     try {
-      // 1. In a real app, we call our backend to create a Stripe PaymentIntent/Session
-      // const response = await fetch('/api/create-checkout-session', { ... });
-      
-      // 2. MOCK SUCCESS for Demo
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // 3. Save "Subscription" records to Supabase manually for the demo
-      if (user && selectedPackage) {
-        // Save for each selected kid
-        for (const kidId of selectedKidIds) {
-          await api.subscriptions.create(user.id, kidId, selectedPackage.id);
-        }
-        
-        // Save sponsorship if selected (no child ID)
-        if (isSponsorship) {
-           await api.subscriptions.create(user.id, null, 'sponsorship');
-        }
-      }
-
-      alert('Payment Successful! Welcome to the Academy.');
-      navigate('/dashboard');
-
+      // Direct call to Billing Service which handles Stripe Checkout
+      await api.billing.createCheckoutSession(pkg.stripePriceId, activeKidId, user.id);
     } catch (e) {
-      console.error(e);
-      alert('Payment failed. Please try again.');
-    } finally {
+      alert('Checkout initiation failed.');
       setProcessing(false);
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-co-yellow font-teko text-2xl">LOADING CHECKOUT...</div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-co-yellow font-teko text-2xl">LOADING DASHBOARD...</div>;
 
-  if (!selectedPackage) return <div className="text-white pt-20 text-center">Package not found</div>;
-
-  const total = calculateTotal();
+  const activeKid = kids.find(k => k.id === activeKidId);
 
   return (
     <div className="min-h-screen bg-dark-bg pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-poppins">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="max-w-7xl mx-auto">
         
-        {/* LEFT COLUMN: Configuration */}
-        <div>
-          <h1 className="font-teko text-5xl text-white uppercase mb-2">Secure Checkout</h1>
-          <p className="text-zinc-400 mb-8">Complete your registration to secure your spot.</p>
-
-          {/* 1. Package Review */}
-          <div className={`bg-card-bg border-l-4 ${selectedPackage.color} p-6 mb-6 rounded-r-lg`}>
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-2xl font-teko text-white uppercase">{selectedPackage.name} Package</h3>
-                <p className="text-zinc-400 text-sm">{selectedPackage.billingPeriod} Billing</p>
-              </div>
-              <div className="text-right">
-                <span className="text-3xl font-bold text-white">${selectedPackage.price}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Select Athletes */}
-          <div className="mb-8">
-            <h3 className="text-xl font-teko text-white uppercase mb-4 flex items-center gap-2">
-              <Users className="text-zinc-500" /> Select Athletes
-            </h3>
-            {kids.length === 0 ? (
-               <div className="bg-red-900/20 border border-red-900 p-4 rounded text-red-200 text-sm">
-                 You haven't added any athletes yet. Please go to your dashboard to add them first.
-               </div>
-            ) : (
-              <div className="space-y-3">
-                {kids.map((kid, index) => {
-                  const isSelected = selectedKidIds.includes(kid.id);
-                  return (
-                    <div 
-                      key={kid.id} 
-                      onClick={() => toggleKid(kid.id)}
-                      className={`
-                        cursor-pointer p-4 rounded border flex items-center justify-between transition-all
-                        ${isSelected ? 'bg-zinc-800 border-co-yellow' : 'bg-black border-zinc-800 hover:border-zinc-600'}
-                      `}
-                    >
-                      <div>
-                        <p className="text-white font-bold">{kid.firstName} {kid.lastName}</p>
-                        <p className="text-xs text-zinc-500">{kid.sports.join(', ')}</p>
-                      </div>
-                      {isSelected && (
-                         <div className="text-xs font-bold text-co-yellow uppercase">
-                            {index === 0 ? 'Full Price' : index === 1 ? '45% OFF' : '65% OFF'}
-                         </div>
-                      )}
-                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${isSelected ? 'bg-co-yellow border-co-yellow' : 'border-zinc-600'}`}>
-                        {isSelected && <Check size={14} className="text-black" />}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* 3. Community & Donation */}
-          <div className="mb-8 bg-zinc-900/30 p-6 rounded border border-zinc-800">
-            <h3 className="text-xl font-teko text-white uppercase mb-4 flex items-center gap-2">
-              <Heart className="text-co-red" /> Community Support
-            </h3>
-            
-            <div className="space-y-4">
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={isSponsorship}
-                  onChange={(e) => setIsSponsorship(e.target.checked)}
-                  className="form-checkbox h-5 w-5 text-co-red rounded focus:ring-0 bg-black border-zinc-700" 
-                />
-                <span className="text-zinc-300 text-sm">
-                  Sponsor an Athlete (Add <strong>${selectedPackage.price}</strong>) - <span className="text-xs text-zinc-500">Includes Tax Write-off Ticket</span>
-                </span>
-              </label>
-
-              <div>
-                <p className="text-sm text-zinc-400 mb-2">Donate to the Equipment Fund</p>
-                <div className="flex gap-2">
-                  {[10, 20, 50, 100].map(amt => (
-                    <button 
-                      key={amt}
-                      onClick={() => setDonationAmount(donationAmount === amt ? 0 : amt)}
-                      className={`px-4 py-2 rounded text-sm font-bold border ${donationAmount === amt ? 'bg-white text-black border-white' : 'bg-black text-zinc-400 border-zinc-700'}`}
-                    >
-                      ${amt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="font-teko text-5xl text-white uppercase mb-2">Choose Your Edge</h1>
+          <p className="text-zinc-500 max-w-2xl mx-auto">
+            Unlock full potential. Secure payment processing powered by Stripe.
+            Manage subscriptions for each athlete below.
+          </p>
         </div>
 
-        {/* RIGHT COLUMN: Summary & Payment */}
-        <div className="bg-white text-black p-8 rounded-lg h-fit shadow-2xl">
-          <h2 className="font-teko text-4xl uppercase mb-6 border-b border-gray-200 pb-4">Order Summary</h2>
-          
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Selected Package</span>
-              <span className="font-bold">{selectedPackage.name} (${selectedPackage.price})</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Athletes</span>
-              <span className="font-bold">{selectedKidIds.length}</span>
-            </div>
-            
-            {isSponsorship && (
-              <div className="flex justify-between text-sm text-co-red">
-                <span>Sponsorship</span>
-                <span>+${selectedPackage.price}</span>
-              </div>
-            )}
-            
-            {donationAmount > 0 && (
-              <div className="flex justify-between text-sm text-zinc-800 font-bold">
-                <span>Donation</span>
-                <span>+${donationAmount}</span>
-              </div>
-            )}
-
-            {appliedPromo && (
-              <div className="flex justify-between text-sm text-green-600 font-bold">
-                 <span>Promo: {appliedPromo}</span>
-                 <span>-50% Applied</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-between items-center border-t border-gray-200 pt-4 mb-8">
-            <span className="font-teko text-2xl uppercase">Total Due</span>
-            <span className="font-teko text-4xl font-bold text-co-red">${total.toFixed(2)}</span>
-          </div>
-
-          {/* Promo Code Input */}
-          <div className="flex gap-2 mb-8">
-            <input 
-              type="text" 
-              placeholder="Promo Code" 
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              className="flex-1 bg-gray-100 border-none rounded px-4 py-2 text-sm uppercase"
-            />
+        {/* Athlete Selector Tabs */}
+        {kids.length > 0 ? (
+          <div className="flex justify-center mb-8 gap-2 flex-wrap">
+            {kids.map(kid => (
+              <button
+                key={kid.id}
+                onClick={() => setActiveKidId(kid.id)}
+                className={`
+                  px-6 py-2 rounded font-teko text-xl uppercase tracking-wide transition-colors border
+                  ${activeKidId === kid.id 
+                    ? 'bg-white text-black border-white' 
+                    : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-white'}
+                `}
+              >
+                {kid.firstName} {kid.lastName}
+              </button>
+            ))}
             <button 
-              onClick={handleApplyPromo}
-              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase rounded hover:bg-zinc-800"
+              onClick={() => navigate('/dashboard')}
+              className="px-6 py-2 rounded font-teko text-xl uppercase tracking-wide border border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500"
             >
-              Apply
+              + Add Athlete
             </button>
           </div>
-
-          {/* Mock Stripe Element */}
-          <div className="mb-6">
-             <h4 className="text-xs uppercase font-bold text-gray-400 mb-2 flex items-center gap-2">
-                <Shield size={12} /> Secure Credit Card Payment
-             </h4>
-             <div className="bg-gray-50 border border-gray-200 p-4 rounded text-gray-400 text-sm flex items-center justify-between">
-                <span>**** **** **** 4242</span>
-                <CreditCard size={18} />
-             </div>
-             <p className="text-[10px] text-gray-400 mt-2">
-                Powered by Stripe. Your data is encrypted.
-             </p>
+        ) : (
+          <div className="text-center mb-12 p-8 bg-zinc-900/50 rounded-lg border border-zinc-800 max-w-xl mx-auto">
+            <UserIcon className="mx-auto h-12 w-12 text-zinc-600 mb-4" />
+            <h3 className="text-white text-xl font-teko uppercase mb-2">No Athletes Found</h3>
+            <p className="text-zinc-500 mb-6">You must create an athlete profile before purchasing a training package.</p>
+            <button onClick={() => navigate('/dashboard')} className="bg-co-yellow text-black px-6 py-2 font-bold uppercase rounded">
+              Go to Dashboard
+            </button>
           </div>
+        )}
 
-          <button 
-            onClick={handlePayment}
-            disabled={processing}
-            className="w-full bg-co-red text-white py-4 font-teko text-2xl uppercase font-bold hover:bg-red-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
-          </button>
-        </div>
+        {/* Pricing Cards (Only if Kid Selected) */}
+        {activeKid && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {PACKAGES.map((pkg) => {
+              // Highlight if this kid has this specific active plan (mock logic)
+              const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); // Loose matching for demo
+
+              return (
+                <div 
+                  key={pkg.id} 
+                  className={`
+                    relative bg-zinc-900 border p-6 flex flex-col rounded-lg
+                    ${pkg.name === 'Elite' ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-zinc-800'}
+                  `}
+                >
+                  {pkg.name === 'Elite' && (
+                    <span className="absolute top-0 right-0 bg-green-500 text-black text-[10px] font-bold px-2 py-1 uppercase rounded-bl">
+                      Best Value
+                    </span>
+                  )}
+
+                  <div className="mb-4">
+                    <h3 className="font-teko text-3xl text-white uppercase">{pkg.name}</h3>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-2xl font-bold text-white">${pkg.price}</span>
+                      <span className="text-xs text-zinc-500 uppercase">/ Month</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    {pkg.features.slice(0, 3).map((feat, i) => ( // Show top 3 features for compactness
+                      <li key={i} className="flex items-start gap-2 text-sm text-zinc-400">
+                        <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                    <li className="text-xs text-zinc-600 italic">+ more</li>
+                  </ul>
+
+                  {isActivePlan ? (
+                    <button disabled className="w-full bg-green-900/30 text-green-500 border border-green-900 py-3 font-bold uppercase rounded cursor-default">
+                      Current Plan
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => handleSubscribe(pkg.id)}
+                      disabled={processing}
+                      className={`
+                        w-full py-3 font-bold uppercase rounded transition-colors text-sm tracking-widest
+                        ${pkg.name === 'Elite' 
+                          ? 'bg-green-500 text-black hover:bg-green-400' 
+                          : 'bg-white text-black hover:bg-zinc-200'}
+                      `}
+                    >
+                      {processing ? 'Processing...' : 'Subscribe'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Subscription Status & Billing History Panel */}
+        {activeKid && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* Status Panel */}
+            <div>
+               <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
+                 <AlertCircle size={20} className="text-green-500" /> Subscription Status
+               </h3>
+               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+                 <div className="flex justify-between items-center py-4 border-b border-zinc-800">
+                    <span className="text-zinc-400 text-sm">Current Plan</span>
+                    {activeKid.subscriptionStatus === 'active' ? (
+                       <span className="bg-green-900/30 text-green-500 px-3 py-1 rounded text-xs font-bold uppercase border border-green-900">Active</span>
+                    ) : (
+                       <span className="bg-zinc-800 text-zinc-500 px-3 py-1 rounded text-xs font-bold uppercase">No Active Plan</span>
+                    )}
+                 </div>
+                 <div className="flex justify-between items-center py-4">
+                    <span className="text-zinc-400 text-sm">Status</span>
+                    <span className="text-zinc-500 text-xs uppercase">{activeKid.subscriptionStatus === 'active' ? 'Auto-Renewing' : 'Inactive'}</span>
+                 </div>
+               </div>
+            </div>
+
+            {/* Billing History Stub */}
+            <div>
+               <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
+                 <CreditCard size={20} className="text-green-500" /> Billing History
+               </h3>
+               <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-zinc-950 text-zinc-500 uppercase text-xs">
+                        <tr>
+                          <th className="px-4 py-3 font-medium">Date</th>
+                          <th className="px-4 py-3 font-medium">Description</th>
+                          <th className="px-4 py-3 font-medium text-right">Amount</th>
+                          <th className="px-4 py-3 font-medium text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800">
+                        {/* Mock Rows or Empty State */}
+                        {activeKid.subscriptionStatus === 'active' ? (
+                          <tr>
+                            <td className="px-4 py-3 text-zinc-300">Dec 15, 2023</td>
+                            <td className="px-4 py-3 text-zinc-300">
+                               <div className="font-bold">Stripe Payment</div>
+                               <div className="text-[10px] text-zinc-600">tx_mock_12345</div>
+                            </td>
+                            <td className="px-4 py-3 text-zinc-300 text-right">$9.00</td>
+                            <td className="px-4 py-3 text-right">
+                              <span className="bg-green-900/30 text-green-500 text-[10px] px-2 py-1 rounded font-bold">PAID</span>
+                            </td>
+                          </tr>
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-6 text-center text-zinc-600 text-xs italic">
+                              No billing history available.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                 </div>
+                 <div className="p-4 bg-zinc-950 border-t border-zinc-800 text-center">
+                    <button onClick={() => api.billing.createPortalSession()} className="text-xs text-zinc-400 hover:text-white uppercase font-bold tracking-widest">
+                       View All in Stripe Portal
+                    </button>
+                 </div>
+               </div>
+            </div>
+
+          </div>
+        )}
+
       </div>
     </div>
   );
