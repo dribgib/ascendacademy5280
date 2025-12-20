@@ -16,6 +16,9 @@ const formatDate = (isoString: string) => {
   return new Date(isoString).toISOString().split('T')[0];
 };
 
+// Helper: Timeout promise
+const timeoutPromise = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms));
+
 // --- REAL SUPABASE IMPLEMENTATION ---
 const supabaseApi = {
   auth: {
@@ -36,21 +39,27 @@ const supabaseApi = {
 
       if (!user) return null;
 
-      // Try to fetch profile details
+      // Try to fetch profile details with a timeout to prevent hanging
       let profile = null;
       try {
-        const { data, error } = await supabase
+        // Race the DB call against a 5-second timeout
+        const profileFetch = supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
+          
+        const { data, error } = await Promise.race([
+            profileFetch, 
+            timeoutPromise(5000).then(() => ({ data: null, error: { code: 'TIMEOUT', message: 'Profile fetch timed out' } }))
+        ]) as any;
         
         if (!error && data) {
           profile = data;
         } else {
             // Only warn if it's not a "row not found" which is expected for new users
-            if (error.code !== 'PGRST116') {
-                console.warn('Profile fetch warning:', error.message);
+            if (error?.code !== 'PGRST116' && error?.code !== 'TIMEOUT') {
+                console.warn('Profile fetch warning:', error?.message);
             }
         }
       } catch (e) {

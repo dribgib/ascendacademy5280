@@ -43,8 +43,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
       if (isLogin) {
         // Standard Login
         const { error } = await api.auth.signIn(email, password);
-        if (error) throw error;
-        // Auth listener in App.tsx will handle the rest
+        if (error) {
+           throw error;
+        }
+        // On success, we purposefully LEAVE loading=true.
+        // The App component will detect the auth state change, update the user, 
+        // and unmount this component (redirecting to dashboard).
+        // If we set loading=false here, the button flickers back to "Sign In" briefly.
       } else {
         // Magic Link Sign Up
         const env = (import.meta as any).env || {};
@@ -52,8 +57,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         
         // IMPORTANT: For HashRouter apps, Supabase should just redirect to the root.
         // We will append ?next=set-password as a query param so App.tsx can handle it
-        // BUT Supabase will append the hash fragment #access_token=... to the end.
-        // Final Result: siteUrl/?next=set-password#access_token=...
         const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
         const redirectUrl = `${baseUrl}/?next=set-password`;
         
@@ -67,12 +70,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
         if (error) throw error;
         setMagicLinkSent(true);
+        setLoading(false); // Stop loading for magic link screen
       }
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Authentication failed');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only stop loading on error
     }
   };
 

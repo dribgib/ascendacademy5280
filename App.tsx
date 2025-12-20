@@ -66,14 +66,15 @@ const App: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     
-    // Safety timeout to prevent infinite loading screens
+    // Safety timeout to prevent infinite loading screens.
+    // Increased to 8 seconds for cold starts on free tier databases.
     const safetyTimeout = setTimeout(() => {
         if (mounted && (loading || authProcessing)) {
             console.warn("Auth check timed out - forcing render.");
             setLoading(false);
             setAuthProcessing(false);
         }
-    }, 5000); // 5 seconds max
+    }, 8000);
 
     // Detect if we are returning from a Magic Link (access_token in hash)
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
@@ -90,6 +91,7 @@ const App: React.FC = () => {
         }
 
         // 2. Fetch App User Profile
+        // This might fail or timeout if DB is cold, but we have the safety timeout.
         const u = await api.auth.getUser(sessionUser);
         if (mounted) setUser(u);
 
