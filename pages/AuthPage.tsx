@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { User } from '../types';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 interface AuthPageProps {
   setUser: (user: User) => void;
@@ -46,9 +47,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         if (error) throw error;
         // Success: App.tsx detects session change
       } else {
-        // --- SIGN UP FLOW (Regular Account) ---
-        // Requires "Confirm Email" to be disabled in Supabase for immediate login,
-        // OR the user must check their email.
+        // --- SIGN UP FLOW ---
         const { data, error } = await api.auth.signUp(
           email, 
           password, 
@@ -57,14 +56,22 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
         if (error) throw error;
 
-        // If Supabase has "Confirm Email" enabled, user is null, checking session is required
+        // CHECK: If session is missing, account might be unconfirmed.
         if (data?.user && !data.session) {
-           setMagicLinkSent(true); // Re-use the "Check Email" screen
+           // ATTEMPT AUTO-LOGIN: 
+           // If "Confirm Email" is OFF in Supabase, sometimes session isn't returned in signUp but signIn works.
+           const { data: loginData } = await api.auth.signIn(email, password);
+           
+           if (loginData?.session) {
+             // Auto-login success!
+             return;
+           }
+
+           // If Auto-login failed, it means "Confirm Email" is definitely ON and account is unconfirmed.
+           setMagicLinkSent(true); 
            setLoading(false);
            return;
         }
-
-        // If "Confirm Email" is disabled, data.session exists, and App.tsx handles the rest.
       }
     } catch (err: any) {
       console.error(err);
@@ -87,16 +94,41 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex justify-center">
-            <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
+            <div className="max-w-xl w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
+                <div className="flex justify-center mb-4">
+                    <CheckCircle className="text-co-yellow h-16 w-16" />
+                </div>
                 <h2 className="font-teko text-4xl text-white uppercase mb-4">Verify Your Email</h2>
-                <p className="text-zinc-400 mb-6">
-                    Account created! We've sent a verification link to <span className="text-white font-bold">{email}</span>.
+                <p className="text-zinc-400 mb-6 text-lg">
+                    We've sent a verification link to <span className="text-white font-bold">{email}</span>.
                     <br />
                     Please check your inbox (and spam folder) to complete registration.
                 </p>
-                <button onClick={() => setMagicLinkSent(false)} className="text-co-yellow underline mt-4">
-                    Back to Login
-                </button>
+
+                {/* Developer Hint */}
+                <div className="bg-zinc-900 border border-zinc-700 p-4 rounded text-left mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle size={16} className="text-co-red" />
+                        <span className="text-white font-bold text-xs uppercase tracking-wide">Development Mode Tip</span>
+                    </div>
+                    <p className="text-zinc-500 text-xs leading-relaxed">
+                        If emails are not arriving, go to your <strong>Supabase Dashboard &gt; Authentication &gt; Providers &gt; Email</strong> and uncheck <strong>"Confirm email"</strong>.
+                        <br /><br />
+                        After disabling it, delete this user from the Supabase "Users" table and try creating the account again. You will be logged in immediately.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    <button 
+                        onClick={() => { setMagicLinkSent(false); setIsLogin(true); }} 
+                        className="bg-white text-black font-teko text-xl uppercase py-3 rounded hover:bg-zinc-200 transition-colors"
+                    >
+                        Return to Login
+                    </button>
+                    <button onClick={() => window.location.reload()} className="text-zinc-500 text-sm hover:text-white">
+                        I've Verified, Refresh Page
+                    </button>
+                </div>
             </div>
         </div>
       </div>

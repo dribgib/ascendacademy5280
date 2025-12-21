@@ -588,7 +588,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
                     <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
                         <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
-                        <p className="text-zinc-400 text-sm mb-4">Please click the link below to sign the document on WaiverSign.</p>
+                        <p className="text-zinc-400 text-sm mb-4">
+                            1. Click the link below to sign on WaiverSign.<br/>
+                            2. Return here and click "I Have Signed".
+                        </p>
                         
                         <a 
                             href={WAIVER_CONFIG.url}
@@ -607,7 +610,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                             disabled={verifyingWaiver || imageUploading}
                             className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'Verify & Add Athlete'}
+                            {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'I Have Signed - Verify Now'}
                         </button>
                     </div>
                 </div>
