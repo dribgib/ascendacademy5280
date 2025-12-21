@@ -19,7 +19,6 @@ const formatDate = (isoString: string) => {
 const supabaseApi = {
   auth: {
     // 1. FAST USER LOAD (Metadata Preference)
-    // This is designed to return as fast as possible to unblock the UI.
     getUser: async (sessionUser?: any): Promise<User | null> => {
       let user = sessionUser;
       
@@ -46,8 +45,6 @@ const supabaseApi = {
         stripeCustomerId: meta.stripe_customer_id
       };
 
-      // Try DB fetch with a SHORT timeout (1.5s)
-      // If DB is cold, we skip it and let the background syncer handle it later.
       try {
         const dbPromise = supabase
           .from('profiles')
@@ -74,8 +71,6 @@ const supabaseApi = {
       return appUser;
     },
 
-    // 2. BACKGROUND SYNC (Force DB Check)
-    // Call this after the app loads to ensure roles are correct (fixes Admin downgrade issue)
     refreshProfile: async (userId: string): Promise<Partial<User> | null> => {
         const { data, error } = await supabase
             .from('profiles')
@@ -139,10 +134,9 @@ const supabaseApi = {
     getAllUsers: async (): Promise<User[]> => {
         const { data, error } = await supabase.from('profiles').select('*');
         if (error) throw error;
-        // Map DB Profile to User Type
         return data.map((p: any) => ({
             id: p.id,
-            email: p.email, // Ensure email is in profiles or join auth.users (RLS dependent)
+            email: p.email,
             firstName: p.first_name,
             lastName: p.last_name,
             phone: p.phone,
@@ -185,7 +179,6 @@ const supabaseApi = {
 
   children: {
     list: async (parentId: string): Promise<Child[]> => {
-      // 1. Fetch children
       const { data: children, error } = await supabase
         .from('children')
         .select(`
@@ -200,7 +193,6 @@ const supabaseApi = {
       
       if (error) throw error;
 
-      // 2. Fetch registration counts for the current month
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0,0,0,0);
@@ -328,7 +320,6 @@ const supabaseApi = {
 
   registrations: {
     register: async (eventId: string, childId: string) => {
-      // 1. ENFORCE LIMITS
       const { data: child, error: childError } = await supabase
         .from('children')
         .select(`*, subscriptions(*)`)
@@ -359,7 +350,6 @@ const supabaseApi = {
           throw new Error(`Plan limit reached! ${pkg.name} allows ${pkg.maxSessions} sessions per month.`);
       }
 
-      // 2. REGISTER (ALLOW WAITLISTING by not checking max_slots here)
       const { error } = await supabase.from('registrations').insert({
         event_id: eventId,
         child_id: childId
@@ -493,8 +483,22 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return true; 
+        // @ts-ignore
+        const env = import.meta.env || {};
+        // @ts-ignore
+        const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+
+        const { data, error } = await supabase.functions.invoke('check-waiver', {
+            body: { email: parentEmail, childName },
+            headers: { 'apikey': anonKey }
+        });
+
+        if (error) {
+             console.error("Waiver check failed", error);
+             // If function doesn't exist or errors, return false (not signed) but log it
+             return false;
+        }
+        return data?.signed || false;
     }
   },
 

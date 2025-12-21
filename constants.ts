@@ -7,6 +7,10 @@ export const POPULAR_SPORTS = [
   "Boxing", "MMA", "Powerlifting", "Rugby"
 ];
 
+export const WAIVER_CONFIG = {
+  url: 'https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none',
+};
+
 // Real Stripe Price IDs
 export const PACKAGES: TrainingPackage[] = [
   {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
 import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle, X } from 'lucide-react';
-import { POPULAR_SPORTS } from '../constants';
+import { POPULAR_SPORTS, WAIVER_CONFIG } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
@@ -157,7 +157,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             resetForm();
             showAlert('Success', 'Athlete added successfully!', 'success');
         } else {
-            showAlert('Waiver Required', "Waiver signature not found. Please sign the document in the new tab and try again.", 'error');
+            showAlert('Waiver Required', "Waiver signature not found. Please sign the document in the new tab and click verify again.", 'error');
         }
     } catch (e) {
         console.error(e);
@@ -591,7 +591,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         <p className="text-zinc-400 text-sm mb-4">Please click the link below to sign the document on WaiverSign.</p>
                         
                         <a 
-                            href="https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none" 
+                            href={WAIVER_CONFIG.url}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide"
