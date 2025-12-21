@@ -405,7 +405,7 @@ const supabaseApi = {
   billing: {
     createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0) => {
       const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe Configuration Missing.");
+      if (!stripe) throw new Error("Stripe not initialized. Check configuration.");
       
       // @ts-ignore
       const env = import.meta.env || {};
@@ -423,16 +423,22 @@ const supabaseApi = {
         headers: { 'apikey': anonKey }
       });
 
-      if (error) throw new Error('Failed to initiate checkout.');
+      if (error) {
+          console.error("Checkout Function Error:", error);
+          throw new Error(error.message || 'Failed to initiate checkout.');
+      }
 
       if (data?.sessionId) {
-          await stripe.redirectToCheckout({ sessionId: data.sessionId });
+          const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+          if (result.error) throw new Error(result.error.message);
+      } else {
+          throw new Error("No session ID returned from billing service.");
       }
     },
 
     createDonationSession: async (amount: number, userId?: string) => {
       const stripe = await stripePromise;
-      if (!stripe) return;
+      if (!stripe) throw new Error("Stripe not initialized. Check configuration.");
 
       // @ts-ignore
       const env = import.meta.env || {};
@@ -444,10 +450,16 @@ const supabaseApi = {
         headers: { 'apikey': anonKey }
       });
 
-      if (error) throw new Error("Donation system unavailable.");
+      if (error) {
+          console.error("Donation Function Error:", error);
+          throw new Error(error.message || "Donation system unavailable.");
+      }
 
       if (data?.sessionId) {
-        await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        if (result.error) throw new Error(result.error.message);
+      } else {
+        throw new Error("No session ID returned from donation service.");
       }
     },
 
