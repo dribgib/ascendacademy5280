@@ -3,8 +3,7 @@ import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
-import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import { ModalProvider } from './context/ModalContext';
 import GlobalModal from './components/GlobalModal';
 
@@ -63,51 +62,70 @@ const App: React.FC = () => {
   const [authProcessing, setAuthProcessing] = useState(false);
 
   useEffect(() => {
-    console.log("Ascend Academy App v2.2 (HashRouter) Loaded");
+    console.log("Ascend Academy App v2.3 (Robust Auth) Loaded");
     let mounted = true;
     
     // Detect if we are returning from a Magic Link (access_token in hash)
-    // Supabase often puts tokens in the hash. 
-    // With HashRouter, this might conflict, but Supabase client handles parsing automatically from URL.
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
       setAuthProcessing(true);
     }
 
-    // Initialize Auth Listener
-    // This is the SINGLE source of truth for auth state to prevent race conditions
-    let authSubscription: any = null;
+    // 1. Setup Listener for FUTURE changes (Sign In, Sign Out during usage)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth Event:', event);
+      
+      if (!mounted) return;
 
-    const initAuth = async () => {
-      // Setup Supabase Listener
-      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-        // Events: INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.
-        if (event === 'SIGNED_OUT') {
-           if (mounted) {
-             setUser(null);
-             setLoading(false);
-             setAuthProcessing(false);
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Only fetch if we don't have the user yet or if it's a new session
+        if (session?.user) {
+           // We might already have the user from the initial check, but getting it again ensures sync
+           try {
+             const u = await api.auth.getUser(session.user);
+             if (mounted) setUser(u);
+           } catch (e) {
+             console.error("Error refreshing user in listener:", e);
            }
-        } else if (session?.user) {
-           // For SIGNED_IN, TOKEN_REFRESHED, INITIAL_SESSION
-           const u = await api.auth.getUser(session.user);
-           if (mounted) {
-             setUser(u);
-             setLoading(false);
-             setAuthProcessing(false);
-           }
-        } else {
-           // No session found (e.g. initial load guest)
-           if (mounted) setLoading(false);
         }
-      });
-      authSubscription = data.subscription;
+      }
+    });
+
+    // 2. Perform IMMEDIATE check for current session to unblock loading screen
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+           console.warn("Session check error:", error);
+           if (mounted) setUser(null);
+           return;
+        }
+
+        if (session?.user) {
+           console.log("Session found, fetching user profile...");
+           const u = await api.auth.getUser(session.user);
+           if (mounted) setUser(u);
+        } else {
+           console.log("No active session.");
+           if (mounted) setUser(null);
+        }
+      } catch (err) {
+        console.error("Critical Auth Error:", err);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setAuthProcessing(false);
+        }
+      }
     };
 
-    initAuth();
+    checkSession();
 
     return () => {
       mounted = false;
-      if (authSubscription) authSubscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -137,13 +155,11 @@ const App: React.FC = () => {
               element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 
             />
             
-            {/* Dashboard is now the unified hub for Parents AND Admins */}
             <Route 
               path="/dashboard" 
               element={user ? <UserDashboard user={user} /> : <Navigate to="/login" replace />} 
             />
             
-            {/* Admin Route preserved as direct access, but typically reached via Dashboard tabs */}
             <Route 
               path="/admin" 
               element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/login" replace />} 
@@ -164,12 +180,10 @@ const App: React.FC = () => {
               element={<SponsorPage />} 
             />
             
-            {/* Catch-all route to redirect back home if 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>
         
-        {/* Render Global Modal above everything */}
         <GlobalModal />
       </Router>
     </ModalProvider>
