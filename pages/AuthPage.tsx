@@ -149,7 +149,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex justify-center py-8">
           <div className="max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-zinc-700 via-co-red to-co-yellow"></div>
             
             {/* Tabs */}
             <div className="flex border-b border-zinc-800">
