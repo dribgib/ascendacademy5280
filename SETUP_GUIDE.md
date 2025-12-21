@@ -1,58 +1,30 @@
 # Ascend Academy 5280 - System Setup Guide
 
-## 1. Architecture: Why this works & Security
-This application uses a **"Backend-as-a-Service"** architecture with Supabase. 
+## 1. Architecture
+This is a standard React application (Vite) using **Vercel Serverless Functions** for the backend logic and **Supabase** for the Database.
 
-### The "Secret" to Live Preview
-In a traditional setup, you have `React App -> Node Server -> Database`.
-In this setup, we have `React App -> Supabase (Database + API Gateway)`.
+## 2. Environment Variables (Vercel)
 
-The application connects directly to the Supabase cloud over HTTPS. It does not need a running backend server in the container to fetch data.
+Go to your Vercel Project Settings > Environment Variables and add these:
 
-### Security Model (RLS)
-You will notice the `VITE_PUBLIC_SUPABASE_ANON_KEY` is exposed in the browser. **This is intentional.**
-*   **The Anon Key** is like the front door key to the building lobby. It lets the browser *connect* to the database.
-*   **Row Level Security (RLS)** is the "Bouncer". Just because you are in the lobby doesn't mean you can enter the VIP room.
-    *   The database itself checks *who* you are (via your Login Token) before giving you data.
-    *   Example: A parent can only see *their own* children because the database policy says `auth.uid() = parent_id`.
+1.  `VITE_PUBLIC_SUPABASE_URL`: Your Supabase Project URL.
+2.  `VITE_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase Anon Public Key.
+3.  `VITE_STRIPE_PUBLISHABLE_KEY`: Your Stripe Public Key (starts with pk_).
+4.  `STRIPE_SECRET_KEY`: Your Stripe Secret Key (starts with sk_). **(Do not prefix with VITE_)**
 
----
+## 3. Database Setup (Supabase)
 
-## 2. Implementation Steps
+1.  Go to Supabase Dashboard > SQL Editor.
+2.  Run the contents of `supabase_schema.sql` to create tables.
+3.  Run the contents of `supabase/fix_storage_rls.sql` to enable image uploads.
 
-### A. Database Setup
-1.  Go to your **Supabase Dashboard**.
-2.  Open the **SQL Editor**.
-3.  Copy the content of `supabase_schema.sql` (found in this project) and paste it into the editor.
-4.  Click **Run**.
-    *   **NOTE:** This script handles "Clean Slate" logic. It will Drop existing tables before creating new ones. This fixes "relation already exists" errors but **will delete existing data** in those custom tables.
+## 4. Webhooks (Optional but Recommended)
+To automatically update subscription status when a payment succeeds:
+1.  Create a file `api/stripe-webhook.js`.
+2.  Add a Webhook endpoint in Stripe Dashboard pointing to `https://your-site.vercel.app/api/stripe-webhook`.
+3.  Select events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
 
-### B. Environment Variables
-To connect your app to your database:
-
-**For Local Development / Preview:**
-Create a `.env` file in the project root:
-```
-VITE_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-VITE_PUBLIC_SUPABASE_ANON_KEY=eyJh... (Your Project API Key)
-```
-
-**For Vercel (Production):**
-1.  Go to Vercel Dashboard -> Settings -> Environment Variables.
-2.  Add the same variables above.
-3.  **Redeploy** your project.
-
----
-
-## 3. Admin Setup
-To make a user an Admin (Coach):
-
-1.  Sign up the user normally on the site.
-2.  Open `admin_roles.sql` in this project.
-3.  Copy the content.
-4.  Go to Supabase > SQL Editor and paste/run the code.
-5.  Refresh the application.
-
-**Current Configuration:**
-- Admin: `colton@tamerdesigns.com`
-- Parent: `colton.joseph@gmail.com`
+## 5. Admin Setup
+To make a user an Admin:
+1.  Sign up on the site.
+2.  Run `admin_roles.sql` in Supabase SQL Editor.

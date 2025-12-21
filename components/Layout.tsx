@@ -68,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
   const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-teko text-xl uppercase tracking-wide cursor-pointer";
 
   return (
-    <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-poppins selection:bg-co-yellow selection:text-black">
+    <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-poppins selection:bg-co-red selection:text-white">
       <nav className="fixed w-full z-50 bg-black/95 backdrop-blur-sm border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -76,7 +76,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
               <div className="flex items-center">
                 <span className="font-teko text-4xl font-bold tracking-tight uppercase text-white leading-none">
-                  AscendAcademy<span className="text-co-yellow">5280</span>
+                  Ascend<span className="text-co-red">Academy</span><span className="text-co-yellow">5280</span>
                 </span>
               </div>
             </div>
@@ -109,33 +109,24 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                       className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                     >
                       <UserIcon className="h-4 w-4" />
-                      <span>Dashboard</span>
+                      <span>My Team</span>
                     </button>
+                    
                     <button 
                       onClick={handleLogout}
-                      className="text-zinc-500 hover:text-co-red transition-colors flex items-center h-full"
-                      title="Logout"
+                      className="ml-4 text-zinc-500 hover:text-white transition-colors"
+                      title="Sign Out"
                     >
                       <LogOut className="h-5 w-5" />
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-6 ml-6 pl-6 border-l border-zinc-700">
-                    <button 
-                      onClick={() => navigate('/login?mode=login')}
-                      className="text-zinc-300 hover:text-white transition-colors uppercase font-teko text-xl tracking-wide pt-1"
-                    >
-                      Login
-                    </button>
-                    <button 
-                      onClick={() => navigate('/login?mode=signup')}
-                      className="bg-co-red hover:bg-co-yellow hover:text-black text-white px-6 py-1 rounded-none skew-x-[-12deg] transition-all duration-300 border-0 group"
-                    >
-                      <span className="skew-x-[12deg] inline-block font-teko text-xl uppercase tracking-wide pt-1">
-                        Join The Squad
-                      </span>
-                    </button>
-                  </div>
+                  <button 
+                    onClick={() => navigate('/login')}
+                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-teko text-xl uppercase font-bold hover:bg-white transition-colors"
+                  >
+                    Login
+                  </button>
                 )}
               </div>
             </div>
@@ -143,79 +134,76 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             <div className="-mr-2 flex md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 focus:outline-none"
+                className="bg-zinc-900 inline-flex items-center justify-center p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 focus:outline-none"
               >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {isMenuOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
               </button>
             </div>
           </div>
         </div>
 
+        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <button onClick={() => handleScrollTo('about')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">About</button>
-              <button onClick={() => handleScrollTo('packages')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Training</button>
-              <button onClick={() => { navigate('/schedule'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</button>
+              <button onClick={() => handleScrollTo('about')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">About</button>
+              <button onClick={() => handleScrollTo('packages')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Training</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate('/schedule'); }} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Schedule</button>
+              
               {user ? (
                 <>
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); navigate('/dashboard'); }}
+                    className="text-co-yellow block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
+                  >
+                    <UserIcon size={16} /> My Team
+                  </button>
                   {user.role === 'ADMIN' && (
-                     <button onClick={() => { navigate('/dashboard?view=admin'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-co-yellow hover:text-white uppercase">Coach Dashboard</button>
+                     <button 
+                        onClick={() => { setIsMenuOpen(false); navigate('/dashboard?view=admin'); }}
+                        className="text-co-yellow block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
+                      >
+                        <Shield size={16} /> Coach
+                      </button>
                   )}
-                  <button onClick={() => { navigate('/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl hover:text-co-yellow text-co-red uppercase">My Team</button>
-                  <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-zinc-500 uppercase">Logout</button>
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); handleLogout(); }}
+                    className="text-zinc-400 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </button>
                 </>
               ) : (
-                <>
-                  <button onClick={() => { navigate('/login?mode=login'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Login</button>
-                  <button onClick={() => { navigate('/login?mode=signup'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-co-red hover:text-white uppercase">Join The Squad</button>
-                </>
+                <button 
+                  onClick={() => { setIsMenuOpen(false); navigate('/login'); }}
+                  className="bg-co-yellow text-black block px-3 py-2 rounded-md font-teko text-xl uppercase font-bold text-center w-full mt-4"
+                >
+                  Login
+                </button>
               )}
             </div>
           </div>
         )}
       </nav>
 
-      <main className="flex-grow pt-20 w-full flex flex-col">
+      <main className="flex-grow pt-20">
         {children}
       </main>
 
-      <footer className="bg-black border-t border-zinc-800 py-16">
+      <footer className="bg-black border-t border-zinc-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <span className="font-teko text-4xl font-bold tracking-tight uppercase text-white leading-none">
-                  AscendAcademy<span className="text-co-yellow">5280</span>
-                </span>
-              </div>
-              <p className="text-zinc-500 text-sm leading-relaxed max-w-xs">
-                Developing the next generation of athletes in the heart of Colorado. 
-                Built on discipline, driven by results.
-              </p>
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-8 md:mb-0 text-center md:text-left">
+              <span className="font-teko text-3xl font-bold tracking-tight uppercase text-white">
+                Ascend<span className="text-co-red">Academy</span><span className="text-co-yellow">5280</span>
+              </span>
+              <p className="text-zinc-500 text-sm mt-2">© {new Date().getFullYear()} All rights reserved.</p>
             </div>
-            <div>
-              <h3 className="font-teko text-2xl text-white mb-6 uppercase tracking-wide">Contact</h3>
-              <p className="text-zinc-500 text-sm mb-3">Denver, Colorado</p>
-              <p className="text-zinc-500 text-sm mb-3 hover:text-co-yellow transition-colors cursor-pointer">rod@ascendacademy5280.com</p>
-              <p className="text-zinc-500 text-sm">(555) 123-4567</p>
-            </div>
-            <div>
-              <h3 className="font-teko text-2xl text-white mb-6 uppercase tracking-wide">Community</h3>
-              <div className="flex gap-6">
-                <a href="#" className="text-zinc-500 hover:text-co-red transition-transform hover:scale-110 duration-300">
-                  <Instagram className="w-6 h-6" />
-                </a>
-                <a href="#" className="text-zinc-500 hover:text-co-red transition-transform hover:scale-110 duration-300">
-                  <TikTokIcon className="w-6 h-6" />
-                </a>
-                <a href="#" className="text-zinc-500 hover:text-co-red transition-transform hover:scale-110 duration-300">
-                  <Youtube className="w-6 h-6" />
-                </a>
-              </div>
-              <div className="mt-8 pt-8 border-t border-zinc-900">
-                <p className="text-xs text-zinc-600">© 2023 Ascend Academy 5280. All rights reserved.</p>
-              </div>
+            
+            <div className="flex space-x-6">
+              <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><Instagram /></a>
+              <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><Youtube /></a>
+              <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><TikTokIcon /></a>
             </div>
           </div>
         </div>
