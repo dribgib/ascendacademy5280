@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle, X } from 'lucide-react';
 import { POPULAR_SPORTS } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -52,8 +52,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   useEffect(() => {
     // Check for query param to auto-switch to admin view
     const params = new URLSearchParams(location.search);
-    if (params.get('view') === 'admin' && user.role === 'ADMIN') {
+    const view = params.get('view');
+    
+    // STRICT NAVIGATION LOGIC: 
+    // If URL has ?view=admin AND user is admin -> Admin Mode
+    // Otherwise -> Parent Mode (My Team)
+    if (view === 'admin' && user.role === 'ADMIN') {
         setIsAdminView(true);
+    } else {
+        setIsAdminView(false);
     }
   }, [location.search, user.role]);
 
@@ -63,6 +70,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
         loadData();
     }
   }, [user.id, isAdminView]);
+
+  const toggleView = (target: 'admin' | 'parent') => {
+      if (target === 'admin') {
+          navigate('/dashboard?view=admin');
+      } else {
+          navigate('/dashboard');
+      }
+  };
 
   const loadData = async () => {
     setSystemError(null);
@@ -223,27 +238,31 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
+    // UPDATED: Use w-full max-w-full with padding for maximum space availability
+    <div className="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
-        <div className="flex-1">
-           <div className="flex flex-wrap items-center gap-4">
-              <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none">
+      {/* UPDATED: Changed breakpoint to xl for row layout, added flex-wrap to prevent collision */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
+        
+        {/* Left Side: Title & Toggle */}
+        <div className="flex-1 w-full xl:w-auto">
+           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-wrap">
+              <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap">
                 {isAdminView ? "Coach's Dashboard" : "My Team"}
               </h1>
               {/* Admin Toggle */}
               {user.role === 'ADMIN' && (
-                 <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg scale-90 origin-left">
+                 <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg self-start sm:self-auto">
                     <button 
-                       onClick={() => setIsAdminView(false)}
-                       className={`px-3 py-1 rounded-md font-teko text-lg uppercase transition-all ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                       onClick={() => toggleView('parent')}
+                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
                     >
                        My Team
                     </button>
                     <button 
-                       onClick={() => setIsAdminView(true)}
-                       className={`px-3 py-1 rounded-md font-teko text-lg uppercase transition-all ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                       onClick={() => toggleView('admin')}
+                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
                     >
                        Coach
                     </button>
@@ -258,24 +277,24 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
            </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Right Side: Action Buttons */}
         {!isAdminView && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
+            <div className="flex flex-wrap gap-3 w-full xl:w-auto mt-4 xl:mt-0 justify-start xl:justify-end">
                 <button 
                     onClick={() => setShowAccountModal(true)}
-                    className="border border-zinc-700 text-zinc-300 px-4 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                    className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
                 >
                     <Settings size={18} /> Account
                 </button>
                 <button 
                     onClick={handleManageBilling}
-                    className="border border-zinc-700 text-zinc-300 px-4 py-2 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                    className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
                 >
                     <CreditCard size={18} /> Billing
                 </button>
                 <button 
                     onClick={() => setShowAddKidModal(true)}
-                    className="bg-co-yellow text-black px-6 py-2 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap"
+                    className="bg-co-yellow text-black px-8 py-3 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
                 >
                     <Plus size={20} /> Add Athlete
                 </button>
@@ -445,32 +464,36 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </div>
       )}
 
-      {/* Account Modal */}
+      {/* Account Modal (Redesigned) */}
       {showAccountModal && (
         <div 
         className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
         onClick={() => setShowAccountModal(false)}
         >
         <div 
-            className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-sm w-full relative"
+            className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-md w-full relative shadow-2xl"
             onClick={(e) => e.stopPropagation()}
         >
             <button 
                 onClick={() => setShowAccountModal(false)}
                 className="absolute top-4 right-4 text-zinc-500 hover:text-white"
             >
-                &times;
+                <X size={24} />
             </button>
-            <h2 className="font-teko text-3xl text-white uppercase mb-6">Manage Account</h2>
             
-            <div className="mb-6 pb-6 border-b border-zinc-800">
-                <p className="text-zinc-400 text-xs uppercase mb-1">Email Address</p>
-                <p className="text-white font-mono">{user.email}</p>
-                <p className="text-zinc-600 text-[10px] mt-2">To change email, please contact support.</p>
+            <div className="text-center mb-8">
+                <Settings className="mx-auto text-co-yellow mb-4" size={48} />
+                <h2 className="font-teko text-4xl text-white uppercase tracking-wide">Account Settings</h2>
+            </div>
+            
+            <div className="mb-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded">
+                <p className="text-zinc-500 text-xs uppercase font-bold mb-1 tracking-wider">Registered Email</p>
+                <p className="text-white font-mono text-sm">{user.email}</p>
+                <p className="text-zinc-600 text-[10px] mt-2 italic">Contact support to change email address.</p>
             </div>
 
-            <form onSubmit={handleUpdatePassword}>
-                <p className="text-co-yellow text-sm uppercase font-bold mb-4">Reset Password</p>
+            <form onSubmit={handleUpdatePassword} className="border-t border-zinc-800 pt-6">
+                <p className="text-white text-xl font-teko uppercase mb-4">Change Password</p>
                 <div className="space-y-4">
                     <div>
                         <input 
@@ -480,7 +503,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                             minLength={6} 
                             value={newPassword} 
                             onChange={e => setNewPassword(e.target.value)} 
-                            className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm" 
+                            className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" 
                         />
                     </div>
                     <div>
@@ -491,20 +514,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                             minLength={6} 
                             value={confirmPassword} 
                             onChange={e => setConfirmPassword(e.target.value)} 
-                            className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm" 
+                            className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" 
                         />
                     </div>
                     <button 
                         type="submit" 
-                        className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-2 uppercase font-teko text-xl transition-colors"
+                        className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded transition-colors shadow-lg mt-2"
                     >
                         Update Password
                     </button>
                 </div>
                 {accountMsg && (
-                    <p className={`mt-4 text-center text-xs ${accountMsg.includes('success') ? 'text-green-500' : 'text-co-red'}`}>
+                    <div className={`mt-4 text-center p-2 rounded text-sm ${accountMsg.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                         {accountMsg}
-                    </p>
+                    </div>
                 )}
             </form>
         </div>

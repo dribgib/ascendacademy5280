@@ -308,8 +308,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       </div>
   );
 
+  const containerMaxWidth = activeTab === 'users' ? 'max-w-[95rem]' : 'max-w-7xl';
+  
   return (
-    <div className={!hideHeader ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" : ""}>
+    <div className={!hideHeader ? `${containerMaxWidth} mx-auto px-4 sm:px-6 lg:px-8 py-10` : ""}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         {!hideHeader && (
           <div>

@@ -15,9 +15,6 @@ const formatDate = (isoString: string) => {
   return new Date(isoString).toISOString().split('T')[0];
 };
 
-// Helper: Timeout promise
-const timeoutPromise = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms));
-
 // Safe Env Access
 const getEnvVar = (key: string) => {
   const env = (import.meta as any).env || {};
@@ -62,16 +59,11 @@ const supabaseApi = {
       // 3. Try to fetch extended profile details (Database)
       // If the DB has RLS recursion (500 error), we catch it and use appUser (metadata) instead.
       try {
-        const profileFetch = supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
-          
-        const { data, error } = await Promise.race([
-            profileFetch, 
-            timeoutPromise(3000).then(() => ({ data: null, error: { code: 'TIMEOUT' } }))
-        ]) as any;
         
         if (error) {
            // 500 errors often mean recursive RLS policies.
