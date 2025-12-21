@@ -42,7 +42,8 @@ const SponsorPage: React.FC = () => {
   }
 
   return (
-    <div className="pt-28 pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    // Standardized Box Layout: w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
             <h1 className="font-teko text-6xl text-white uppercase mb-4">Sponsor An Athlete</h1>

@@ -114,8 +114,8 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg pt-24 pb-12 font-poppins">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    // Standardized Box Layout: w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
         
         {/* Header */}
         <div className="text-center mb-12">
@@ -314,8 +314,6 @@ const CheckoutPage: React.FC = () => {
 
           </div>
         )}
-
-      </div>
     </div>
   );
 };

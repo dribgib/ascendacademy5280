@@ -58,7 +58,8 @@ const SetPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    // Standardized Box Layout: w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh] flex flex-col items-center justify-center">
       <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl relative">
         
         <div className="text-center mb-8">

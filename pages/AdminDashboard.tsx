@@ -308,8 +308,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       </div>
   );
   
+  // Standardized Box Layout logic:
+  // If embedded (hideHeader=true), we assume parent provides the container, so we just fill width.
+  // If standalone (hideHeader=false), we use the standard max-w-7xl container.
   return (
-    <div className={!hideHeader ? `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10` : ""}>
+    <div className={!hideHeader ? `w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10` : "w-full"}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         {!hideHeader && (
           <div>
@@ -386,7 +389,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
             {activeTab === 'users' && renderUsersTab()}
         </div>
       </div>
-      {/* ... (Modals remain unchanged but are included in full file) */}
+      
       {/* Roster Management Modal */}
       {showRosterModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowRosterModal(null)}>

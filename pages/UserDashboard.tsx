@@ -238,11 +238,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   );
 
   return (
-    // UPDATED: Standard max-w-7xl to match other pages (Boxed Layout)
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
+    // Standardized Box Layout
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
-      {/* UPDATED: flex-wrap to prevent overlap on medium screens */}
       <div className="flex flex-wrap justify-between items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
         
         {/* Left Side: Title & Toggle */}
