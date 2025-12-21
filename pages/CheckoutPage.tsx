@@ -184,12 +184,12 @@ const CheckoutPage: React.FC = () => {
                   key={pkg.id} 
                   className={`
                     relative bg-zinc-900 border p-6 flex flex-col rounded-lg transition-all duration-300
-                    ${pkg.name === 'Elite' ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-zinc-800'}
+                    ${pkg.name === 'Elite' ? 'border-co-yellow shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800'}
                     ${isSelectedFromUrl ? 'ring-2 ring-co-yellow scale-105 z-10' : ''}
                   `}
                 >
                   {pkg.name === 'Elite' && (
-                    <span className="absolute top-0 right-0 bg-green-500 text-black text-[10px] font-bold px-2 py-1 uppercase rounded-bl">
+                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] font-bold px-2 py-1 uppercase rounded-bl">
                       Best Value
                     </span>
                   )}
@@ -208,7 +208,7 @@ const CheckoutPage: React.FC = () => {
                   <ul className="space-y-3 mb-8 flex-grow">
                     {pkg.features.slice(0, 3).map((feat, i) => ( // Show top 3 features for compactness
                       <li key={i} className="flex items-start gap-2 text-sm text-zinc-400">
-                        <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <Check className="h-4 w-4 text-co-yellow flex-shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -216,7 +216,7 @@ const CheckoutPage: React.FC = () => {
                   </ul>
 
                   {isActivePlan ? (
-                    <button disabled className="w-full bg-green-900/30 text-green-500 border border-green-900 py-3 font-bold uppercase rounded cursor-default">
+                    <button disabled className="w-full bg-co-yellow/10 text-co-yellow border border-co-yellow/30 py-3 font-bold uppercase rounded cursor-default">
                       Current Plan
                     </button>
                   ) : (
@@ -226,7 +226,7 @@ const CheckoutPage: React.FC = () => {
                       className={`
                         w-full py-3 font-bold uppercase rounded transition-colors text-sm tracking-widest
                         ${pkg.name === 'Elite' 
-                          ? 'bg-green-500 text-black hover:bg-green-400' 
+                          ? 'bg-co-yellow text-black hover:bg-white' 
                           : 'bg-white text-black hover:bg-zinc-200'}
                       `}
                     >
@@ -246,13 +246,13 @@ const CheckoutPage: React.FC = () => {
             {/* Status Panel */}
             <div>
                <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
-                 <AlertCircle size={20} className="text-green-500" /> Subscription Status
+                 <AlertCircle size={20} className="text-co-yellow" /> Subscription Status
                </h3>
                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
                  <div className="flex justify-between items-center py-4 border-b border-zinc-800">
                     <span className="text-zinc-400 text-sm">Current Plan</span>
                     {activeKid.subscriptionStatus === 'active' ? (
-                       <span className="bg-green-900/30 text-green-500 px-3 py-1 rounded text-xs font-bold uppercase border border-green-900">Active</span>
+                       <span className="bg-co-yellow/10 text-co-yellow px-3 py-1 rounded text-xs font-bold uppercase border border-co-yellow/30">Active</span>
                     ) : (
                        <span className="bg-zinc-800 text-zinc-500 px-3 py-1 rounded text-xs font-bold uppercase">No Active Plan</span>
                     )}
@@ -267,7 +267,7 @@ const CheckoutPage: React.FC = () => {
             {/* Billing History Stub */}
             <div>
                <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
-                 <CreditCard size={20} className="text-green-500" /> Billing History
+                 <CreditCard size={20} className="text-co-yellow" /> Billing History
                </h3>
                <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
                  <div className="overflow-x-auto">
@@ -291,7 +291,7 @@ const CheckoutPage: React.FC = () => {
                             </td>
                             <td className="px-4 py-3 text-zinc-300 text-right">$9.00</td>
                             <td className="px-4 py-3 text-right">
-                              <span className="bg-green-900/30 text-green-500 text-[10px] px-2 py-1 rounded font-bold">PAID</span>
+                              <span className="bg-co-yellow/10 text-co-yellow border border-co-yellow/20 text-[10px] px-2 py-1 rounded font-bold">PAID</span>
                             </td>
                           </tr>
                         ) : (

@@ -11,13 +11,54 @@ export const WAIVER_CONFIG = {
   url: 'https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none',
 };
 
-// Real Stripe Price IDs
-// IMPORTANT: These IDs must match the environment of your Stripe Key (Test vs Live).
-// If you switch to Test Mode, you must update these IDs to your Test Mode Price IDs from the Stripe Dashboard.
+// --- STRIPE CONFIGURATION ---
+// @ts-ignore
+const env = import.meta.env || {};
+// Check if the app is initialized with a Test Key
+// @ts-ignore
+const stripeKey = env.VITE_STRIPE_TEST_PUBLISHABLE_KEY || env.VITE_STRIPE_LIVE_PUBLISHABLE_KEY || env.VITE_STRIPE_PUBLISHABLE_KEY || '';
+const isTestMode = stripeKey.startsWith('pk_test');
+
+if (isTestMode) {
+  console.log('App is running in Stripe TEST MODE. Ensure Test Price IDs are configured.');
+}
+
+// DEFINITION: Price IDs for both environments.
+// ACTION REQUIRED: Fill in the 'test' fields with IDs from your Stripe Test Dashboard.
+const PRICE_IDS = {
+  elite: {
+    live: 'price_1SgU61IQ7QGupvoPTnwh2LCN',
+    test: 'price_1SguwgIQ7QGupvoP9udmnyo5'
+  },
+  all_pro: {
+    live: 'price_1SgU5ZIQ7QGupvoP2XQ6JvOB',
+    test: 'price_1SguwqIQ7QGupvoPeseEUBqR'
+  },
+  pro: {
+    live: 'price_1SgU5DIQ7QGupvoPjxNtibuT',
+    test: 'price_1SguwzIQ7QGupvoPkRbBW25a'
+  },
+  rookie: {
+    live: 'price_1SgU4sIQ7QGupvoPibE6fbry',
+    test: 'price_1SguxAIQ7QGupvoPktEZ4PgY'
+  }
+};
+
+const getPrice = (key: keyof typeof PRICE_IDS) => {
+  // Option 1: Override via Environment Variable (Best for CI/CD)
+  // Example: VITE_PRICE_ELITE=price_12345
+  // @ts-ignore
+  const envOverride = env[`VITE_PRICE_${key.toUpperCase()}`];
+  if (envOverride) return envOverride;
+
+  // Option 2: Use the dictionary defined above based on mode
+  return isTestMode ? PRICE_IDS[key].test : PRICE_IDS[key].live;
+};
+
 export const PACKAGES: TrainingPackage[] = [
   {
     id: 'p_elite',
-    stripePriceId: 'price_1SgU61IQ7QGupvoPTnwh2LCN', 
+    stripePriceId: getPrice('elite'),
     name: 'Elite',
     price: 310,
     billingPeriod: 'Monthly',
@@ -34,7 +75,7 @@ export const PACKAGES: TrainingPackage[] = [
   },
   {
     id: 'p_all_pro',
-    stripePriceId: 'price_1SgU5ZIQ7QGupvoP2XQ6JvOB',
+    stripePriceId: getPrice('all_pro'),
     name: 'All-Pro',
     price: 215,
     billingPeriod: 'Monthly',
@@ -50,7 +91,7 @@ export const PACKAGES: TrainingPackage[] = [
   },
   {
     id: 'p_pro',
-    stripePriceId: 'price_1SgU5DIQ7QGupvoPjxNtibuT',
+    stripePriceId: getPrice('pro'),
     name: 'Pro',
     price: 120,
     billingPeriod: 'Monthly',
@@ -65,7 +106,7 @@ export const PACKAGES: TrainingPackage[] = [
   },
   {
     id: 'p_rookie',
-    stripePriceId: 'price_1SgU4sIQ7QGupvoPibE6fbry',
+    stripePriceId: getPrice('rookie'),
     name: 'Rookie',
     price: 100,
     billingPeriod: 'Monthly',
