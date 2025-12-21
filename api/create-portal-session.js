@@ -1,8 +1,8 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Check for Live key, then Test key, then generic key
-const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+// Check for Test key first, then Live key, then generic key
+const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 
 if (!stripeKey) {
   throw new Error('Missing Stripe Secret Key in Environment Variables');
