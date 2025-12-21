@@ -462,6 +462,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
                 </div>
                 </div>
+          </div>
       )}
 
       {/* Account Modal (Redesigned) */}
