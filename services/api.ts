@@ -489,8 +489,13 @@ const supabaseApi = {
         const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
         try {
-            const { data, error } = await supabase.functions.invoke('check-waiver', {
-                body: { email: parentEmail, childName },
+            // Updated to use the new 'quick-service' endpoint
+            const { data, error } = await supabase.functions.invoke('quick-service', {
+                body: { 
+                  email: parentEmail, 
+                  childName,
+                  type: 'waiver_check' // Extra context in case the function handles multiple things
+                },
                 headers: { 'apikey': anonKey }
             });
 
