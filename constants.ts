@@ -12,6 +12,8 @@ export const WAIVER_CONFIG = {
 };
 
 // Real Stripe Price IDs
+// IMPORTANT: These IDs must match the environment of your Stripe Key (Test vs Live).
+// If you switch to Test Mode, you must update these IDs to your Test Mode Price IDs from the Stripe Dashboard.
 export const PACKAGES: TrainingPackage[] = [
   {
     id: 'p_elite',

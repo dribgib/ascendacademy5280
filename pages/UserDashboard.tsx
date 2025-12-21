@@ -141,7 +141,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             setImageUploading(true);
             let imageUrl = undefined;
             if (kidImage && (api as any).children.uploadImage) {
-                const uploaded = await (api as any).children.uploadImage(kidImage);
+                // Pass user.id to handle RLS folder structure
+                const uploaded = await (api as any).children.uploadImage(kidImage, user.id);
                 if (uploaded) imageUrl = uploaded;
             }
             await api.children.create({
@@ -159,9 +160,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
         } else {
             showAlert('Waiver Required', "Waiver signature not found. Please sign the document in the new tab and click verify again.", 'error');
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        showAlert('Error', 'Error verifying waiver or adding child.', 'error');
+        showAlert('Verification Error', e.message || 'Error verifying waiver. Please try again.', 'error');
     } finally {
         setVerifyingWaiver(false);
         setImageUploading(false);

@@ -266,25 +266,26 @@ const supabaseApi = {
         if (error) throw error;
     },
 
-    uploadImage: async (file: File): Promise<string | null> => {
+    uploadImage: async (file: File, userId: string): Promise<string | null> => {
         try {
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
+            // Use userId folder to satisfy RLS Policies (owner restriction)
+            const filePath = `avatars/${userId}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('media') 
                 .upload(filePath, file);
 
             if (uploadError) {
-                console.warn("Image upload skipped (Bucket 'media' might be missing):", uploadError.message);
-                return null;
+                console.error("Image upload error:", uploadError);
+                throw uploadError; // Throw so we can catch it in the UI
             }
 
             const { data } = supabase.storage.from('media').getPublicUrl(filePath);
             return data.publicUrl;
         } catch (e) {
-            console.warn("Image upload exception", e);
+            console.error("Image upload exception", e);
             return null;
         }
     }
@@ -505,29 +506,22 @@ const supabaseApi = {
         // @ts-ignore
         const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
-        try {
-            // Updated to use the new 'quick-service' endpoint
-            const { data, error } = await supabase.functions.invoke('quick-service', {
-                body: { 
-                  email: parentEmail, 
-                  childName,
-                  type: 'waiver_check' // Extra context in case the function handles multiple things
-                },
-                headers: { 'apikey': anonKey }
-            });
+        // STRICT PRODUCTION MODE: NO BYPASS
+        const { data, error } = await supabase.functions.invoke('quick-service', {
+            body: { 
+              email: parentEmail, 
+              childName,
+              type: 'waiver_check' 
+            },
+            headers: { 'apikey': anonKey }
+        });
 
-            if (error) {
-                 // Warn instead of Error to avoid panic, since we are bypassing
-                 console.warn("Backend waiver check unreachable (CORS/Network). Bypassing verification.");
-                 // BYPASS: Return true so the user can continue even if the backend is broken
-                 return true; 
-            }
-            return data?.signed || false;
-        } catch (e) {
-            console.warn("Waiver check bypassed (Network Exception).");
-            // BYPASS
-            return true;
+        if (error) {
+             console.error("Waiver check failed:", error);
+             throw new Error("Waiver verification system unreachable.");
         }
+        
+        return data?.signed || false;
     }
   },
 
