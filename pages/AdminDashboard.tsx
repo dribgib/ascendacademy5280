@@ -306,7 +306,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                 <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-6 py-2 rounded font-teko text-xl uppercase transition-all ${hideHeader ? 'flex-1 md:flex-none' : ''} ${activeTab === tab ? 'bg-co-yellow text-black font-bold shadow' : 'text-zinc-400 hover:text-white'}`}
+                    className={`px-6 py-2 rounded font-teko text-xl uppercase transition-all ${hideHeader ? 'flex-1 md:flex-none' : ''} ${activeTab === tab ? 'bg-co-yellow text-black shadow' : 'text-zinc-400 hover:text-white'}`}
                 >
                     {tab}
                 </button>

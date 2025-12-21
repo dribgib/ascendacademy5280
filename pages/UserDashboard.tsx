@@ -257,13 +257,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
                     <button 
                         onClick={() => toggleView('parent')}
-                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
                     >
                         My Team
                     </button>
                     <button 
                         onClick={() => toggleView('admin')}
-                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black' : 'text-zinc-500 hover:text-white'}`}
                     >
                         Coach
                     </button>
