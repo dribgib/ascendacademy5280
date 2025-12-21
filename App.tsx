@@ -15,6 +15,7 @@ import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SetPasswordPage from './pages/SetPasswordPage';
 import SponsorPage from './pages/SponsorPage';
+import SchedulePage from './pages/SchedulePage';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -125,6 +126,7 @@ const App: React.FC = () => {
         <Layout user={user} setUser={setUser}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
             <Route 
               path="/login" 
               element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 

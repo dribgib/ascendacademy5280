@@ -290,8 +290,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   );
   
   return (
-    // If hidden header (embedded), we rely on parent container width but ensure w-full.
-    // Otherwise standard box width.
     <div className={!hideHeader ? `w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10` : "w-full"}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         {!hideHeader && (
@@ -442,7 +440,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
               <div className="grid grid-cols-2 gap-4">
                 <div>
                    <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>
-                   <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+                   {/* STYLED DATE PICKER */}
+                   <input 
+                      required 
+                      type="date" 
+                      className="w-full bg-black border border-zinc-700 p-2 text-white focus:border-co-yellow focus:ring-1 focus:ring-co-yellow rounded outline-none appearance-none" 
+                      value={newEvent.date} 
+                      onChange={e => setNewEvent({...newEvent, date: e.target.value})} 
+                   />
                 </div>
                 <div>
                    <label className="block text-zinc-400 text-xs uppercase mb-1">Max Slots</label>

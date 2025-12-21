@@ -55,7 +55,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
   // Helper to determine active state
   // "Coach" is active if ?view=admin
   // "Dashboard" (My Team) is active if /dashboard AND NOT ?view=admin
-  const isActive = (type: 'coach' | 'dashboard') => {
+  const isActive = (type: 'coach' | 'dashboard' | 'schedule') => {
+    if (type === 'schedule') return location.pathname === '/schedule';
+    
     if (location.pathname !== '/dashboard') return false;
     const isAdminView = location.search.includes('view=admin');
     if (type === 'coach') return isAdminView;
@@ -83,7 +85,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               <div className="ml-10 flex items-center space-x-6">
                 <button onClick={() => handleScrollTo('about')} className={navLinkClass}>About</button>
                 <button onClick={() => handleScrollTo('packages')} className={navLinkClass}>Training</button>
-                <button onClick={() => handleScrollTo('schedule')} className={navLinkClass}>Schedule</button>
+                <button 
+                    onClick={() => navigate('/schedule')} 
+                    className={`${navLinkClass} ${isActive('schedule') ? 'text-co-yellow' : ''}`}
+                >
+                    Schedule
+                </button>
                 
                 {user ? (
                   <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700 h-8">
@@ -149,7 +156,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               <button onClick={() => handleScrollTo('about')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">About</button>
               <button onClick={() => handleScrollTo('packages')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Training</button>
-              <button onClick={() => handleScrollTo('schedule')} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</button>
+              <button onClick={() => { navigate('/schedule'); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md font-teko text-2xl text-white hover:text-co-yellow uppercase">Schedule</button>
               {user ? (
                 <>
                   {user.role === 'ADMIN' && (

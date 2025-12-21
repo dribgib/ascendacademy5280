@@ -359,7 +359,7 @@ const supabaseApi = {
           throw new Error(`Plan limit reached! ${pkg.name} allows ${pkg.maxSessions} sessions per month.`);
       }
 
-      // 2. REGISTER
+      // 2. REGISTER (ALLOW WAITLISTING by not checking max_slots here)
       const { error } = await supabase.from('registrations').insert({
         event_id: eventId,
         child_id: childId

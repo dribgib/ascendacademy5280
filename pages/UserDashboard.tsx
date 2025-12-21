@@ -186,14 +186,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
-  const handleRegister = async (eventId: string, kidId: string) => {
-    const confirmed = await showConfirm("Confirm Registration", "Register for this session?");
+  const handleRegister = async (eventId: string, kidId: string, isWaitlist: boolean) => {
+    const action = isWaitlist ? "Join Waitlist" : "Register";
+    const confirmed = await showConfirm(`Confirm ${action}`, `${action} for this session?`);
     if (!confirmed) return;
 
     try {
       await api.registrations.register(eventId, kidId);
       loadData();
-      showAlert('Success', 'Registration Successful!', 'success');
+      showAlert('Success', isWaitlist ? 'Added to Waitlist!' : 'Registration Successful!', 'success');
     } catch (e: any) {
       console.error(e);
       showAlert('Registration Failed', e.message || 'Please try again.', 'error');
@@ -395,15 +396,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 return (
                                     <button
                                     key={kid.id}
-                                    disabled={isRegistered || isFull || (!isRegistered && limitReached) || !hasPlan}
-                                    onClick={() => handleRegister(evt.id, kid.id)}
+                                    // Removed isFull check so parents can join waitlist
+                                    disabled={isRegistered || (!isRegistered && limitReached) || !hasPlan}
+                                    onClick={() => handleRegister(evt.id, kid.id, isFull)}
                                     className={`
                                         text-xs py-2 px-3 rounded uppercase font-bold transition-colors
                                         ${isRegistered 
                                         ? 'bg-green-900/30 text-green-500 border border-green-900 cursor-default' 
-                                        : (isFull || limitReached || !hasPlan)
+                                        : (limitReached || !hasPlan)
                                             ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed border border-zinc-800'
-                                            : 'bg-zinc-800 hover:bg-co-red hover:text-white text-zinc-300 border border-zinc-700'}
+                                            : isFull
+                                                ? 'bg-zinc-800 border border-zinc-700 text-white hover:border-co-yellow'
+                                                : 'bg-zinc-800 hover:bg-co-red hover:text-white text-zinc-300 border border-zinc-700'}
                                     `}
                                     >
                                     {isRegistered ? (
@@ -413,7 +417,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     ) : limitReached ? (
                                         `Limit Reached`
                                     ) : isFull ? (
-                                        `${kid.firstName} (Full)`
+                                        `Waitlist ${kid.firstName}`
                                     ) : (
                                         `Sign Up ${kid.firstName}`
                                     )}

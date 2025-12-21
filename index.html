@@ -45,6 +45,15 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #3f3f46; 
       }
+
+      /* Force Dark Mode on Date Pickers */
+      ::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+      }
+      input[type="date"], input[type="time"] {
+        color-scheme: dark;
+      }
     </style>
   <script type="importmap">
 {

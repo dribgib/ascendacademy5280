@@ -1,0 +1,207 @@
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import { Event } from '../types';
+import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircle } from 'lucide-react';
+
+const SchedulePage: React.FC = () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      const data = await api.events.list();
+      setEvents(data);
+    } catch (e) {
+      console.error("Failed to load events", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+  };
+
+  const prevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+  };
+
+  const renderCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    // Empty cells for previous month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-32 bg-zinc-900/50 border border-zinc-800/50"></div>);
+    }
+
+    // Days of current month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dayEvents = events.filter(e => e.date === dateStr);
+      const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
+
+      days.push(
+        <div key={day} className={`h-32 bg-zinc-900 border border-zinc-800 p-2 overflow-y-auto custom-scrollbar ${isToday ? 'bg-zinc-800/50 ring-1 ring-inset ring-co-yellow' : ''}`}>
+          <div className={`text-right text-sm mb-2 ${isToday ? 'text-co-yellow font-bold' : 'text-zinc-500'}`}>{day}</div>
+          <div className="space-y-1">
+            {dayEvents.map(evt => {
+                const isFull = evt.bookedSlots >= evt.maxSlots;
+                return (
+                    <button
+                        key={evt.id}
+                        onClick={() => setSelectedEvent(evt)}
+                        className={`w-full text-left text-[10px] p-1.5 rounded truncate border transition-colors
+                            ${isFull 
+                                ? 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-co-red' 
+                                : 'bg-co-yellow/10 text-co-yellow border-co-yellow/20 hover:bg-co-yellow hover:text-black'}
+                        `}
+                    >
+                        <span className="font-bold mr-1">{evt.startTime}</span>
+                        {evt.title}
+                    </button>
+                );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  if (loading) return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="text-co-yellow animate-pulse font-teko text-4xl">LOADING SCHEDULE...</div>
+      </div>
+  );
+
+  return (
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
+      <div className="text-center mb-10">
+        <h1 className="font-teko text-6xl text-white uppercase mb-4">Training Schedule</h1>
+        <p className="text-zinc-500 max-w-2xl mx-auto">
+            View upcoming sessions. Select a session to view details and availability status. 
+            Login to your dashboard to register.
+        </p>
+      </div>
+
+      {/* Calendar Controls */}
+      <div className="flex items-center justify-between mb-6 bg-zinc-900 p-4 rounded-t-lg border border-zinc-800">
+        <button onClick={prevMonth} className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors">
+            <ChevronLeft size={24} />
+        </button>
+        <h2 className="font-teko text-4xl text-white uppercase">
+            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </h2>
+        <button onClick={nextMonth} className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors">
+            <ChevronRight size={24} />
+        </button>
+      </div>
+
+      {/* Calendar Grid Header */}
+      <div className="grid grid-cols-7 bg-zinc-950 border-x border-t border-zinc-800">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="py-3 text-center text-zinc-500 text-sm font-bold uppercase tracking-wider">
+                {day}
+            </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid Body */}
+      <div className="grid grid-cols-7 border-b border-l border-zinc-800 mb-12">
+        {renderCalendarDays()}
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-6 justify-center text-sm mb-12">
+        <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-co-yellow/10 border border-co-yellow rounded"></div>
+            <span className="text-zinc-400">Open Slots</span>
+        </div>
+        <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-zinc-800 border border-zinc-700 rounded"></div>
+            <span className="text-zinc-400">Waitlist Only</span>
+        </div>
+      </div>
+
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <div 
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+            onClick={() => setSelectedEvent(null)}
+        >
+            <div 
+                className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-md w-full relative shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button 
+                    onClick={() => setSelectedEvent(null)}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                >
+                    <X size={24} />
+                </button>
+
+                <div className="mb-6">
+                    <span className="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded font-mono uppercase tracking-wider">
+                        {new Date(selectedEvent.isoStart).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </span>
+                    <h2 className="font-teko text-4xl text-white uppercase mt-2 leading-none">
+                        {selectedEvent.title}
+                    </h2>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3 text-zinc-300">
+                        <Clock className="text-co-yellow" size={20} />
+                        <span>{selectedEvent.startTime} - {selectedEvent.endTime}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-zinc-300">
+                        <MapPin className="text-co-red" size={20} />
+                        <span>{selectedEvent.location}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-zinc-400">
+                        <Info className="text-zinc-500 mt-1" size={20} />
+                        <p className="text-sm leading-relaxed">{selectedEvent.description}</p>
+                    </div>
+                </div>
+
+                {/* STATUS BADGE - PRIVACY RESPECTED (No Numbers) */}
+                <div className="border-t border-zinc-800 pt-6">
+                    {selectedEvent.bookedSlots >= selectedEvent.maxSlots ? (
+                        <div className="flex items-center gap-2 text-zinc-400 bg-zinc-900 p-3 rounded border border-zinc-800">
+                            <AlertCircle size={20} />
+                            <span className="font-bold uppercase tracking-wide">Waitlist Only</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-black bg-co-yellow p-3 rounded font-bold uppercase tracking-wide justify-center">
+                            <div className="w-2 h-2 bg-black rounded-full animate-pulse"></div>
+                            Registration Open
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SchedulePage;
