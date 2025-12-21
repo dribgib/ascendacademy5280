@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle, X } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle, X, Trash2 } from 'lucide-react';
 import { POPULAR_SPORTS, WAIVER_CONFIG } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -168,6 +168,23 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
+  const handleDeleteKid = async (kid: Child) => {
+    const confirmed = await showConfirm(
+      "Remove Athlete?", 
+      `Are you sure you want to remove ${kid.firstName} from your profile? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await (api.children as any).delete(kid.id);
+      loadData();
+      showAlert('Deleted', 'Athlete profile removed.', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showAlert('Error', e.message || 'Failed to delete profile.', 'error');
+    }
+  };
+
   const resetForm = () => {
     setNewKidName({ first: '', last: '' });
     setSelectedSports([]);
@@ -303,6 +320,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     kids.map(kid => (
                     <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group hover:border-zinc-600 transition-colors">
                         <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : 'bg-zinc-700'}`}></div>
+                        
+                        {/* Delete Button */}
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteKid(kid); }}
+                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors z-10"
+                            title="Remove Athlete"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+
                         <div className="flex justify-between items-start mb-4">
                         <div className="flex gap-4">
                             {/* Kid Avatar */}
@@ -316,7 +343,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                             )}
                             </div>
 
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 pr-6">
                                 <h3 className="font-teko text-3xl text-white uppercase leading-none mt-1 truncate">{kid.firstName} {kid.lastName}</h3>
                                 <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
                                 

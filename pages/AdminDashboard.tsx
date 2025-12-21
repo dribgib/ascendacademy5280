@@ -104,6 +104,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       }
   };
 
+  const handleDeleteUser = async (userToDelete: User) => {
+      if (userToDelete.id === user.id) {
+          showAlert("Operation Denied", "You cannot delete your own admin account.", 'error');
+          return;
+      }
+      
+      const confirmed = await showConfirm(
+          "Delete User?", 
+          `Are you sure you want to delete ${userToDelete.firstName} ${userToDelete.lastName}? This will remove their profile and associated athletes.`
+      );
+      if (!confirmed) return;
+
+      try {
+          await (api as any).admin.deleteUser(userToDelete.id);
+          loadData();
+          showAlert('Success', 'User profile deleted.', 'success');
+      } catch (e: any) {
+          showAlert('Error', e.message || 'Failed to delete user.', 'error');
+      }
+  };
+
   const handleAddKidToRoster = async () => {
       if (!showRosterModal || !kidToAdd) return;
       await (api as any).admin.addRegistration(showRosterModal.id, kidToAdd);
@@ -249,7 +270,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         <th className="px-6 py-4 font-bold">Parent Name</th>
                         <th className="px-6 py-4 font-bold">Email / Phone</th>
                         <th className="px-6 py-4 font-bold">Children</th>
-                        <th className="px-6 py-4 font-bold text-right">Role</th>
+                        <th className="px-6 py-4 font-bold">Role</th>
+                        <th className="px-6 py-4 font-bold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
@@ -275,10 +297,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                         <span className="text-zinc-600 italic">No kids added</span>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4">
                                     <span className={`px-2 py-1 rounded text-xs font-bold ${u.role === 'ADMIN' ? 'bg-co-yellow text-black' : 'bg-zinc-800 text-zinc-400'}`}>
                                         {u.role}
                                     </span>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <button 
+                                        onClick={() => handleDeleteUser(u)}
+                                        disabled={u.id === user.id}
+                                        className="text-zinc-500 hover:text-red-500 transition-colors disabled:opacity-30 disabled:hover:text-zinc-500"
+                                        title="Delete User"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </td>
                             </tr>
                         );
