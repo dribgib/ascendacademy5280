@@ -17,22 +17,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Admin Toggle State
   const [isAdminView, setIsAdminView] = useState(false);
-
-  // Standard User Dashboard State
   const [kids, setKids] = useState<Child[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [systemError, setSystemError] = useState<string | null>(null);
   
-  // Modals
   const [showAddKidModal, setShowAddKidModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   
   const [loading, setLoading] = useState(true);
   
-  // New Kid Form State
-  const [addStep, setAddStep] = useState(1); // 1 = Details, 2 = Waiver
+  // New Kid Form
+  const [addStep, setAddStep] = useState(1);
   const [newKidName, setNewKidName] = useState({ first: '', last: '' });
   const [newKidDob, setNewKidDob] = useState('');
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
@@ -40,23 +36,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const [kidImagePreview, setKidImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   
-  // Account Form State
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountMsg, setAccountMsg] = useState('');
 
-  // Waiver State
   const [verifyingWaiver, setVerifyingWaiver] = useState(false);
   const [waiverSigned, setWaiverSigned] = useState(false);
 
   useEffect(() => {
-    // Check for query param to auto-switch to admin view
     const params = new URLSearchParams(location.search);
     const view = params.get('view');
-    
-    // STRICT NAVIGATION LOGIC: 
-    // If URL has ?view=admin AND user is admin -> Admin Mode
-    // Otherwise -> Parent Mode (My Team)
     if (view === 'admin' && user.role === 'ADMIN') {
         setIsAdminView(true);
     } else {
@@ -65,24 +54,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   }, [location.search, user.role]);
 
   useEffect(() => {
-    // Only load family data if in Family View (or generally on mount)
-    if (!isAdminView) {
-        loadData();
-    }
+    if (!isAdminView) loadData();
+    else setLoading(false);
   }, [user.id, isAdminView]);
 
   const toggleView = (target: 'admin' | 'parent') => {
-      if (target === 'admin') {
-          navigate('/dashboard?view=admin');
-      } else {
-          navigate('/dashboard');
-      }
+      if (target === 'admin') navigate('/dashboard?view=admin');
+      else navigate('/dashboard');
   };
 
   const loadData = async () => {
     setSystemError(null);
     try {
-      // Fetch concurrently but handle errors individually so one failure doesn't break the page
       const kidsPromise = api.children.list(user.id).catch(e => {
           console.error("Children fetch failed:", e);
           return [];
@@ -93,12 +76,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       });
 
       const [kidsData, eventsData] = await Promise.all([kidsPromise, eventsPromise]);
-      
       setKids(kidsData);
       setEvents(eventsData);
     } catch (e: any) {
       console.error("Critical Dashboard Load Error:", e);
-      setSystemError("Unable to load dashboard data. Please check your internet connection.");
+      setSystemError("Unable to load dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -109,7 +91,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       setLoading(true);
       await api.billing.createPortalSession();
     } catch (e: any) {
-      showAlert('Billing Error', e.message || 'Unable to open billing portal', 'error');
+      showAlert('Billing Error', e.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -137,7 +119,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
-  // Image handling
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -146,31 +127,23 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
-  // Step 1: Proceed to Waiver
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setAddStep(2);
   };
 
-  // Step 2: Verify Waiver & Add Kid
   const handleVerifyAndAdd = async () => {
     setVerifyingWaiver(true);
     try {
-        // 1. Check Waiver
         const isSigned = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
-        
         if (isSigned) {
             setWaiverSigned(true);
             setImageUploading(true);
-            
-            // 2. Upload Image (if any)
             let imageUrl = undefined;
             if (kidImage && (api as any).children.uploadImage) {
                 const uploaded = await (api as any).children.uploadImage(kidImage);
                 if (uploaded) imageUrl = uploaded;
             }
-
-            // 3. Create Child in DB
             await api.children.create({
                 parentId: user.id,
                 firstName: newKidName.first,
@@ -179,8 +152,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 sports: selectedSports,
                 imageUrl
             });
-            
-            // 4. Cleanup
             setShowAddKidModal(false);
             loadData();
             resetForm();
@@ -238,64 +209,65 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   );
 
   return (
-    // Standardized Box Layout
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
-      <div className="flex flex-wrap justify-between items-start gap-6 mb-10 border-b border-zinc-800 pb-8">
-        
-        {/* Left Side: Title & Toggle */}
-        <div className="flex-1 min-w-[300px]">
-           <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap mb-2">
-             {isAdminView ? "Coach's Dashboard" : "My Team"}
-           </h1>
-           <p className="text-zinc-500 mb-6 max-w-xl">
-              {isAdminView 
-                  ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
-                  : "Manage your athletes, subscriptions, and schedules."
-              }
-           </p>
+      <div className="flex flex-col mb-10 border-b border-zinc-800 pb-8">
+        <div className="flex flex-wrap justify-between items-start gap-6">
+            <div className="flex-1 min-w-[300px]">
+                <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap mb-2">
+                    {isAdminView ? "Coach's Dashboard" : "My Team"}
+                </h1>
+                <p className="text-zinc-500 max-w-xl">
+                    {isAdminView 
+                        ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
+                        : "Manage your athletes, subscriptions, and schedules."
+                    }
+                </p>
+            </div>
 
-           {/* Admin Toggle - MOVED BELOW TITLE */}
-           {user.role === 'ADMIN' && (
-              <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
-                 <button 
-                    onClick={() => toggleView('parent')}
-                    className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
-                 >
-                    My Team
-                 </button>
-                 <button 
-                    onClick={() => toggleView('admin')}
-                    className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
-                 >
-                    Coach
-                 </button>
-              </div>
-           )}
+            {/* Right Side: Action Buttons */}
+            {!isAdminView && (
+                <div className="flex flex-wrap gap-3 w-full lg:w-auto mt-4 lg:mt-0 justify-start lg:justify-end">
+                    <button 
+                        onClick={() => setShowAccountModal(true)}
+                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
+                    >
+                        <Settings size={18} /> Account
+                    </button>
+                    <button 
+                        onClick={handleManageBilling}
+                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
+                    >
+                        <CreditCard size={18} /> Billing
+                    </button>
+                    <button 
+                        onClick={() => setShowAddKidModal(true)}
+                        className="bg-co-yellow text-black px-8 py-3 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
+                    >
+                        <Plus size={20} /> Add Athlete
+                    </button>
+                </div>
+            )}
         </div>
 
-        {/* Right Side: Action Buttons */}
-        {!isAdminView && (
-            <div className="flex flex-wrap gap-3 w-full lg:w-auto mt-4 lg:mt-0 justify-start lg:justify-end">
-                <button 
-                    onClick={() => setShowAccountModal(true)}
-                    className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
-                >
-                    <Settings size={18} /> Account
-                </button>
-                <button 
-                    onClick={handleManageBilling}
-                    className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
-                >
-                    <CreditCard size={18} /> Billing
-                </button>
-                <button 
-                    onClick={() => setShowAddKidModal(true)}
-                    className="bg-co-yellow text-black px-8 py-3 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
-                >
-                    <Plus size={20} /> Add Athlete
-                </button>
+        {/* Toggle Row - Separated */}
+        {user.role === 'ADMIN' && (
+            <div className="mt-8 flex">
+                <div className="bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
+                    <button 
+                        onClick={() => toggleView('parent')}
+                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        My Team
+                    </button>
+                    <button 
+                        onClick={() => toggleView('admin')}
+                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        Coach
+                    </button>
+                </div>
             </div>
         )}
       </div>
@@ -347,14 +319,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 <h3 className="font-teko text-3xl text-white uppercase leading-none mt-1 truncate">{kid.firstName} {kid.lastName}</h3>
                                 <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
                                 
-                                {/* Subscription Status & Limits */}
                                 <div className="mt-3">
                                     {kid.subscriptionStatus === 'active' && kid.usageStats ? (
                                     <div>
                                         <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
                                             {kid.usageStats.planName} Plan
                                         </span>
-                                        {/* Usage Bar */}
                                         <div className="mt-2">
                                             <div className="flex justify-between text-[10px] text-zinc-400 mb-1 uppercase tracking-wider">
                                                 <span>Usage</span>
@@ -416,7 +386,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 </div>
                             </div>
 
-                            {/* Registration Actions */}
                             <div className="flex flex-col gap-2 min-w-[140px]">
                                 {kids.map(kid => {
                                 const isRegistered = evt.registeredKidIds.includes(kid.id);
@@ -463,7 +432,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
           </div>
       )}
 
-      {/* Account Modal (Redesigned) */}
       {showAccountModal && (
         <div 
         className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
@@ -479,18 +447,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             >
                 <X size={24} />
             </button>
-            
             <div className="text-center mb-8">
                 <Settings className="mx-auto text-co-yellow mb-4" size={48} />
                 <h2 className="font-teko text-4xl text-white uppercase tracking-wide">Account Settings</h2>
             </div>
-            
             <div className="mb-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded">
                 <p className="text-zinc-500 text-xs uppercase font-bold mb-1 tracking-wider">Registered Email</p>
                 <p className="text-white font-mono text-sm">{user.email}</p>
                 <p className="text-zinc-600 text-[10px] mt-2 italic">Contact support to change email address.</p>
             </div>
-
             <form onSubmit={handleUpdatePassword} className="border-t border-zinc-800 pt-6">
                 <p className="text-white text-xl font-teko uppercase mb-4">Change Password</p>
                 <div className="space-y-4">
@@ -533,7 +498,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
         </div>
       )}
 
-      {/* Add Kid Modal */}
       {showAddKidModal && (
         <div 
         className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
@@ -543,8 +507,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
         >
-            
-            {/* Step Indicator */}
             <div className="flex items-center gap-2 mb-8 text-sm">
                 <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : 'text-green-500'}`}>1. Details</span>
                 <span className="text-zinc-600">/</span>
@@ -556,7 +518,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
                 <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 
-                {/* Image Upload Field */}
                 <div className="flex items-center gap-6 mb-6 p-4 bg-black rounded border border-zinc-800">
                     <div className="h-20 w-20 rounded-full overflow-hidden bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 relative">
                         {kidImagePreview ? (

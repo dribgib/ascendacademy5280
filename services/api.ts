@@ -18,39 +18,36 @@ const formatDate = (isoString: string) => {
 // --- REAL SUPABASE IMPLEMENTATION ---
 const supabaseApi = {
   auth: {
-    // Accepts optional user object to avoid double-fetching if we already have session
+    // 1. FAST USER LOAD (Metadata Preference)
+    // This is designed to return as fast as possible to unblock the UI.
     getUser: async (sessionUser?: any): Promise<User | null> => {
       let user = sessionUser;
       
-      // 1. If not provided, get from local session (Instant)
       if (!user) {
         try {
             const { data } = await supabase.auth.getSession();
             user = data.session?.user;
         } catch (e) {
-            console.warn('Error retrieving session:', e);
             return null;
         }
       }
 
       if (!user) return null;
 
-      // 2. Extract Metadata immediately (Fastest Source of Truth)
       const meta = user.user_metadata || {};
       
-      // Default User Object from Metadata
       const appUser: User = {
         id: user.id,
         email: user.email!,
         firstName: meta.first_name || meta.firstName || '',
         lastName: meta.last_name || meta.lastName || '',
         phone: meta.phone || '',
-        role: meta.role || 'PARENT', // Fallback role
+        role: meta.role || 'PARENT', 
         stripeCustomerId: meta.stripe_customer_id
       };
 
-      // 3. Try to fetch extended profile details (Database)
-      // INCREASED TIMEOUT: 5000ms to handle Supabase cold starts without breaking auth flow
+      // Try DB fetch with a SHORT timeout (1.5s)
+      // If DB is cold, we skip it and let the background syncer handle it later.
       try {
         const dbPromise = supabase
           .from('profiles')
@@ -58,35 +55,49 @@ const supabaseApi = {
           .eq('id', user.id)
           .single();
           
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 5000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 1500));
         
         // @ts-ignore
-        const { data, error } = await Promise.race([dbPromise, timeoutPromise])
-            .catch(e => ({ data: null, error: e }));
+        const { data } = await Promise.race([dbPromise, timeoutPromise]);
         
-        if (error) {
-           // Silent warning, we have metadata fallback
-           console.log('[Profile Fetch skipped] Using metadata fallback (DB might be cold/paused).');
-        } else if (data) {
-          // Merge DB profile data over metadata
+        if (data) {
           appUser.firstName = data.first_name || appUser.firstName;
           appUser.lastName = data.last_name || appUser.lastName;
           appUser.phone = data.phone || appUser.phone;
-          appUser.role = data.role || appUser.role; // DB Role takes precedence if successful
+          appUser.role = data.role || appUser.role;
           appUser.stripeCustomerId = data.stripe_customer_id || appUser.stripeCustomerId;
         }
       } catch (e) {
-        console.warn('Profile fetch exception (Using fallback):', e);
+        // Ignore timeout/error, return basic user immediately
       }
 
       return appUser;
+    },
+
+    // 2. BACKGROUND SYNC (Force DB Check)
+    // Call this after the app loads to ensure roles are correct (fixes Admin downgrade issue)
+    refreshProfile: async (userId: string): Promise<Partial<User> | null> => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+            
+        if (error || !data) return null;
+        
+        return {
+            firstName: data.first_name,
+            lastName: data.last_name,
+            phone: data.phone,
+            role: data.role,
+            stripeCustomerId: data.stripe_customer_id
+        };
     },
 
     signIn: async (email: string, password: string) => {
       return await supabase.auth.signInWithPassword({ email, password });
     },
 
-    // Magic Link Sign In / Sign Up
     signInWithOtp: async (email: string, meta?: any, redirectTo?: string) => {
       return await supabase.auth.signInWithOtp({
         email,
@@ -393,14 +404,9 @@ const supabaseApi = {
 
   billing: {
     createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0) => {
-      console.log('Initiating Stripe Checkout...', { priceId, childId, userId, activeSubscriptionCount });
       const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error("Stripe Configuration Missing.");
-      }
+      if (!stripe) throw new Error("Stripe Configuration Missing.");
       
-      // Explicitly set headers in case of custom domain issues
-      // Use direct access via safe environment object
       // @ts-ignore
       const env = import.meta.env || {};
       // @ts-ignore
@@ -414,15 +420,10 @@ const supabaseApi = {
             activeSubscriptionCount,
             returnUrl: window.location.origin + '/dashboard' 
         },
-        headers: {
-            'apikey': anonKey 
-        }
+        headers: { 'apikey': anonKey }
       });
 
-      if (error) {
-          console.error('Checkout Func Error:', error);
-          throw new Error('Failed to initiate checkout. Please contact support.');
-      }
+      if (error) throw new Error('Failed to initiate checkout.');
 
       if (data?.sessionId) {
           await stripe.redirectToCheckout({ sessionId: data.sessionId });
@@ -440,14 +441,10 @@ const supabaseApi = {
       
       const { data, error } = await supabase.functions.invoke('create-donation-session', {
         body: { amount, userId, returnUrl: window.location.origin + '/' },
-        headers: {
-            'apikey': anonKey 
-        }
+        headers: { 'apikey': anonKey }
       });
 
-      if (error) {
-         throw new Error("Donation system currently unavailable.");
-      }
+      if (error) throw new Error("Donation system unavailable.");
 
       if (data?.sessionId) {
         await stripe.redirectToCheckout({ sessionId: data.sessionId });
@@ -462,14 +459,10 @@ const supabaseApi = {
       
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
           body: { returnUrl: window.location.origin + '/dashboard' },
-          headers: {
-            'apikey': anonKey 
-          }
+          headers: { 'apikey': anonKey }
       });
 
-      if (error || !data?.url) {
-          throw new Error('Billing Portal is accessible once you have an active subscription history.');
-      }
+      if (error || !data?.url) throw new Error('Portal unavailable.');
       window.location.href = data.url;
     }
   },
@@ -488,7 +481,6 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        // In prod, this would likely be an Edge Function call to WaiverSign API
         await new Promise(resolve => setTimeout(resolve, 1000));
         return true; 
     }
@@ -510,5 +502,4 @@ const supabaseApi = {
   }
 };
 
-// EXPORT ONLY THE REAL API
 export const api = supabaseApi;

@@ -10,7 +10,6 @@ interface LayoutProps {
   setUser: (u: User | null) => void;
 }
 
-// Custom TikTok Icon
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -41,45 +40,37 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
 
   const handleScrollTo = (id: string) => {
     setIsMenuOpen(false);
-    
-    // If not on home page, go there first
     if (location.pathname !== '/') {
       navigate('/');
-      // Wait for navigation to complete then scroll
       setTimeout(() => {
         const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     } else {
-      // Already on home, just scroll
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   // Helper to determine active state
-  const isActive = (path: string, queryParam?: string) => {
-    if (location.pathname !== path) return false;
-    if (queryParam) {
-      return location.search.includes(queryParam);
-    }
-    // If checking root dashboard (parent view), ensure NOT in admin view
-    if (path === '/dashboard') {
-      return !location.search.includes('view=admin');
-    }
-    return true;
+  // "Coach" is active if ?view=admin
+  // "Dashboard" (My Team) is active if /dashboard AND NOT ?view=admin
+  const isActive = (type: 'coach' | 'dashboard') => {
+    if (location.pathname !== '/dashboard') return false;
+    const isAdminView = location.search.includes('view=admin');
+    if (type === 'coach') return isAdminView;
+    if (type === 'dashboard') return !isAdminView;
+    return false;
   };
 
   const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-teko text-xl uppercase tracking-wide cursor-pointer";
 
   return (
     <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-poppins selection:bg-co-yellow selection:text-black">
-      {/* Navigation */}
       <nav className="fixed w-full z-50 bg-black/95 backdrop-blur-sm border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             
-            {/* Logo */}
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
               <div className="flex items-center">
                 <span className="font-teko text-4xl font-bold tracking-tight uppercase text-white leading-none">
@@ -88,7 +79,6 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               </div>
             </div>
             
-            {/* Desktop Menu */}
             <div className="hidden md:flex items-center">
               <div className="ml-10 flex items-center space-x-6">
                 <button onClick={() => handleScrollTo('about')} className={navLinkClass}>About</button>
@@ -97,27 +87,26 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 
                 {user ? (
                   <div className="flex items-center gap-4 ml-6 pl-6 border-l border-zinc-700 h-8">
-                    {/* Admin Specific Link */}
                     {user.role === 'ADMIN' && (
                        <button 
                         onClick={() => navigate('/dashboard?view=admin')}
-                        className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4 ${isActive('/dashboard', 'view=admin') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
+                        className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4 ${isActive('coach') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                       >
-                        <Shield className="h-4 w-4 mb-1" />
-                        <span className="pt-0.5">Coach</span>
+                        <Shield className="h-4 w-4" />
+                        <span>Coach</span>
                       </button>
                     )}
 
                     <button 
                       onClick={() => navigate('/dashboard')}
-                      className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full ${isActive('/dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
+                      className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                     >
-                      <UserIcon className="h-4 w-4 mb-1" />
-                      <span className="pt-0.5">Dashboard</span>
+                      <UserIcon className="h-4 w-4" />
+                      <span>Dashboard</span>
                     </button>
                     <button 
                       onClick={handleLogout}
-                      className="text-zinc-500 hover:text-co-red transition-colors flex items-center h-full mb-1"
+                      className="text-zinc-500 hover:text-co-red transition-colors flex items-center h-full"
                       title="Logout"
                     >
                       <LogOut className="h-5 w-5" />
@@ -144,7 +133,6 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               </div>
             </div>
 
-            {/* Mobile menu button */}
             <div className="-mr-2 flex md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -156,7 +144,6 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -182,7 +169,6 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
         )}
       </nav>
 
-      {/* Main Content Area */}
       <main className="flex-grow pt-20 w-full flex flex-col">
         {children}
       </main>

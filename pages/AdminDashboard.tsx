@@ -18,21 +18,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allChildren, setAllChildren] = useState<Child[]>([]);
   
-  // Check-In Logic
   const [qrInput, setQrInput] = useState('');
   const [checkInStatus, setCheckInStatus] = useState<{msg: string, success: boolean} | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   
-  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRosterModal, setShowRosterModal] = useState<Event | null>(null);
 
-  // New Event Form
   const [newEvent, setNewEvent] = useState({
     title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20
   });
 
-  // Roster Management State
   const [kidToAdd, setKidToAdd] = useState('');
 
   useEffect(() => {
@@ -41,7 +37,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
   const loadData = async () => {
     try {
-      // Parallel fetch for speed
       const [evts, usrs, kids] = await Promise.all([
         api.events.list(),
         (api as any).admin.getAllUsers(),
@@ -51,7 +46,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       setAllUsers(usrs);
       setAllChildren(kids);
 
-      // Auto-select first event for check-in dropdown
       if (evts.length > 0 && !selectedEventId) {
         setSelectedEventId(evts[0].id);
       }
@@ -70,7 +64,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
     setCheckInStatus({ msg: result.message, success: result.success });
     setQrInput('');
     setTimeout(() => setCheckInStatus(null), 3000);
-    loadData(); // Refresh data
+    loadData();
   };
 
   const handleCreateEvent = async (e: React.FormEvent) => {
@@ -114,7 +108,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       if (!showRosterModal || !kidToAdd) return;
       await (api as any).admin.addRegistration(showRosterModal.id, kidToAdd);
       
-      // Update local state temporarily so we don't need full reload to see change
       const updatedEvents = events.map(e => {
           if (e.id === showRosterModal.id) {
              return { ...e, registeredKidIds: [...e.registeredKidIds, kidToAdd] };
@@ -122,7 +115,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           return e;
       });
       setEvents(updatedEvents);
-      // Update modal view
       const updatedModalEvent = updatedEvents.find(e => e.id === showRosterModal.id);
       setShowRosterModal(updatedModalEvent || null);
       setKidToAdd('');
@@ -135,7 +127,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
       await (api as any).admin.removeRegistration(showRosterModal.id, childId);
 
-       // Update local state
        const updatedEvents = events.map(e => {
         if (e.id === showRosterModal.id) {
            return { ...e, registeredKidIds: e.registeredKidIds.filter(id => id !== childId) };
@@ -147,18 +138,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       setShowRosterModal(updatedModalEvent || null);
   };
 
-  // --- RENDER HELPERS ---
   const getKidName = (id: string) => {
       const kid = allChildren.find(c => c.id === id);
       return kid ? `${kid.firstName} ${kid.lastName}` : 'Unknown Athlete';
   };
 
-  const getParentName = (parentId: string) => {
-      const parent = allUsers.find(u => u.id === parentId);
-      return parent ? `${parent.firstName} ${parent.lastName}` : 'Unknown Parent';
-  };
-
-  // --- TAB CONTENT ---
   const renderScheduleTab = () => (
       <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -209,11 +193,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   );
 
   const renderCalendarTab = () => {
-      // Simple Calendar: List grouped by day for mobile responsiveness + Web readability
-      // Sort events by date
       const sortedEvents = [...events].sort((a, b) => new Date(a.isoStart).getTime() - new Date(b.isoStart).getTime());
       
-      // Group by Date
       const grouped: { [key: string]: Event[] } = {};
       sortedEvents.forEach(evt => {
           if (!grouped[evt.date]) grouped[evt.date] = [];
@@ -308,10 +289,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       </div>
   );
   
-  // Standardized Box Layout logic:
-  // If embedded (hideHeader=true), we assume parent provides the container, so we just fill width.
-  // If standalone (hideHeader=false), we use the standard max-w-7xl container.
   return (
+    // If hidden header (embedded), we rely on parent container width but ensure w-full.
+    // Otherwise standard box width.
     <div className={!hideHeader ? `w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10` : "w-full"}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         {!hideHeader && (
@@ -321,7 +301,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           </div>
         )}
         
-        {/* Navigation Tabs - Adjusted width logic if header is hidden */}
         <div className={`flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 ${hideHeader ? 'w-full md:w-auto' : ''}`}>
             {(['schedule', 'calendar', 'users'] as const).map(tab => (
                 <button
@@ -336,7 +315,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Check-In Sidebar (Always Visible on Schedule/Calendar) */}
         {activeTab !== 'users' && (
             <div className="lg:col-span-1">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 sticky top-24">
@@ -382,7 +360,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
             </div>
         )}
 
-        {/* Main Content Area */}
         <div className={activeTab === 'users' ? 'lg:col-span-3' : 'lg:col-span-2'}>
             {activeTab === 'schedule' && renderScheduleTab()}
             {activeTab === 'calendar' && renderCalendarTab()}
@@ -390,7 +367,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
         </div>
       </div>
       
-      {/* Roster Management Modal */}
       {showRosterModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowRosterModal(null)}>
             <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -403,7 +379,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Registered List */}
                     <div>
                         <h3 className="text-sm font-bold text-white uppercase mb-4 border-b border-zinc-800 pb-2">Roster ({showRosterModal.registeredKidIds.length})</h3>
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
@@ -419,7 +394,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         </div>
                     </div>
 
-                    {/* Add Athlete */}
                     <div>
                         <h3 className="text-sm font-bold text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add Athlete</h3>
                         <div className="flex gap-2">
@@ -430,7 +404,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                             >
                                 <option value="">-- Select Athlete --</option>
                                 {allChildren
-                                    .filter(c => !showRosterModal.registeredKidIds.includes(c.id)) // Filter out already registered
+                                    .filter(c => !showRosterModal.registeredKidIds.includes(c.id)) 
                                     .map(c => (
                                     <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
                                 ))}
@@ -452,7 +426,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
         </div>
       )}
 
-      {/* Create Event Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
            <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
