@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PACKAGES } from '../constants';
 import { api } from '../services/api';
 import { Child, User } from '../types';
-import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag } from 'lucide-react';
+import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag, Loader2, CheckCircle } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 
 const CheckoutPage: React.FC = () => {
@@ -17,37 +17,51 @@ const CheckoutPage: React.FC = () => {
   const [activeKidId, setActiveKidId] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
+    // 1. Check for Stripe Success Return
+    const params = new URLSearchParams(location.search);
+    if (params.get('session_id')) {
+        setPaymentSuccess(true);
+        // Clear URL param to prevent re-trigger
+        window.history.replaceState({}, '', window.location.pathname);
+        // Show immediate feedback
+        showAlert('Payment Successful', 'Your subscription is being activated. Please wait...', 'success');
+    }
+
     loadData();
-  }, []);
+  }, [location.search]); 
 
   const loadData = async () => {
     try {
       const u = await api.auth.getUser();
       
-      // If no user, redirect to login but save the current location so we can return
       if (!u) {
         const returnUrl = encodeURIComponent(location.pathname);
         navigate(`/login?redirect=${returnUrl}`);
-        // We do NOT stop loading here, because we are redirecting.
-        // If we stop loading, the UI might flash before redirect.
         return;
       }
 
       setUser(u);
+      
+      // Artificial delay if we just came back from payment to allow Webhook to fire
+      const params = new URLSearchParams(location.search);
+      if (params.get('session_id')) {
+         // INCREASED DELAY to 4.5 seconds for cold start functions
+         await new Promise(resolve => setTimeout(resolve, 4500));
+      }
+
       const k = await api.children.list(u.id);
       setKids(k);
       
-      if (k.length > 0) {
+      if (k.length > 0 && !activeKidId) {
         setActiveKidId(k[0].id);
       }
       
     } catch (e) {
       console.error(e);
     } finally {
-       // CRITICAL: Always turn off loading even if no kids are found or error occurs
-       // This prevents the "PREPARING CHECKOUT..." stuck screen.
        setLoading(false);
     }
   };
@@ -57,31 +71,42 @@ const CheckoutPage: React.FC = () => {
     const pkg = PACKAGES.find(p => p.id === pkgId);
     if (!pkg) return;
 
-    // Calculate count of OTHER kids with active subs (excluding current one if they are updating)
-    // For a new sub, it counts all existing active ones.
+    // Calculate count of OTHER kids with active subs
     const activeSubscriptionCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
 
     setProcessing(true);
     try {
-      // Direct call to Billing Service which handles Stripe Checkout
-      await api.billing.createCheckoutSession(pkg.stripePriceId, activeKidId, user.id, activeSubscriptionCount);
+      // Return to THIS page
+      const returnUrl = `${window.location.origin}/#/checkout/${pkgId}?kidId=${activeKidId}`;
+      
+      await api.billing.createCheckoutSession(
+          pkg.stripePriceId, 
+          activeKidId, 
+          user.id, 
+          activeSubscriptionCount,
+          returnUrl, 
+          user.email
+      );
     } catch (e: any) {
       showAlert('Checkout Error', e.message || 'Checkout initiation failed.', 'error');
       setProcessing(false);
     }
   };
 
-  // Pre-select the package from URL if it matches one of the cards
+  // Pre-select kid from URL if present
   useEffect(() => {
-    if (!loading && activeKidId && packageId && packageId !== 'all') {
-        // Logic to scroll to or highlight could go here
-    }
-  }, [loading, activeKidId, packageId]);
+     const params = new URLSearchParams(location.search);
+     const kidParam = params.get('kidId');
+     if (!loading && kidParam && kids.some(k => k.id === kidParam)) {
+         setActiveKidId(kidParam);
+     }
+  }, [loading, location.search, kids]);
+
 
   if (loading) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
         <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center">
-          PREPARING CHECKOUT...
+          {paymentSuccess ? 'ACTIVATING PLAN...' : 'LOADING...'}
         </div>
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
@@ -89,7 +114,6 @@ const CheckoutPage: React.FC = () => {
     </div>
   );
 
-  // If no user (and redirect failed for some reason), don't crash
   if (!user && !loading) {
       return (
           <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -99,9 +123,9 @@ const CheckoutPage: React.FC = () => {
   }
 
   const activeKid = kids.find(k => k.id === activeKidId);
-  const otherActiveSubsCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
   
   // Calculate discount Tier
+  const otherActiveSubsCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
   let discountLabel = '';
   let discountPercent = 0;
 
@@ -114,7 +138,6 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    // Standardized Box Layout: w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
         
         {/* Header */}
@@ -122,9 +145,16 @@ const CheckoutPage: React.FC = () => {
           <h1 className="font-teko text-5xl text-white uppercase mb-2">Choose Your Edge</h1>
           <p className="text-zinc-500 max-w-2xl mx-auto">
             Unlock full potential. Secure payment processing powered by Stripe.
-            Manage subscriptions for each athlete below.
           </p>
         </div>
+
+        {paymentSuccess && (
+            <div className="max-w-3xl mx-auto mb-8 bg-green-900/20 border border-green-800 p-6 rounded text-center flex flex-col items-center animate-fade-in">
+                <CheckCircle className="text-green-500 mb-2" size={32} />
+                <h3 className="text-white font-teko text-2xl uppercase">Payment Successful</h3>
+                <p className="text-zinc-400 text-sm">Your athlete's subscription is active. Welcome to the team.</p>
+            </div>
+        )}
 
         {/* Athlete Selector Tabs */}
         {kids.length > 0 ? (
@@ -173,10 +203,9 @@ const CheckoutPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {PACKAGES.map((pkg) => {
               // Highlight if this kid has this specific active plan (mock logic)
-              const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); // Loose matching for demo
+              const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); 
               const isSelectedFromUrl = packageId === pkg.id;
               
-              // Calculate Price
               const finalPrice = discountPercent > 0 ? Math.round(pkg.price * (1 - discountPercent / 100)) : pkg.price;
 
               return (
@@ -206,7 +235,7 @@ const CheckoutPage: React.FC = () => {
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-grow">
-                    {pkg.features.slice(0, 3).map((feat, i) => ( // Show top 3 features for compactness
+                    {pkg.features.slice(0, 3).map((feat, i) => ( 
                       <li key={i} className="flex items-start gap-2 text-sm text-zinc-400">
                         <Check className="h-4 w-4 text-co-yellow flex-shrink-0 mt-0.5" />
                         <span>{feat}</span>
@@ -264,51 +293,27 @@ const CheckoutPage: React.FC = () => {
                </div>
             </div>
 
-            {/* Billing History Stub */}
+            {/* Billing History Link */}
             <div>
                <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
-                 <CreditCard size={20} className="text-co-yellow" /> Billing History
+                 <CreditCard size={20} className="text-co-yellow" /> Billing Portal
                </h3>
-               <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-zinc-950 text-zinc-500 uppercase text-xs">
-                        <tr>
-                          <th className="px-4 py-3 font-medium">Date</th>
-                          <th className="px-4 py-3 font-medium">Description</th>
-                          <th className="px-4 py-3 font-medium text-right">Amount</th>
-                          <th className="px-4 py-3 font-medium text-right">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-800">
-                        {/* Mock Rows or Empty State */}
-                        {activeKid.subscriptionStatus === 'active' ? (
-                          <tr>
-                            <td className="px-4 py-3 text-zinc-300">Dec 15, 2023</td>
-                            <td className="px-4 py-3 text-zinc-300">
-                               <div className="font-bold">Stripe Payment</div>
-                               <div className="text-[10px] text-zinc-600">tx_mock_12345</div>
-                            </td>
-                            <td className="px-4 py-3 text-zinc-300 text-right">$9.00</td>
-                            <td className="px-4 py-3 text-right">
-                              <span className="bg-co-yellow/10 text-co-yellow border border-co-yellow/20 text-[10px] px-2 py-1 rounded font-bold">PAID</span>
-                            </td>
-                          </tr>
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="px-4 py-6 text-center text-zinc-600 text-xs italic">
-                              No billing history available.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                 </div>
-                 <div className="p-4 bg-zinc-950 border-t border-zinc-800 text-center">
-                    <button onClick={() => api.billing.createPortalSession()} className="text-xs text-zinc-400 hover:text-white uppercase font-bold tracking-widest">
-                       View All in Stripe Portal
-                    </button>
-                 </div>
+               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 text-center">
+                   <p className="text-zinc-400 text-sm mb-4">
+                       Manage your payment methods, view past invoices, and cancel subscriptions via Stripe.
+                   </p>
+                   {activeKid.subscriptionStatus === 'active' || user.stripeCustomerId ? (
+                        <button 
+                            onClick={() => api.billing.createPortalSession()} 
+                            className="bg-white text-black px-6 py-2 font-bold uppercase rounded hover:bg-zinc-200 transition-colors w-full"
+                        >
+                            Open Billing Portal
+                        </button>
+                   ) : (
+                        <button disabled className="bg-zinc-800 text-zinc-500 px-6 py-2 font-bold uppercase rounded cursor-not-allowed w-full border border-zinc-700">
+                            No Billing History
+                        </button>
+                   )}
                </div>
             </div>
 

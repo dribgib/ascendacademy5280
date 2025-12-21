@@ -408,7 +408,7 @@ const supabaseApi = {
   },
 
   billing: {
-    createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0) => {
+    createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0, returnUrl: string, userEmail: string) => {
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe not initialized.");
       
@@ -422,8 +422,9 @@ const supabaseApi = {
               priceId, 
               childId, 
               userId, 
+              userEmail,
               activeSubscriptionCount,
-              returnUrl: window.location.origin + '/dashboard'
+              returnUrl: returnUrl
           })
       });
 
@@ -485,7 +486,7 @@ const supabaseApi = {
 
       const data = await response.json();
 
-      if (!response.ok || !data.url) throw new Error('Portal unavailable.');
+      if (!response.ok || !data.url) throw new Error(data.error || 'Portal unavailable.');
       window.location.href = data.url;
     }
   },

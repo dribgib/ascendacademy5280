@@ -91,7 +91,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       setLoading(true);
       await api.billing.createPortalSession();
     } catch (e: any) {
-      showAlert('Billing Error', e.message, 'error');
+      // If error is strictly about missing history, we can show a friendlier modal
+      if (e.message?.includes('No billing history') || e.message?.includes('No billing account')) {
+         showAlert('No Billing History', 'You do not have any active subscriptions or payment history yet. Subscribe to a plan first.', 'info');
+      } else {
+         showAlert('Billing Portal Unavailable', e.message || 'Could not connect to billing portal.', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -139,12 +144,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
         if (isSigned) {
             setWaiverSigned(true);
             setImageUploading(true);
+            
             let imageUrl = undefined;
+            // Attempt Upload - NON BLOCKING
+            // We intentionally swallow upload errors to ensure the child profile is created even if image storage fails
             if (kidImage && (api as any).children.uploadImage) {
-                // Pass user.id to handle RLS folder structure
-                const uploaded = await (api as any).children.uploadImage(kidImage, user.id);
-                if (uploaded) imageUrl = uploaded;
+                try {
+                    const uploaded = await (api as any).children.uploadImage(kidImage, user.id);
+                    if (uploaded) imageUrl = uploaded;
+                } catch (uploadErr) {
+                    console.error("Image upload failed (RLS or Network), proceeding with registration without image:", uploadErr);
+                    // Do not bubble error up - proceed to create child
+                }
             }
+
+            // Create Child Profile
             await api.children.create({
                 parentId: user.id,
                 firstName: newKidName.first,
@@ -153,6 +167,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 sports: selectedSports,
                 imageUrl
             });
+            
             setShowAddKidModal(false);
             loadData();
             resetForm();

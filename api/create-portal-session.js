@@ -1,12 +1,12 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Check for Test key first, then Live key, then generic key
 const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+const supabaseUrl = process.env.VITE_PUBLIC_SUPABASE_URL;
+// Need Service Role to securely read profiles if RLS is strict, or Anon if user is authenticated via header
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!stripeKey) {
-  throw new Error('Missing Stripe Secret Key in Environment Variables');
-}
+if (!stripeKey) throw new Error('Missing Stripe Key');
 
 const stripe = new Stripe(stripeKey);
 
@@ -16,36 +16,35 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Verify User with Supabase
-    // We create a client using the Auth Header from the request
-    const supabaseUrl = process.env.VITE_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
-    
-    // Check if auth header exists
+    // 1. Initialize Supabase
+    // If we have the Auth header, we can use the Anon key and respect RLS.
+    // Otherwise we use Service Role to lookup the customer ID directly.
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    const client = createClient(supabaseUrl, supabaseKey, 
+        authHeader ? { global: { headers: { Authorization: authHeader } } } : {}
+    );
+
+    let userId;
+
+    if (authHeader) {
+        // Method A: Authenticated Request from Frontend
+        const { data: { user }, error } = await client.auth.getUser();
+        if (error || !user) throw new Error('Unauthorized');
+        userId = user.id;
+    } else {
+        // Method B: Fallback (Not recommended without auth)
         throw new Error('Missing Authorization Header');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-        throw new Error('Unauthorized');
-    }
-
-    // 2. Get Stripe Customer ID from DB
-    const { data: profile } = await supabase
+    // 2. Get Stripe Customer ID
+    const { data: profile } = await client
         .from('profiles')
         .select('stripe_customer_id')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
     if (!profile?.stripe_customer_id) {
-        throw new Error('No billing account found for this user.');
+        return res.status(400).json({ error: 'No billing history found. Please subscribe to a plan first.' });
     }
 
     const { returnUrl } = req.body;
