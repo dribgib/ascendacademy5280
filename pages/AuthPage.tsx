@@ -41,45 +41,35 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
     try {
       if (isLogin) {
-        // Standard Login
+        // --- LOGIN FLOW ---
         const { error } = await api.auth.signIn(email, password);
-        if (error) {
-           throw error;
-        }
-        // On success, we purposefully LEAVE loading=true.
-        // The App component will detect the auth state change, update the user, 
-        // and unmount this component (redirecting to dashboard).
+        if (error) throw error;
+        // Success: App.tsx detects session change
       } else {
-        // Magic Link Sign Up
-        const env = (import.meta as any).env || {};
-        const siteUrl = env.VITE_SITE_URL || window.location.origin;
-        
-        // IMPORTANT: For HashRouter, we point to the root with a query param or handle the hash manually.
-        // Supabase will append #access_token=... to this URL.
-        // If we use `siteUrl + '/#/set-password'`, Supabase might encode the hash weirdly.
-        // Best practice is to redirect to root, then let App.tsx handle the token detection.
-        const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
-        
-        // We instruct the App to redirect to set-password after auth via a query param state or just checking the user state.
-        // But specifically for Supabase `emailRedirectTo`, it works best if pointing to a clean URL.
-        const redirectUrl = baseUrl; 
-        
-        console.log('Initiating Magic Link with redirect:', redirectUrl);
-
-        const { error } = await api.auth.signInWithOtp(
+        // --- SIGN UP FLOW (Regular Account) ---
+        // Requires "Confirm Email" to be disabled in Supabase for immediate login,
+        // OR the user must check their email.
+        const { data, error } = await api.auth.signUp(
           email, 
-          { firstName, lastName, phone }, // Metadata
-          redirectUrl
+          password, 
+          { firstName, lastName, phone }
         );
 
         if (error) throw error;
-        setMagicLinkSent(true);
-        setLoading(false); // Stop loading for magic link screen
+
+        // If Supabase has "Confirm Email" enabled, user is null, checking session is required
+        if (data?.user && !data.session) {
+           setMagicLinkSent(true); // Re-use the "Check Email" screen
+           setLoading(false);
+           return;
+        }
+
+        // If "Confirm Email" is disabled, data.session exists, and App.tsx handles the rest.
       }
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Authentication failed');
-      setLoading(false); // Only stop loading on error
+      setLoading(false);
     }
   };
 
@@ -98,11 +88,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex justify-center">
             <div className="max-w-md w-full bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
-                <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Email</h2>
+                <h2 className="font-teko text-4xl text-white uppercase mb-4">Verify Your Email</h2>
                 <p className="text-zinc-400 mb-6">
-                    We've sent a magic link to <span className="text-white font-bold">{email}</span>.
+                    Account created! We've sent a verification link to <span className="text-white font-bold">{email}</span>.
                     <br />
-                    Click the link in the email to verify your account and set your password.
+                    Please check your inbox (and spam folder) to complete registration.
                 </p>
                 <button onClick={() => setMagicLinkSent(false)} className="text-co-yellow underline mt-4">
                     Back to Login
@@ -122,7 +112,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
           alt="Background" 
           className="w-full h-full object-cover"
         />
-        {/* Darker Overlay as requested */}
         <div className="absolute inset-0 bg-black/85"></div>
       </div>
 
@@ -186,16 +175,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                 </div>
 
-                {/* Password only for Login */}
-                {isLogin && (
                 <div>
                     <div className="flex justify-between">
                     <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Password</label>
-                    <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">Forgot?</a>
+                    {isLogin && <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">Forgot?</a>}
                     </div>
                     <input required type="password" minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                 </div>
-                )}
 
                 <button 
                 type="submit" 
@@ -206,7 +192,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                         : 'bg-co-red text-white hover:bg-red-800'
                     }`}
                 >
-                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Send Magic Link & Join')}
+                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
                 </button>
             </form>
             </div>
