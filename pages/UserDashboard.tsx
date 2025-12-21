@@ -238,15 +238,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   );
 
   return (
-    // UPDATED: Use w-full max-w-full with padding for maximum space availability
-    <div className="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
+    // UPDATED: Use w-full max-w-[98%] for wider view, with 2xl limit
+    <div className="w-full max-w-[98%] 2xl:max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
-      {/* UPDATED: Changed breakpoint to xl for row layout, added flex-wrap to prevent collision */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
+      {/* UPDATED: flex-wrap to prevent overlap on medium screens */}
+      <div className="flex flex-wrap justify-between items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
         
         {/* Left Side: Title & Toggle */}
-        <div className="flex-1 w-full xl:w-auto">
+        <div className="flex-1 min-w-[300px]">
            <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-wrap">
               <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap">
                 {isAdminView ? "Coach's Dashboard" : "My Team"}
@@ -279,7 +279,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
         {/* Right Side: Action Buttons */}
         {!isAdminView && (
-            <div className="flex flex-wrap gap-3 w-full xl:w-auto mt-4 xl:mt-0 justify-start xl:justify-end">
+            <div className="flex flex-wrap gap-3 w-full lg:w-auto mt-4 lg:mt-0 justify-start lg:justify-end">
                 <button 
                     onClick={() => setShowAccountModal(true)}
                     className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"

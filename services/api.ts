@@ -42,7 +42,6 @@ const supabaseApi = {
       if (!user) return null;
 
       // 2. Extract Metadata immediately (Fastest Source of Truth)
-      // If DB is 500ing, we rely on this.
       const meta = user.user_metadata || {};
       
       // Default User Object from Metadata
@@ -57,7 +56,6 @@ const supabaseApi = {
       };
 
       // 3. Try to fetch extended profile details (Database)
-      // If the DB has RLS recursion (500 error), we catch it and use appUser (metadata) instead.
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -66,7 +64,6 @@ const supabaseApi = {
           .single();
         
         if (error) {
-           // 500 errors often mean recursive RLS policies.
            console.warn('[Profile Fetch Warning] DB fetch failed, using Auth Metadata.', error);
         } else if (data) {
           // Merge DB profile data over metadata
@@ -75,8 +72,6 @@ const supabaseApi = {
           appUser.phone = data.phone || appUser.phone;
           appUser.role = data.role || appUser.role; // DB Role takes precedence if successful
           appUser.stripeCustomerId = data.stripe_customer_id || appUser.stripeCustomerId;
-          
-          console.log(`[Profile Fetch] Loaded user ${appUser.email} with role: ${appUser.role}`);
         }
       } catch (e) {
         console.warn('Profile fetch exception (Using fallback):', e);
