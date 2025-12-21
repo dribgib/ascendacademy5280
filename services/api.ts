@@ -483,13 +483,26 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        // DEV OVERRIDE: 
-        // Real-time signing detection requires Webhooks or a Proxy Server which aren't available 
-        // in this frontend-only/development environment.
-        // We simulate a successful check to unblock the user flow.
-        console.log(`[DEV MODE] Mocking waiver check for ${childName}. Assuming signed.`);
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API network delay
-        return true; 
+        // @ts-ignore
+        const env = import.meta.env || {};
+        // @ts-ignore
+        const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+
+        try {
+            const { data, error } = await supabase.functions.invoke('check-waiver', {
+                body: { email: parentEmail, childName },
+                headers: { 'apikey': anonKey }
+            });
+
+            if (error) {
+                 console.error("Waiver check failed", error);
+                 return false;
+            }
+            return data?.signed || false;
+        } catch (e) {
+            console.error("Waiver check exception", e);
+            return false;
+        }
     }
   },
 

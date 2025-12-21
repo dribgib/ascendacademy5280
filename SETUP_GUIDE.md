@@ -45,8 +45,14 @@ VITE_PUBLIC_SUPABASE_ANON_KEY=eyJh... (Your Project API Key)
 ---
 
 ## 3. Admin Setup
-To make yourself an admin:
-1.  Sign up on the site normally.
-2.  Go to Supabase > Table Editor > `profiles`.
-3.  Find your user row and change `role` from 'PARENT' to 'ADMIN'.
-4.  Refresh the app.
+To make a user an Admin (Coach):
+
+1.  Sign up the user normally on the site.
+2.  Open `admin_roles.sql` in this project.
+3.  Copy the content.
+4.  Go to Supabase > SQL Editor and paste/run the code.
+5.  Refresh the application.
+
+**Current Configuration:**
+- Admin: `colton@tamerdesigns.com`
+- Parent: `colton.joseph@gmail.com`
