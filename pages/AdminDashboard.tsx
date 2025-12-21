@@ -261,8 +261,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
          <h2 className="font-teko text-3xl text-white uppercase mb-6 flex items-center gap-2">
             <Users className="text-zinc-400" /> Athletes & Parents
          </h2>
-         <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-sm">
+         <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[800px]">
                 <thead className="bg-zinc-950 text-zinc-500 uppercase text-xs border-b border-zinc-800">
                     <tr>
                         <th className="px-6 py-4 font-bold">Parent Name</th>
@@ -307,11 +307,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
          </div>
       </div>
   );
-
-  const containerMaxWidth = activeTab === 'users' ? 'max-w-[95rem]' : 'max-w-7xl';
   
   return (
-    <div className={!hideHeader ? `${containerMaxWidth} mx-auto px-4 sm:px-6 lg:px-8 py-10` : ""}>
+    <div className={!hideHeader ? `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10` : ""}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         {!hideHeader && (
           <div>

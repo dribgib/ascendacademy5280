@@ -54,9 +54,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
         const env = (import.meta as any).env || {};
         const siteUrl = env.VITE_SITE_URL || window.location.origin;
         
-        // IMPORTANT: For BrowserRouter, we can point directly to the path
+        // IMPORTANT: For HashRouter, we point to the root with a query param or handle the hash manually.
+        // Supabase will append #access_token=... to this URL.
+        // If we use `siteUrl + '/#/set-password'`, Supabase might encode the hash weirdly.
+        // Best practice is to redirect to root, then let App.tsx handle the token detection.
         const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
-        const redirectUrl = `${baseUrl}/set-password`;
+        
+        // We instruct the App to redirect to set-password after auth via a query param state or just checking the user state.
+        // But specifically for Supabase `emailRedirectTo`, it works best if pointing to a clean URL.
+        const redirectUrl = baseUrl; 
         
         console.log('Initiating Magic Link with redirect:', redirectUrl);
 

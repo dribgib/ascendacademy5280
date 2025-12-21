@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
@@ -39,17 +39,20 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
     if (location.pathname === '/set-password') return;
 
     // 1. Check search params (e.g. site.com/?next=set-password)
-    const searchParams = new URLSearchParams(window.location.search);
+    // Note: With HashRouter, query params are after the hash like #/path?next=...
+    const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('next') === 'set-password') {
        navigate('/set-password');
        return;
     }
 
-    // 2. Check hash params fallback (just in case old links exist)
+    // 2. Check hash params fallback (handling legacy/external redirects)
+    // In HashRouter, window.location.hash includes the path.
+    // We check if the raw hash string contains the param.
     if (window.location.hash.includes('next=set-password')) {
        navigate('/set-password', { replace: true });
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate, location.pathname, location.search]);
 
   return null;
 };
@@ -60,10 +63,12 @@ const App: React.FC = () => {
   const [authProcessing, setAuthProcessing] = useState(false);
 
   useEffect(() => {
-    console.log("Ascend Academy App v2.1 (Production/Real DB) Loaded");
+    console.log("Ascend Academy App v2.2 (HashRouter) Loaded");
     let mounted = true;
     
     // Detect if we are returning from a Magic Link (access_token in hash)
+    // Supabase often puts tokens in the hash. 
+    // With HashRouter, this might conflict, but Supabase client handles parsing automatically from URL.
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
       setAuthProcessing(true);
     }

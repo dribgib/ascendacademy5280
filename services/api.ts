@@ -15,12 +15,6 @@ const formatDate = (isoString: string) => {
   return new Date(isoString).toISOString().split('T')[0];
 };
 
-// Safe Env Access
-const getEnvVar = (key: string) => {
-  const env = (import.meta as any).env || {};
-  return env[key] || '';
-};
-
 // --- REAL SUPABASE IMPLEMENTATION ---
 const supabaseApi = {
   auth: {
@@ -398,7 +392,10 @@ const supabaseApi = {
       }
       
       // Explicitly set headers in case of custom domain issues
-      const anonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY');
+      // Use direct access for Vite replacement
+      // @ts-ignore
+      const anonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+      
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
             priceId, 
@@ -426,7 +423,9 @@ const supabaseApi = {
       const stripe = await stripePromise;
       if (!stripe) return;
 
-      const anonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY');
+      // @ts-ignore
+      const anonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+      
       const { data, error } = await supabase.functions.invoke('create-donation-session', {
         body: { amount, userId, returnUrl: window.location.origin + '/' },
         headers: {
@@ -444,7 +443,9 @@ const supabaseApi = {
     },
 
     createPortalSession: async () => {
-      const anonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY');
+      // @ts-ignore
+      const anonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+      
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
           body: { returnUrl: window.location.origin + '/dashboard' },
           headers: {

@@ -238,8 +238,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   );
 
   return (
-    // UPDATED: Use w-full max-w-[98%] for wider view, with 2xl limit
-    <div className="w-full max-w-[98%] 2xl:max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
+    // UPDATED: Standard max-w-7xl to match other pages (Boxed Layout)
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
       {/* UPDATED: flex-wrap to prevent overlap on medium screens */}
