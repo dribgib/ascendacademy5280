@@ -392,9 +392,11 @@ const supabaseApi = {
       }
       
       // Explicitly set headers in case of custom domain issues
-      // Use direct access for Vite replacement
+      // Use direct access via safe environment object
       // @ts-ignore
-      const anonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+      const env = import.meta.env || {};
+      // @ts-ignore
+      const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
       
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
@@ -424,7 +426,9 @@ const supabaseApi = {
       if (!stripe) return;
 
       // @ts-ignore
-      const anonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+      const env = import.meta.env || {};
+      // @ts-ignore
+      const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
       
       const { data, error } = await supabase.functions.invoke('create-donation-session', {
         body: { amount, userId, returnUrl: window.location.origin + '/' },
@@ -444,7 +448,9 @@ const supabaseApi = {
 
     createPortalSession: async () => {
       // @ts-ignore
-      const anonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+      const env = import.meta.env || {};
+      // @ts-ignore
+      const anonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY;
       
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
           body: { returnUrl: window.location.origin + '/dashboard' },

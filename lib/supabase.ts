@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Access environment variables directly to ensure Vite performs static replacement during build
+// Safely access environment variables with a fallback
 // @ts-ignore
-const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL;
+const env = import.meta.env || {};
+
 // @ts-ignore
-const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = env.VITE_PUBLIC_SUPABASE_URL || '';
+// @ts-ignore
+const supabaseAnonKey = env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = !!supabaseUrl && !!supabaseAnonKey;
 
