@@ -242,38 +242,37 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
       {/* --- HEADER SECTION --- */}
-      <div className="flex flex-wrap justify-between items-end gap-6 mb-10 border-b border-zinc-800 pb-8">
+      <div className="flex flex-wrap justify-between items-start gap-6 mb-10 border-b border-zinc-800 pb-8">
         
         {/* Left Side: Title & Toggle */}
         <div className="flex-1 min-w-[300px]">
-           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-wrap">
-              <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap">
-                {isAdminView ? "Coach's Dashboard" : "My Team"}
-              </h1>
-              {/* Admin Toggle */}
-              {user.role === 'ADMIN' && (
-                 <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg self-start sm:self-auto">
-                    <button 
-                       onClick={() => toggleView('parent')}
-                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
-                    >
-                       My Team
-                    </button>
-                    <button 
-                       onClick={() => toggleView('admin')}
-                       className={`px-4 py-1 rounded-md font-teko text-lg uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
-                    >
-                       Coach
-                    </button>
-                 </div>
-              )}
-           </div>
-           <p className="text-zinc-500 mt-2 max-w-xl">
+           <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap mb-2">
+             {isAdminView ? "Coach's Dashboard" : "My Team"}
+           </h1>
+           <p className="text-zinc-500 mb-6 max-w-xl">
               {isAdminView 
                   ? `Welcome back, ${user.firstName}. Access roster and schedule controls.` 
                   : "Manage your athletes, subscriptions, and schedules."
               }
            </p>
+
+           {/* Admin Toggle - MOVED BELOW TITLE */}
+           {user.role === 'ADMIN' && (
+              <div className="flex bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
+                 <button 
+                    onClick={() => toggleView('parent')}
+                    className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                 >
+                    My Team
+                 </button>
+                 <button 
+                    onClick={() => toggleView('admin')}
+                    className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black font-bold' : 'text-zinc-500 hover:text-white'}`}
+                 >
+                    Coach
+                 </button>
+              </div>
+           )}
         </div>
 
         {/* Right Side: Action Buttons */}

@@ -50,7 +50,7 @@ const supabaseApi = {
       };
 
       // 3. Try to fetch extended profile details (Database)
-      // Add timeout to prevent hanging if DB is unresponsive
+      // INCREASED TIMEOUT: 5000ms to handle Supabase cold starts without breaking auth flow
       try {
         const dbPromise = supabase
           .from('profiles')
@@ -58,7 +58,7 @@ const supabaseApi = {
           .eq('id', user.id)
           .single();
           
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 2000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 5000));
         
         // @ts-ignore
         const { data, error } = await Promise.race([dbPromise, timeoutPromise])
@@ -66,7 +66,7 @@ const supabaseApi = {
         
         if (error) {
            // Silent warning, we have metadata fallback
-           console.log('[Profile Fetch skipped] Using metadata fallback.');
+           console.log('[Profile Fetch skipped] Using metadata fallback (DB might be cold/paused).');
         } else if (data) {
           // Merge DB profile data over metadata
           appUser.firstName = data.first_name || appUser.firstName;

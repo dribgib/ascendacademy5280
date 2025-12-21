@@ -57,6 +57,19 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
     }
   };
 
+  // Helper to determine active state
+  const isActive = (path: string, queryParam?: string) => {
+    if (location.pathname !== path) return false;
+    if (queryParam) {
+      return location.search.includes(queryParam);
+    }
+    // If checking root dashboard (parent view), ensure NOT in admin view
+    if (path === '/dashboard') {
+      return !location.search.includes('view=admin');
+    }
+    return true;
+  };
+
   const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-teko text-xl uppercase tracking-wide cursor-pointer";
 
   return (
@@ -88,23 +101,23 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                     {user.role === 'ADMIN' && (
                        <button 
                         onClick={() => navigate('/dashboard?view=admin')}
-                        className="flex items-center gap-2 text-co-yellow hover:text-white transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4"
+                        className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4 ${isActive('/dashboard', 'view=admin') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                       >
-                        <Shield className="h-5 w-5" />
-                        Coach
+                        <Shield className="h-4 w-4 mb-1" />
+                        <span className="pt-0.5">Coach</span>
                       </button>
                     )}
 
                     <button 
                       onClick={() => navigate('/dashboard')}
-                      className="flex items-center gap-2 text-white hover:text-co-yellow transition-colors font-teko text-xl uppercase tracking-wide h-full"
+                      className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full ${isActive('/dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                     >
-                      <UserIcon className="h-5 w-5" />
-                      Dashboard
+                      <UserIcon className="h-4 w-4 mb-1" />
+                      <span className="pt-0.5">Dashboard</span>
                     </button>
                     <button 
                       onClick={handleLogout}
-                      className="text-zinc-500 hover:text-co-red transition-colors flex items-center h-full"
+                      className="text-zinc-500 hover:text-co-red transition-colors flex items-center h-full mb-1"
                       title="Logout"
                     >
                       <LogOut className="h-5 w-5" />
@@ -114,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                   <div className="flex items-center gap-6 ml-6 pl-6 border-l border-zinc-700">
                     <button 
                       onClick={() => navigate('/login?mode=login')}
-                      className="text-zinc-300 hover:text-white transition-colors uppercase font-teko text-xl tracking-wide"
+                      className="text-zinc-300 hover:text-white transition-colors uppercase font-teko text-xl tracking-wide pt-1"
                     >
                       Login
                     </button>

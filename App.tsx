@@ -62,7 +62,7 @@ const App: React.FC = () => {
   const [authProcessing, setAuthProcessing] = useState(false);
 
   useEffect(() => {
-    console.log("Ascend Academy App v2.4 (Failsafe Auth) Loaded");
+    console.log("Ascend Academy App v2.5 (Stable Auth) Loaded");
     let mounted = true;
     
     // Detect if we are returning from a Magic Link (access_token in hash)
@@ -71,14 +71,14 @@ const App: React.FC = () => {
     }
 
     // Failsafe: If loading takes too long, force it off.
-    // This handles cases where Supabase client hangs on connection or requests.
+    // INCREASED TIMEOUT to 6s to allow the 5s DB check in api.ts to complete first.
     const safetyTimer = setTimeout(() => {
       if (mounted && (loading || authProcessing)) {
         console.warn("Auth check timed out. Forcing app load.");
         setLoading(false);
         setAuthProcessing(false);
       }
-    }, 3000);
+    }, 6000);
 
     // 1. Setup Listener for FUTURE changes (Sign In, Sign Out during usage)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -107,9 +107,10 @@ const App: React.FC = () => {
     const checkSession = async () => {
       try {
         console.log("Checking session...");
-        // Race the session check against a short timeout to prevent hanging on network issues
+        // Race the session check against a timeout
+        // INCREASED TIMEOUT to 6000ms to allow cold starts
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 2500));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 6000));
         
         // @ts-ignore
         const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise])
