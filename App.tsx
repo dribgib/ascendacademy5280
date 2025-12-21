@@ -62,13 +62,23 @@ const App: React.FC = () => {
   const [authProcessing, setAuthProcessing] = useState(false);
 
   useEffect(() => {
-    console.log("Ascend Academy App v2.3 (Robust Auth) Loaded");
+    console.log("Ascend Academy App v2.4 (Failsafe Auth) Loaded");
     let mounted = true;
     
     // Detect if we are returning from a Magic Link (access_token in hash)
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
       setAuthProcessing(true);
     }
+
+    // Failsafe: If loading takes too long, force it off.
+    // This handles cases where Supabase client hangs on connection or requests.
+    const safetyTimer = setTimeout(() => {
+      if (mounted && (loading || authProcessing)) {
+        console.warn("Auth check timed out. Forcing app load.");
+        setLoading(false);
+        setAuthProcessing(false);
+      }
+    }, 3000);
 
     // 1. Setup Listener for FUTURE changes (Sign In, Sign Out during usage)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -83,6 +93,7 @@ const App: React.FC = () => {
         if (session?.user) {
            // We might already have the user from the initial check, but getting it again ensures sync
            try {
+             // Use a simpler fetch here to avoid race conditions with the main check
              const u = await api.auth.getUser(session.user);
              if (mounted) setUser(u);
            } catch (e) {
@@ -95,15 +106,19 @@ const App: React.FC = () => {
     // 2. Perform IMMEDIATE check for current session to unblock loading screen
     const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Checking session...");
+        // Race the session check against a short timeout to prevent hanging on network issues
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 2500));
+        
+        // @ts-ignore
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise])
+            .catch(e => ({ data: { session: null }, error: e }));
         
         if (error) {
-           console.warn("Session check error:", error);
+           console.warn("Session check warning:", error);
            if (mounted) setUser(null);
-           return;
-        }
-
-        if (session?.user) {
+        } else if (session?.user) {
            console.log("Session found, fetching user profile...");
            const u = await api.auth.getUser(session.user);
            if (mounted) setUser(u);
@@ -115,6 +130,7 @@ const App: React.FC = () => {
         console.error("Critical Auth Error:", err);
       } finally {
         if (mounted) {
+          clearTimeout(safetyTimer); // Clear the backup timer since we finished naturally
           setLoading(false);
           setAuthProcessing(false);
         }
@@ -125,6 +141,7 @@ const App: React.FC = () => {
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);

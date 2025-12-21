@@ -50,15 +50,23 @@ const supabaseApi = {
       };
 
       // 3. Try to fetch extended profile details (Database)
+      // Add timeout to prevent hanging if DB is unresponsive
       try {
-        const { data, error } = await supabase
+        const dbPromise = supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
+          
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 2000));
+        
+        // @ts-ignore
+        const { data, error } = await Promise.race([dbPromise, timeoutPromise])
+            .catch(e => ({ data: null, error: e }));
         
         if (error) {
-           console.warn('[Profile Fetch Warning] DB fetch failed, using Auth Metadata.', error);
+           // Silent warning, we have metadata fallback
+           console.log('[Profile Fetch skipped] Using metadata fallback.');
         } else if (data) {
           // Merge DB profile data over metadata
           appUser.firstName = data.first_name || appUser.firstName;
