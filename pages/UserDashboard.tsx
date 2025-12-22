@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight } from 'lucide-react';
 import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -397,25 +397,29 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 
                                 <div className="mt-4">
                                     {kid.subscriptionStatus === 'active' && kid.usageStats ? (
-                                    <div className="flex flex-col items-start gap-2">
-                                        <div className="flex items-center gap-2">
+                                    <div className="flex flex-col items-start gap-3">
+                                        <div className="flex flex-wrap gap-2 items-center">
                                             <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 inline-block">
                                                 {kid.usageStats.planName} Plan
                                             </span>
-                                            <button 
-                                                onClick={() => navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`)}
-                                                className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs uppercase font-bold py-1 px-3 rounded border border-zinc-600 hover:border-zinc-500 transition-colors flex items-center gap-1 shadow-sm"
-                                            >
-                                                Change Plan
-                                            </button>
+                                            <span className="text-[10px] text-zinc-500">
+                                                {kid.usageStats.used} / {kid.usageStats.limit} Sessions
+                                            </span>
                                         </div>
+                                        
+                                        <button 
+                                            onClick={() => navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`)}
+                                            className="w-full bg-white hover:bg-zinc-200 text-black text-xs uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                        >
+                                            <RefreshCw size={12} /> Change Plan
+                                        </button>
                                     </div>
                                     ) : (
                                     <button 
                                         onClick={() => navigate(`/checkout/p_elite?kidId=${kid.id}`)} 
-                                        className="text-[10px] uppercase font-medium bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
+                                        className="w-full text-xs uppercase font-medium bg-red-900/40 text-red-200 px-3 py-2 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center justify-center gap-1 mt-2"
                                     >
-                                        No Active Plan <ExternalLink size={10} />
+                                        No Active Plan <ChevronRight size={12} />
                                     </button>
                                     )}
                                 </div>

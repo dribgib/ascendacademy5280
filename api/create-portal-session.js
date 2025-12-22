@@ -3,11 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 
 const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 const supabaseUrl = process.env.VITE_PUBLIC_SUPABASE_URL;
-// Need Service Role to securely read profiles if RLS is strict, or Anon if user is authenticated via header
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+// Distinct keys for different operations
+const supabaseAnonKey = process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!stripeKey) throw new Error('Missing Stripe Key');
-if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase Config');
+if (!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase Config');
 
 const stripe = new Stripe(stripeKey);
 
@@ -17,37 +18,33 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Initialize Supabase
-    // Vercel/Node lowercases headers
+    // 1. Validation
     const authHeader = req.headers.authorization || req.headers.Authorization;
     
-    // Check if Auth Header is present and valid
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-       console.error("Missing or invalid Authorization header");
+       console.error("Portal API: Missing Authorization header");
        return res.status(401).json({ error: 'Missing auth token' });
     }
 
-    const client = createClient(supabaseUrl, supabaseKey, {
+    // 2. Authenticate User
+    // CRITICAL FIX: Use ANON KEY for getUser() verification. 
+    // Service Role key bypasses security and might behave differently with getUser().
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } }
     });
 
-    // 2. Authenticate User
-    const { data: { user }, error: userError } = await client.auth.getUser();
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
 
     if (userError || !user) {
-        console.error("Portal Auth Error:", userError);
-        return res.status(401).json({ error: 'Unauthorized: Session invalid.' });
+        console.error("Portal API: Auth failed", userError);
+        return res.status(401).json({ error: 'Unauthorized: Invalid session.' });
     }
 
     const userId = user.id;
 
     // 3. Get Stripe Customer ID
-    // Use Service Role client for DB access if possible, or fall back to the authenticated client
-    // To be safe, if we have service key, use it for DB query to bypass RLS issues on 'profiles'
-    let dbClient = client;
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        dbClient = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    }
+    // Use Service Role client for reliable DB access (bypassing RLS)
+    const dbClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: profile, error: profileError } = await dbClient
         .from('profiles')
@@ -56,8 +53,8 @@ export default async function handler(req, res) {
         .single();
 
     if (profileError) {
-        console.error("Profile Lookup Error:", profileError);
-        return res.status(500).json({ error: 'Database error retrieving profile.' });
+        console.error("Portal API: Profile lookup failed", profileError);
+        return res.status(500).json({ error: 'Database error.' });
     }
 
     if (!profile?.stripe_customer_id) {
@@ -74,7 +71,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ url: session.url });
   } catch (error) {
-    console.error('Portal Error:', error);
+    console.error('Portal API Critical Error:', error);
     return res.status(400).json({ error: error.message });
   }
 }
