@@ -408,7 +408,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                         </div>
                                         
                                         <button 
-                                            onClick={() => navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`);
+                                            }}
                                             className="w-full bg-white hover:bg-zinc-200 text-black text-xs uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
                                         >
                                             <RefreshCw size={12} /> Change Plan
