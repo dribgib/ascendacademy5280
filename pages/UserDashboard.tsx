@@ -371,18 +371,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                         <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
                                             {kid.usageStats.planName} Plan
                                         </span>
-                                        <div className="mt-2">
-                                            <div className="flex justify-between text-[10px] text-zinc-400 mb-1 uppercase tracking-wider">
-                                                <span>Usage</span>
-                                                <span>{kid.usageStats.used} / {kid.usageStats.limit}</span>
-                                            </div>
-                                            <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                                                <div 
-                                                    className={`h-full ${kid.usageStats.used >= kid.usageStats.limit ? 'bg-co-red' : 'bg-co-yellow'}`} 
-                                                    style={{ width: `${Math.min((kid.usageStats.used / kid.usageStats.limit) * 100, 100)}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
                                     </div>
                                     ) : (
                                     <button 

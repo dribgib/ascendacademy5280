@@ -212,7 +212,9 @@ const supabaseApi = {
         let usageStats = undefined;
 
         if (activeSub) {
-            const pkg = PACKAGES.find(p => p.id === activeSub.package_id) || PACKAGES.find(p => activeSub.package_id.includes(p.id));
+            // FIX: Check for match on local ID OR Stripe Price ID to ensure Plan Name resolves
+            const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
+            
             const limit = pkg ? pkg.maxSessions : 0;
             const planName = pkg ? pkg.name : 'Unknown';
             const used = registrations?.filter((r: any) => r.child_id === c.id).length || 0;
