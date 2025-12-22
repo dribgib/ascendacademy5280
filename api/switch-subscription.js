@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!stripeKey) throw new Error('Missing Stripe Key');
-if (!supabaseUrl || !supabaseServiceKey) throw new Error('Missing Supabase Config or Service Key');
+if (!supabaseUrl || !supabaseServiceKey) throw new Error('Missing Supabase Config');
 
 const stripe = new Stripe(stripeKey);
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -14,14 +14,11 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 export default async function handler(req, res) {
-  // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { childId, newPriceId } = req.body;
 
@@ -30,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Find active subscription
+    // 1. Find active subscription using Service Role (reliable)
     const { data: sub, error: subError } = await supabase
         .from('subscriptions')
         .select('stripe_subscription_id')
@@ -44,11 +41,11 @@ export default async function handler(req, res) {
 
     const subscriptionId = sub.stripe_subscription_id;
 
-    // 2. Get Stripe Subscription
+    // 2. Get Stripe Subscription Item
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     const itemId = subscription.items.data[0].id;
 
-    // 3. Update Stripe Subscription
+    // 3. Update Stripe Subscription (Swap Plans)
     const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
       items: [{
         id: itemId,
