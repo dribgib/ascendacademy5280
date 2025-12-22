@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertCircle, Shield, AlertTriangle, X, Trash2 } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2 } from 'lucide-react';
 import { POPULAR_SPORTS, WAIVER_CONFIG } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -91,11 +91,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       setLoading(true);
       await api.billing.createPortalSession();
     } catch (e: any) {
+      console.error("Billing Error:", e);
+      const msg = e.message || '';
       // If error is strictly about missing history, we can show a friendlier modal
-      if (e.message?.includes('No billing history') || e.message?.includes('No billing account')) {
+      if (msg.includes('No billing history') || msg.includes('No billing account') || msg.includes('subscribe')) {
          showAlert('No Billing History', 'You do not have any active subscriptions or payment history yet. Subscribe to a plan first.', 'info');
       } else {
-         showAlert('Billing Portal Unavailable', e.message || 'Could not connect to billing portal.', 'error');
+         showAlert('Portal Unavailable', msg || 'Could not connect to billing portal.', 'error');
       }
     } finally {
       setLoading(false);
@@ -277,7 +279,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </button>
                     <button 
                         onClick={() => setShowAddKidModal(true)}
-                        className="bg-co-yellow text-black px-8 py-3 font-teko text-xl uppercase font-bold rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="bg-co-yellow text-black px-8 py-3 font-teko text-xl uppercase rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <Plus size={20} /> Add Athlete
                     </button>
@@ -366,7 +368,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 <div className="mt-3">
                                     {kid.subscriptionStatus === 'active' && kid.usageStats ? (
                                     <div>
-                                        <span className="text-[10px] uppercase font-bold bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
+                                        <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
                                             {kid.usageStats.planName} Plan
                                         </span>
                                         <div className="mt-2">
@@ -385,7 +387,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     ) : (
                                     <button 
                                         onClick={() => navigate('/checkout/p_elite')} 
-                                        className="text-[10px] uppercase font-bold bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
+                                        className="text-[10px] uppercase font-medium bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
                                     >
                                         No Active Plan <ExternalLink size={10} />
                                     </button>
@@ -499,7 +501,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <h2 className="font-teko text-4xl text-white uppercase tracking-wide">Account Settings</h2>
             </div>
             <div className="mb-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded">
-                <p className="text-zinc-500 text-xs uppercase font-bold mb-1 tracking-wider">Registered Email</p>
+                <p className="text-zinc-500 text-xs uppercase font-medium mb-1 tracking-wider">Registered Email</p>
                 <p className="text-white font-mono text-sm">{user.email}</p>
                 <p className="text-zinc-600 text-[10px] mt-2 italic">Contact support to change email address.</p>
             </div>
@@ -530,7 +532,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
                     <button 
                         type="submit" 
-                        className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded transition-colors shadow-lg mt-2"
+                        className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded transition-colors shadow-lg mt-2"
                     >
                         Update Password
                     </button>
@@ -575,7 +577,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
                     <div className="flex-1">
                         <label className="block text-zinc-400 text-xs uppercase mb-2">Profile Photo (Optional)</label>
-                        <label className="cursor-pointer inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-xs uppercase font-bold text-zinc-300 transition-colors">
+                        <label className="cursor-pointer inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-xs uppercase font-medium text-zinc-300 transition-colors">
                             <Upload size={14} /> Choose Image
                             <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                         </label>
@@ -614,7 +616,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </div>
                 <div className="flex gap-4 pt-4">
                     <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2">
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-medium rounded flex items-center justify-center gap-2">
                         Next: Sign Waiver <ArrowRight size={18} />
                     </button>
                 </div>
@@ -633,7 +635,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
                         <p className="text-zinc-400 text-sm mb-4">
                             1. Click the link below to sign on WaiverSign.<br/>
-                            2. Return here and click "I Have Signed".
+                            2. Return here and click "Verify Waiver".
                         </p>
                         
                         <a 
@@ -651,9 +653,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         <button 
                             onClick={handleVerifyAndAdd}
                             disabled={verifyingWaiver || imageUploading}
-                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl font-bold rounded flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50 font-medium"
                         >
-                            {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'I Have Signed - Verify Now'}
+                            {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'Verify Waiver'}
                         </button>
                     </div>
                 </div>

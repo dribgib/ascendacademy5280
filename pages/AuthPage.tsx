@@ -184,11 +184,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 {!isLogin && (
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">First Name</label>
+                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">First Name</label>
                     <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                     </div>
                     <div>
-                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Last Name</label>
+                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Last Name</label>
                     <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                     </div>
                 </div>
@@ -196,19 +196,19 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 
                 {!isLogin && (
                 <div>
-                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Mobile Phone</label>
+                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Mobile Phone</label>
                     <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" placeholder="(555) 555-5555" />
                 </div>
                 )}
 
                 <div>
-                <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Email Address</label>
+                <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Email Address</label>
                 <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                 </div>
 
                 <div>
                     <div className="flex justify-between">
-                    <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Password</label>
+                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Password</label>
                     {isLogin && <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">Forgot?</a>}
                     </div>
                     <input required type="password" minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
@@ -219,7 +219,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 disabled={loading}
                 className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg 
                     ${isLogin 
-                        ? 'bg-co-yellow !text-black font-bold hover:bg-white' 
+                        ? 'bg-co-yellow !text-black hover:bg-white' 
                         : 'bg-co-red text-white hover:bg-red-800'
                     }`}
                 >

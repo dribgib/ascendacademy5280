@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PACKAGES } from '../constants';
 import { api } from '../services/api';
 import { Child, User } from '../types';
-import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag, Loader2, CheckCircle } from 'lucide-react';
+import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag, Loader2, CheckCircle, RefreshCw } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 
 const CheckoutPage: React.FC = () => {
@@ -35,7 +35,8 @@ const CheckoutPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const u = await api.auth.getUser();
+      // Re-fetch user to ensure we have the Stripe Customer ID if it was just created
+      let u = await api.auth.getUser();
       
       if (!u) {
         const returnUrl = encodeURIComponent(location.pathname);
@@ -43,12 +44,16 @@ const CheckoutPage: React.FC = () => {
         return;
       }
 
+      // Ensure we have fresh profile data (Stripe ID specifically)
+      const fresh = await api.auth.refreshProfile(u.id);
+      if (fresh) u = { ...u, ...fresh };
+
       setUser(u);
       
       // Artificial delay if we just came back from payment to allow Webhook to fire
       const params = new URLSearchParams(location.search);
       if (params.get('session_id')) {
-         // INCREASED DELAY to 4.5 seconds for cold start functions
+         // Wait for webhook to populate DB
          await new Promise(resolve => setTimeout(resolve, 4500));
       }
 
@@ -77,7 +82,8 @@ const CheckoutPage: React.FC = () => {
     setProcessing(true);
     try {
       // Return to THIS page
-      const returnUrl = `${window.location.origin}/#/checkout/${pkgId}?kidId=${activeKidId}`;
+      // Using window.location.origin avoids hash issues now that we are on BrowserRouter
+      const returnUrl = `${window.location.origin}/checkout/${pkgId}?kidId=${activeKidId}`;
       
       await api.billing.createCheckoutSession(
           pkg.stripePriceId, 
@@ -91,6 +97,17 @@ const CheckoutPage: React.FC = () => {
       showAlert('Checkout Error', e.message || 'Checkout initiation failed.', 'error');
       setProcessing(false);
     }
+  };
+
+  const handleOpenPortal = async () => {
+      try {
+          setProcessing(true);
+          await api.billing.createPortalSession();
+      } catch (e: any) {
+          showAlert('Billing Portal', e.message || 'Could not access billing portal.', 'error');
+      } finally {
+          setProcessing(false);
+      }
   };
 
   // Pre-select kid from URL if present
@@ -153,6 +170,12 @@ const CheckoutPage: React.FC = () => {
                 <CheckCircle className="text-green-500 mb-2" size={32} />
                 <h3 className="text-white font-teko text-2xl uppercase">Payment Successful</h3>
                 <p className="text-zinc-400 text-sm">Your athlete's subscription is active. Welcome to the team.</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4 text-xs text-zinc-400 hover:text-white flex items-center gap-1 uppercase tracking-wider"
+                >
+                  <RefreshCw size={12} /> Refresh Status
+                </button>
             </div>
         )}
 
@@ -185,7 +208,7 @@ const CheckoutPage: React.FC = () => {
             <UserIcon className="mx-auto h-12 w-12 text-zinc-600 mb-4" />
             <h3 className="text-white text-xl font-teko uppercase mb-2">No Athletes Found</h3>
             <p className="text-zinc-500 mb-6">You must create an athlete profile before purchasing a training package.</p>
-            <button onClick={() => navigate('/dashboard')} className="bg-co-yellow text-black px-6 py-2 font-bold uppercase rounded">
+            <button onClick={() => navigate('/dashboard')} className="bg-co-yellow text-black px-6 py-2 uppercase rounded">
               Go to Dashboard
             </button>
           </div>
@@ -193,7 +216,7 @@ const CheckoutPage: React.FC = () => {
 
         {/* Discount Banner */}
         {discountPercent > 0 && activeKid && activeKid.subscriptionStatus !== 'active' && (
-             <div className="bg-gradient-to-r from-co-yellow to-yellow-600 text-black p-4 mb-8 rounded font-bold text-center uppercase tracking-wide flex items-center justify-center gap-2 animate-pulse">
+             <div className="bg-gradient-to-r from-co-yellow to-yellow-600 text-black p-4 mb-8 rounded text-center uppercase tracking-wide flex items-center justify-center gap-2 animate-pulse font-medium">
                 <Tag size={20} /> {discountLabel}: Save {discountPercent}% on this subscription!
              </div>
         )}
@@ -218,7 +241,7 @@ const CheckoutPage: React.FC = () => {
                   `}
                 >
                   {pkg.name === 'Elite' && (
-                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] font-bold px-2 py-1 uppercase rounded-bl">
+                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium">
                       Best Value
                     </span>
                   )}
@@ -245,7 +268,7 @@ const CheckoutPage: React.FC = () => {
                   </ul>
 
                   {isActivePlan ? (
-                    <button disabled className="w-full bg-co-yellow/10 text-co-yellow border border-co-yellow/30 py-3 font-bold uppercase rounded cursor-default">
+                    <button disabled className="w-full bg-co-yellow/10 text-co-yellow border border-co-yellow/30 py-3 uppercase rounded cursor-default">
                       Current Plan
                     </button>
                   ) : (
@@ -253,7 +276,7 @@ const CheckoutPage: React.FC = () => {
                       onClick={() => handleSubscribe(pkg.id)}
                       disabled={processing}
                       className={`
-                        w-full py-3 font-bold uppercase rounded transition-colors text-sm tracking-widest
+                        w-full py-3 uppercase rounded transition-colors text-sm tracking-widest
                         ${pkg.name === 'Elite' 
                           ? 'bg-co-yellow text-black hover:bg-white' 
                           : 'bg-white text-black hover:bg-zinc-200'}
@@ -281,9 +304,9 @@ const CheckoutPage: React.FC = () => {
                  <div className="flex justify-between items-center py-4 border-b border-zinc-800">
                     <span className="text-zinc-400 text-sm">Current Plan</span>
                     {activeKid.subscriptionStatus === 'active' ? (
-                       <span className="bg-co-yellow/10 text-co-yellow px-3 py-1 rounded text-xs font-bold uppercase border border-co-yellow/30">Active</span>
+                       <span className="bg-co-yellow/10 text-co-yellow px-3 py-1 rounded text-xs uppercase border border-co-yellow/30 font-medium">Active</span>
                     ) : (
-                       <span className="bg-zinc-800 text-zinc-500 px-3 py-1 rounded text-xs font-bold uppercase">No Active Plan</span>
+                       <span className="bg-zinc-800 text-zinc-500 px-3 py-1 rounded text-xs uppercase font-medium">No Active Plan</span>
                     )}
                  </div>
                  <div className="flex justify-between items-center py-4">
@@ -304,13 +327,14 @@ const CheckoutPage: React.FC = () => {
                    </p>
                    {activeKid.subscriptionStatus === 'active' || user.stripeCustomerId ? (
                         <button 
-                            onClick={() => api.billing.createPortalSession()} 
-                            className="bg-white text-black px-6 py-2 font-bold uppercase rounded hover:bg-zinc-200 transition-colors w-full"
+                            onClick={handleOpenPortal} 
+                            disabled={processing}
+                            className="bg-white text-black px-6 py-2 uppercase rounded hover:bg-zinc-200 transition-colors w-full font-teko text-xl tracking-wide"
                         >
-                            Open Billing Portal
+                            {processing ? 'Opening...' : 'Open Billing Portal'}
                         </button>
                    ) : (
-                        <button disabled className="bg-zinc-800 text-zinc-500 px-6 py-2 font-bold uppercase rounded cursor-not-allowed w-full border border-zinc-700">
+                        <button disabled className="bg-zinc-800 text-zinc-500 px-6 py-2 uppercase rounded cursor-not-allowed w-full border border-zinc-700 font-teko text-xl tracking-wide">
                             No Billing History
                         </button>
                    )}

@@ -99,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                         onClick={() => navigate('/dashboard?view=admin')}
                         className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4 ${isActive('coach') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                       >
-                        <Shield className="h-4 w-4" />
+                        <Shield className="h-4 w-4 relative -top-[2px]" />
                         <span>Coach</span>
                       </button>
                     )}
@@ -108,22 +108,22 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                       onClick={() => navigate('/dashboard')}
                       className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                     >
-                      <UserIcon className="h-4 w-4" />
+                      <UserIcon className="h-4 w-4 relative -top-[2px]" />
                       <span>My Team</span>
                     </button>
                     
                     <button 
                       onClick={handleLogout}
-                      className="ml-4 text-zinc-500 hover:text-white transition-colors"
+                      className="ml-4 text-zinc-500 hover:text-white transition-colors flex items-center"
                       title="Sign Out"
                     >
-                      <LogOut className="h-5 w-5" />
+                      <LogOut className="h-5 w-5 relative -top-[1px]" />
                     </button>
                   </div>
                 ) : (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-teko text-xl uppercase font-bold hover:bg-white transition-colors"
+                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-teko text-xl uppercase hover:bg-white transition-colors"
                   >
                     Login
                   </button>
@@ -156,21 +156,21 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                     onClick={() => { setIsMenuOpen(false); navigate('/dashboard'); }}
                     className="text-co-yellow block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
                   >
-                    <UserIcon size={16} /> My Team
+                    <UserIcon size={16} className="relative -top-[2px]" /> My Team
                   </button>
                   {user.role === 'ADMIN' && (
                      <button 
                         onClick={() => { setIsMenuOpen(false); navigate('/dashboard?view=admin'); }}
                         className="text-co-yellow block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
                       >
-                        <Shield size={16} /> Coach
+                        <Shield size={16} className="relative -top-[2px]" /> Coach
                       </button>
                   )}
                   <button 
                     onClick={() => { setIsMenuOpen(false); handleLogout(); }}
                     className="text-zinc-400 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
                   >
-                    <LogOut size={16} /> Sign Out
+                    <LogOut size={16} className="relative -top-[1px]" /> Sign Out
                   </button>
                 </>
               ) : (

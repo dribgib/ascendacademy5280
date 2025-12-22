@@ -170,7 +170,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
             <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
                 <List className="text-zinc-400" /> Upcoming Sessions
             </h2>
-            <button onClick={() => setShowCreateModal(true)} className="bg-co-red text-white px-4 py-1 text-sm font-bold uppercase rounded hover:bg-red-800 flex items-center gap-2">
+            <button onClick={() => setShowCreateModal(true)} className="bg-co-red text-white px-4 py-1 text-sm uppercase rounded hover:bg-red-800 flex items-center gap-2 font-medium">
                 <Plus size={16} /> New Session
             </button>
           </div>
@@ -201,10 +201,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
               </div>
               
               <div className="flex gap-3 mt-4 pt-4 border-t border-zinc-800">
-                <button onClick={() => setShowRosterModal(evt)} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded uppercase font-bold flex items-center gap-2">
+                <button onClick={() => setShowRosterModal(evt)} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded uppercase font-medium flex items-center gap-2">
                    <Users size={14} /> Manage Roster
                 </button>
-                <button onClick={() => handleDeleteEvent(evt.id)} className="text-xs text-co-red hover:text-red-400 ml-auto uppercase font-bold flex items-center gap-1">
+                <button onClick={() => handleDeleteEvent(evt.id)} className="text-xs text-co-red hover:text-red-400 ml-auto uppercase font-medium flex items-center gap-1">
                    <Trash2 size={14} /> Cancel
                 </button>
               </div>
@@ -228,7 +228,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                     <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
                         <CalendarIcon className="text-zinc-400" /> Calendar View
                     </h2>
-                    <button onClick={() => setShowCreateModal(true)} className="bg-co-red text-white px-4 py-1 text-sm font-bold uppercase rounded hover:bg-red-800 flex items-center gap-2">
+                    <button onClick={() => setShowCreateModal(true)} className="bg-co-red text-white px-4 py-1 text-sm font-medium uppercase rounded hover:bg-red-800 flex items-center gap-2">
                         <Plus size={16} /> New Session
                     </button>
                </div>
@@ -246,7 +246,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                            <span>{evt.startTime}</span>
                                            <span>{evt.registeredKidIds.length}/{evt.maxSlots}</span>
                                        </div>
-                                       <div className="text-white font-bold text-sm truncate">{evt.title}</div>
+                                       <div className="text-white font-medium text-sm truncate">{evt.title}</div>
                                    </div>
                                ))}
                            </div>
@@ -267,11 +267,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
             <table className="w-full text-left text-sm min-w-[800px]">
                 <thead className="bg-zinc-950 text-zinc-500 uppercase text-xs border-b border-zinc-800">
                     <tr>
-                        <th className="px-6 py-4 font-bold">Parent Name</th>
-                        <th className="px-6 py-4 font-bold">Email / Phone</th>
-                        <th className="px-6 py-4 font-bold">Children</th>
-                        <th className="px-6 py-4 font-bold">Role</th>
-                        <th className="px-6 py-4 font-bold text-right">Actions</th>
+                        <th className="px-6 py-4 font-medium">Parent Name</th>
+                        <th className="px-6 py-4 font-medium">Email / Phone</th>
+                        <th className="px-6 py-4 font-medium">Children</th>
+                        <th className="px-6 py-4 font-medium">Role</th>
+                        <th className="px-6 py-4 font-medium text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
@@ -279,7 +279,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         const kids = allChildren.filter(c => c.parentId === u.id);
                         return (
                             <tr key={u.id} className="hover:bg-zinc-800/50 transition-colors">
-                                <td className="px-6 py-4 font-bold text-white">{u.firstName} {u.lastName}</td>
+                                <td className="px-6 py-4 font-medium text-white">{u.firstName} {u.lastName}</td>
                                 <td className="px-6 py-4 text-zinc-400">
                                     <div className="text-white">{u.email}</div>
                                     <div className="text-xs">{u.phone}</div>
@@ -298,7 +298,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                     )}
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${u.role === 'ADMIN' ? 'bg-co-yellow text-black' : 'bg-zinc-800 text-zinc-400'}`}>
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${u.role === 'ADMIN' ? 'bg-co-yellow text-black' : 'bg-zinc-800 text-zinc-400'}`}>
                                         {u.role}
                                     </span>
                                 </td>
@@ -375,14 +375,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                 placeholder="Scan QR..."
                                 className="flex-1 bg-black border border-zinc-700 p-3 text-white rounded focus:border-co-yellow outline-none"
                             />
-                            <button type="submit" className="bg-white text-black font-bold uppercase px-4 rounded hover:bg-zinc-200">
+                            <button type="submit" className="bg-white text-black font-medium uppercase px-4 rounded hover:bg-zinc-200">
                                 GO
                             </button>
                         </div>
                     </form>
 
                     {checkInStatus && (
-                        <div className={`p-3 rounded text-center text-sm font-bold ${checkInStatus.success ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                        <div className={`p-3 rounded text-center text-sm font-medium ${checkInStatus.success ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
                             {checkInStatus.msg}
                         </div>
                     )}
@@ -410,7 +410,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <h3 className="text-sm font-bold text-white uppercase mb-4 border-b border-zinc-800 pb-2">Roster ({showRosterModal.registeredKidIds.length})</h3>
+                        <h3 className="text-sm font-medium text-white uppercase mb-4 border-b border-zinc-800 pb-2">Roster ({showRosterModal.registeredKidIds.length})</h3>
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                             {showRosterModal.registeredKidIds.length === 0 && <p className="text-zinc-600 text-sm italic">No athletes registered.</p>}
                             {showRosterModal.registeredKidIds.map(kidId => (
@@ -425,7 +425,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-bold text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add Athlete</h3>
+                        <h3 className="text-sm font-medium text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add Athlete</h3>
                         <div className="flex gap-2">
                             <select 
                                 value={kidToAdd} 
@@ -503,7 +503,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                <button type="submit" className="flex-1 bg-co-red hover:bg-red-800 text-white py-3 uppercase font-teko text-xl font-bold rounded">Create</button>
+                <button type="submit" className="flex-1 bg-co-red hover:bg-red-800 text-white py-3 uppercase font-teko text-xl font-medium rounded">Create</button>
               </div>
             </form>
            </div>

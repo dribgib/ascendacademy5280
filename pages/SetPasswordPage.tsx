@@ -77,7 +77,7 @@ const SetPasswordPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">New Password</label>
+            <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">New Password</label>
             <input 
                 required 
                 type="password" 
@@ -89,7 +89,7 @@ const SetPasswordPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-zinc-400 text-xs uppercase font-bold mb-1">Confirm Password</label>
+            <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Confirm Password</label>
             <input 
                 required 
                 type="password" 
@@ -103,7 +103,7 @@ const SetPasswordPage: React.FC = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-co-yellow hover:bg-yellow-500 text-black font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4"
+            className="w-full bg-co-yellow hover:bg-yellow-500 text-black font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4 font-medium"
           >
             {loading ? 'Updating...' : 'Set Password & Enter'}
           </button>

@@ -33,7 +33,7 @@ const SponsorPage: React.FC = () => {
             </p>
             <button 
                 onClick={() => window.location.href = '/'}
-                className="text-co-yellow uppercase font-teko text-xl underline hover:text-white"
+                className="text-co-yellow uppercase font-teko text-xl underline hover:text-white font-medium"
             >
                 Return Home
             </button>
@@ -59,7 +59,7 @@ const SponsorPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-zinc-500 text-xs uppercase font-bold mb-2">Your Name</label>
+                        <label className="block text-zinc-500 text-xs uppercase font-medium mb-2">Your Name</label>
                         <input 
                             required
                             type="text" 
@@ -69,7 +69,7 @@ const SponsorPage: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-zinc-500 text-xs uppercase font-bold mb-2">Company (Optional)</label>
+                        <label className="block text-zinc-500 text-xs uppercase font-medium mb-2">Company (Optional)</label>
                         <input 
                             type="text" 
                             className="w-full bg-black border border-zinc-700 p-4 text-white rounded focus:border-co-yellow outline-none"
@@ -80,7 +80,7 @@ const SponsorPage: React.FC = () => {
                 </div>
 
                 <div>
-                    <label className="block text-zinc-500 text-xs uppercase font-bold mb-2">Email Address</label>
+                    <label className="block text-zinc-500 text-xs uppercase font-medium mb-2">Email Address</label>
                     <input 
                         required
                         type="email" 
@@ -91,7 +91,7 @@ const SponsorPage: React.FC = () => {
                 </div>
 
                 <div>
-                    <label className="block text-zinc-500 text-xs uppercase font-bold mb-2">Message</label>
+                    <label className="block text-zinc-500 text-xs uppercase font-medium mb-2">Message</label>
                     <textarea 
                         required
                         rows={5}
@@ -105,7 +105,7 @@ const SponsorPage: React.FC = () => {
                 <button 
                     type="submit" 
                     disabled={sending}
-                    className="w-full bg-co-red hover:bg-white hover:text-black text-white py-4 font-teko text-2xl uppercase font-bold rounded flex items-center justify-center gap-2 transition-colors"
+                    className="w-full bg-co-red hover:bg-white hover:text-black text-white py-4 font-teko text-2xl uppercase font-medium rounded flex items-center justify-center gap-2 transition-colors"
                 >
                     {sending ? 'Sending...' : <><Send size={20} /> Send Inquiry</>}
                 </button>

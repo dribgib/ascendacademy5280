@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
 import { api } from './services/api';
@@ -37,7 +37,8 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
        navigate('/set-password');
        return;
     }
-    if (window.location.hash.includes('next=set-password')) {
+    // Handle standard auth redirect param from Supabase
+    if (location.hash.includes('type=recovery')) {
        navigate('/set-password', { replace: true });
     }
   }, [user, navigate, location.pathname, location.search]);
@@ -142,6 +143,8 @@ const App: React.FC = () => {
             <Route path="/checkout/:packageId" element={<CheckoutPage />} />
             <Route path="/set-password" element={<SetPasswordPage />} />
             <Route path="/sponsor" element={<SponsorPage />} />
+            
+            {/* 404 CATCH-ALL: Redirects any unknown route to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>

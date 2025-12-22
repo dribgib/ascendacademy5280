@@ -55,7 +55,7 @@ const HomePage: React.FC = () => {
           <div className="mt-12 flex justify-center gap-6">
             <a 
               href="#packages"
-              className="group relative bg-co-yellow text-black px-12 py-4 font-teko text-3xl uppercase tracking-wide font-bold hover:bg-white transition-all duration-300 -skew-x-12 shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
+              className="group relative bg-co-yellow text-black px-12 py-4 font-teko text-3xl uppercase tracking-wide hover:bg-white transition-all duration-300 -skew-x-12 shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
             >
               <span className="skew-x-12 inline-block">Start Training</span>
             </a>
@@ -80,13 +80,13 @@ const HomePage: React.FC = () => {
               />
               <div className="absolute -bottom-8 -right-8 bg-black p-8 border-l-4 border-co-yellow shadow-xl z-20">
                 <p className="font-teko text-5xl text-white leading-none">RODERRICK JACKSON</p>
-                <p className="text-zinc-400 text-sm tracking-[0.2em] uppercase mt-2 font-bold">Head Trainer</p>
+                <p className="text-zinc-400 text-sm tracking-[0.2em] uppercase mt-2 font-medium">Head Trainer</p>
               </div>
             </div>
             <div className="pl-0 md:pl-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-1 bg-co-red"></div>
-                <span className="uppercase tracking-[0.2em] text-zinc-400 text-sm font-bold">About The Coach</span>
+                <span className="uppercase tracking-[0.2em] text-zinc-400 text-sm font-medium">About The Coach</span>
               </div>
               <h2 className="font-teko text-6xl md:text-7xl text-white mb-8 uppercase leading-[0.9]">Built Different.</h2>
               <p className="text-zinc-400 text-lg mb-6 leading-relaxed font-light">
@@ -133,7 +133,7 @@ const HomePage: React.FC = () => {
                 <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
                   <span className="text-3xl font-bold text-co-yellow">$</span>
                   <span className="text-6xl font-teko font-bold text-white">{pkg.price}</span>
-                  <span className="ml-2 text-zinc-500 text-sm font-bold uppercase tracking-wide">/ {pkg.billingPeriod}</span>
+                  <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
                 </div>
                 <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
                 <ul className="space-y-4 mb-10 flex-grow">
@@ -190,13 +190,13 @@ const HomePage: React.FC = () => {
               <div className="flex flex-col gap-4 relative z-10">
                 <button 
                     onClick={() => setShowDonateModal(true)}
-                    className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-4 px-4 text-sm uppercase font-bold tracking-widest transition-colors duration-300 flex items-center justify-center gap-2"
+                    className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-4 px-4 text-sm uppercase font-medium tracking-widest transition-colors duration-300 flex items-center justify-center gap-2"
                 >
                   <DollarSign size={16} /> Donate
                 </button>
                 <button 
                     onClick={() => navigate('/sponsor')}
-                    className="w-full border border-zinc-700 text-zinc-400 hover:border-co-yellow hover:text-co-yellow py-4 px-4 text-sm uppercase font-bold tracking-widest transition-colors duration-300"
+                    className="w-full border border-zinc-700 text-zinc-400 hover:border-co-yellow hover:text-co-yellow py-4 px-4 text-sm uppercase font-medium tracking-widest transition-colors duration-300"
                 >
                   Sponsor an Athlete
                 </button>
@@ -218,7 +218,7 @@ const HomePage: React.FC = () => {
           </p>
           <Link 
             to="/login" 
-            className="group relative inline-block bg-white text-co-red px-16 py-5 font-teko text-3xl uppercase font-bold hover:bg-black hover:text-white shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300 transform -skew-x-12"
+            className="group relative inline-block bg-white text-co-red px-16 py-5 font-teko text-3xl uppercase font-medium hover:bg-black hover:text-white shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300 transform -skew-x-12"
           >
              <span className="skew-x-12 inline-block">Join Now</span>
           </Link>

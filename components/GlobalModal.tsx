@@ -10,33 +10,12 @@ const GlobalModal: React.FC = () => {
   const handleConfirm = () => {
     if (modalState.resolveConfirm) {
       modalState.resolveConfirm(true);
-      // Close handled by parent's resolve logic or separate close call?
-      // Actually we should close immediately after resolving.
-      // But we need to avoid the closeModal trigger in the component re-render cycle interfering.
-      // We manually update state here to close cleanly.
-      // Since context `closeModal` resolves false, we need a specific "confirm" action.
     }
-    // We access the setter via a "private" hack or just rely on the fact that 
-    // we need to close it now.
-    // The cleanest way is to just call a close method that knows we confirmed.
-    // But our context's closeModal resolves false.
-    // Let's modify context slightly? No, let's just use the resolve function directly if it exists.
-    // Wait, I can't access setModalState here.
-    // Let's assume the component will unmount/hide.
-    // Actually, simply:
-    // If I call modalState.resolveConfirm(true), the promise resolves. 
-    // Then I need to close the modal UI.
-    // The caller awaits the promise.
   };
 
   // Helper to handle confirm action visually
   const onYes = () => {
     if (modalState.resolveConfirm) modalState.resolveConfirm(true);
-    // Force close state update without triggering the 'false' resolution again?
-    // See ModalContext implementation: closeModal() resolves false.
-    // We need to be careful.
-    // If we resolved true already, resolving false again is usually ignored by Promises (they settle once).
-    // So calling closeModal() after resolving true is safe!
     closeModal();
   };
 
@@ -83,13 +62,13 @@ const GlobalModal: React.FC = () => {
               <>
                 <button 
                   onClick={onNo}
-                  className="flex-1 py-3 border border-zinc-700 text-zinc-300 uppercase font-teko text-xl rounded hover:bg-zinc-800 transition-colors"
+                  className="flex-1 py-3 border border-zinc-700 text-zinc-300 uppercase font-teko text-xl rounded hover:bg-zinc-800 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={onYes}
-                  className="flex-1 py-3 bg-co-yellow text-black uppercase font-teko text-xl font-bold rounded hover:bg-white transition-colors"
+                  className="flex-1 py-3 bg-co-yellow text-black uppercase font-teko text-xl font-medium rounded hover:bg-white transition-colors"
                 >
                   Confirm
                 </button>
@@ -97,7 +76,7 @@ const GlobalModal: React.FC = () => {
             ) : (
               <button 
                 onClick={onNo}
-                className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white uppercase font-teko text-xl rounded transition-colors"
+                className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white uppercase font-teko text-xl rounded transition-colors font-medium"
               >
                 Close
               </button>
