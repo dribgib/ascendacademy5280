@@ -7,6 +7,7 @@ const supabaseUrl = process.env.VITE_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!stripeKey) throw new Error('Missing Stripe Key');
+if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase Config');
 
 const stripe = new Stripe(stripeKey);
 
@@ -17,31 +18,38 @@ export default async function handler(req, res) {
 
   try {
     // 1. Initialize Supabase
-    const authHeader = req.headers.authorization;
+    // Vercel/Node lowercases headers
+    const authHeader = req.headers.authorization || req.headers.Authorization;
     
     // Check if Auth Header is present and valid
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-       console.error("Missing or invalid Authorization header in portal request");
-       // Note: We cannot throw here immediately if we want to fallback, 
-       // but we require auth for this sensitive action.
+       console.error("Missing or invalid Authorization header");
+       return res.status(401).json({ error: 'Missing auth token' });
     }
 
-    const client = createClient(supabaseUrl, supabaseKey, 
-        authHeader ? { global: { headers: { Authorization: authHeader } } } : {}
-    );
+    const client = createClient(supabaseUrl, supabaseKey, {
+        global: { headers: { Authorization: authHeader } }
+    });
 
     // 2. Authenticate User
     const { data: { user }, error: userError } = await client.auth.getUser();
 
     if (userError || !user) {
         console.error("Portal Auth Error:", userError);
-        return res.status(401).json({ error: 'Unauthorized: Unable to verify user session.' });
+        return res.status(401).json({ error: 'Unauthorized: Session invalid.' });
     }
 
     const userId = user.id;
 
     // 3. Get Stripe Customer ID
-    const { data: profile, error: profileError } = await client
+    // Use Service Role client for DB access if possible, or fall back to the authenticated client
+    // To be safe, if we have service key, use it for DB query to bypass RLS issues on 'profiles'
+    let dbClient = client;
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        dbClient = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    }
+
+    const { data: profile, error: profileError } = await dbClient
         .from('profiles')
         .select('stripe_customer_id')
         .eq('id', userId)

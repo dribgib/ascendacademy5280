@@ -395,18 +395,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 </h3>
                                 <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
                                 
-                                <div className="mt-3">
+                                <div className="mt-4">
                                     {kid.subscriptionStatus === 'active' && kid.usageStats ? (
                                     <div className="flex flex-col items-start gap-2">
-                                        <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 inline-block">
-                                            {kid.usageStats.planName} Plan
-                                        </span>
-                                        <button 
-                                            onClick={() => navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`)}
-                                            className="text-[10px] text-zinc-400 hover:text-white uppercase font-bold flex items-center gap-1 border border-zinc-700 px-2 py-1 rounded hover:bg-zinc-800 transition-colors"
-                                        >
-                                            <RefreshCw size={10} /> Change Plan
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 inline-block">
+                                                {kid.usageStats.planName} Plan
+                                            </span>
+                                            <button 
+                                                onClick={() => navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`)}
+                                                className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs uppercase font-bold py-1 px-3 rounded border border-zinc-600 hover:border-zinc-500 transition-colors flex items-center gap-1 shadow-sm"
+                                            >
+                                                Change Plan
+                                            </button>
+                                        </div>
                                     </div>
                                     ) : (
                                     <button 
