@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { User } from '../types';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 
 interface AuthPageProps {
   setUser: (user: User) => void;
@@ -10,6 +10,9 @@ interface AuthPageProps {
 
 const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [magicLinkSent, setMagicLinkSent] = useState(false);
@@ -79,6 +82,61 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
       setLoading(false);
     }
   };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!email) {
+          setError("Please enter your email address.");
+          return;
+      }
+      setLoading(true);
+      setError('');
+      try {
+          const redirectTo = `${window.location.origin}/set-password`;
+          const { error } = await api.auth.resetPasswordForEmail(email, redirectTo);
+          if (error) throw error;
+          setResetSent(true);
+      } catch (err: any) {
+          console.error(err);
+          setError(err.message || 'Failed to send reset link.');
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  if (resetSent) {
+      return (
+        <div className="flex-grow flex items-center justify-center relative w-full min-h-[80vh]">
+            {/* Background */}
+            <div className="absolute inset-0 z-0">
+            <img 
+                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/rod2.png" 
+                alt="Background" 
+                className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/90"></div>
+            </div>
+
+            <div className="relative z-10 max-w-md w-full px-4">
+                <div className="bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-2xl text-center">
+                    <div className="flex justify-center mb-6">
+                        <Mail className="text-co-yellow h-16 w-16" />
+                    </div>
+                    <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Inbox</h2>
+                    <p className="text-zinc-400 mb-8 text-lg">
+                        We've sent password reset instructions to <span className="text-white font-bold">{email}</span>.
+                    </p>
+                    <button 
+                        onClick={() => { setResetSent(false); setResetMode(false); setIsLogin(true); setError(''); }}
+                        className="w-full bg-white text-black font-teko text-xl uppercase py-3 rounded hover:bg-zinc-200 transition-colors"
+                    >
+                        Return to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+      );
+  }
 
   if (magicLinkSent) {
     return (
@@ -151,26 +209,32 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
           <div className="max-w-md w-full bg-card-bg border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col">
             
             {/* Tabs */}
-            <div className="flex border-b border-zinc-800">
-            <button 
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
-            >
-                Login
-            </button>
-            <button 
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${!isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-red' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
-            >
-                Create Account
-            </button>
-            </div>
+            {!resetMode && (
+                <div className="flex border-b border-zinc-800">
+                <button 
+                    onClick={() => setIsLogin(true)}
+                    className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+                >
+                    Login
+                </button>
+                <button 
+                    onClick={() => setIsLogin(false)}
+                    className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${!isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-red' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+                >
+                    Create Account
+                </button>
+                </div>
+            )}
 
             <div className="p-8">
             <div className="text-center mb-6">
-                <h2 className="font-teko text-3xl text-white uppercase">{isLogin ? 'Welcome Back' : 'Join The Squad'}</h2>
+                <h2 className="font-teko text-3xl text-white uppercase">
+                    {resetMode ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Join The Squad')}
+                </h2>
                 <p className="text-zinc-500 text-sm mt-1">
-                {isLogin ? 'Access your athlete dashboard.' : 'Start your journey with Ascend Academy.'}
+                    {resetMode 
+                        ? 'Enter your email to receive reset instructions.' 
+                        : (isLogin ? 'Access your athlete dashboard.' : 'Start your journey with Ascend Academy.')}
                 </p>
             </div>
 
@@ -180,52 +244,85 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {!isLogin && (
-                <div className="grid grid-cols-2 gap-4">
+            {resetMode ? (
+                // RESET PASSWORD FORM
+                <form onSubmit={handleResetSubmit} className="space-y-4">
+                     <div>
+                        <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Email Address</label>
+                        <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                    </div>
+                    <button 
+                        type="submit" 
+                        disabled={loading}
+                        className="w-full bg-co-yellow text-black hover:bg-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4 shadow-lg"
+                    >
+                        {loading ? 'Sending...' : 'Send Reset Link'}
+                    </button>
+                    <button 
+                        type="button" 
+                        onClick={() => { setResetMode(false); setError(''); }}
+                        className="w-full text-zinc-500 hover:text-white text-sm mt-2 flex items-center justify-center gap-1"
+                    >
+                        <ArrowLeft size={14} /> Back to Login
+                    </button>
+                </form>
+            ) : (
+                // LOGIN / SIGNUP FORM
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {!isLogin && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                        <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">First Name</label>
+                        <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                        </div>
+                        <div>
+                        <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Last Name</label>
+                        <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                        </div>
+                    </div>
+                    )}
+                    
+                    {!isLogin && (
                     <div>
-                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">First Name</label>
-                    <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                        <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Mobile Phone</label>
+                        <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" placeholder="(555) 555-5555" />
                     </div>
+                    )}
+
                     <div>
-                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Last Name</label>
-                    <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
+                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Email Address</label>
+                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                     </div>
-                </div>
-                )}
-                
-                {!isLogin && (
-                <div>
-                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Mobile Phone</label>
-                    <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" placeholder="(555) 555-5555" />
-                </div>
-                )}
 
-                <div>
-                <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Email Address</label>
-                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
-                </div>
-
-                <div>
-                    <div className="flex justify-between">
-                    <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Password</label>
-                    {isLogin && <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">Forgot?</a>}
+                    <div>
+                        <div className="flex justify-between">
+                        <label className="block text-zinc-400 text-xs uppercase font-medium mb-1">Password</label>
+                        {isLogin && (
+                            <button 
+                                type="button" 
+                                onClick={() => { setResetMode(true); setError(''); }} 
+                                className="text-xs text-zinc-500 hover:text-zinc-300"
+                            >
+                                Forgot?
+                            </button>
+                        )}
+                        </div>
+                        <input required type="password" minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
                     </div>
-                    <input required type="password" minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:border-co-yellow outline-none transition-colors" />
-                </div>
 
-                <button 
-                type="submit" 
-                disabled={loading}
-                className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg 
-                    ${isLogin 
-                        ? 'bg-co-yellow !text-black hover:bg-white' 
-                        : 'bg-co-red text-white hover:bg-red-800'
-                    }`}
-                >
-                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
-                </button>
-            </form>
+                    <button 
+                    type="submit" 
+                    disabled={loading}
+                    className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg 
+                        ${isLogin 
+                            ? 'bg-co-yellow !text-black hover:bg-white' 
+                            : 'bg-co-red text-white hover:bg-red-800'
+                        }`}
+                    >
+                    {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+                    </button>
+                </form>
+            )}
             </div>
           </div>
       </div>

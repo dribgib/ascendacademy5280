@@ -120,6 +120,10 @@ const supabaseApi = {
         }
       });
     },
+    
+    resetPasswordForEmail: async (email: string, redirectTo: string) => {
+      return await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    },
 
     updateUser: async (attributes: { password?: string }) => {
       return await supabase.auth.updateUser(attributes);
