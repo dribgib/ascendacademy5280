@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube, Shield } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube, Shield, Mail, Phone } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -197,7 +197,15 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               <span className="font-teko text-3xl font-bold tracking-tight uppercase text-white">
                 Ascend<span className="text-co-red">Academy</span><span className="text-co-yellow">5280</span>
               </span>
-              <p className="text-zinc-500 text-sm mt-2">© {new Date().getFullYear()} All rights reserved.</p>
+              <div className="mt-4 text-zinc-400 text-sm space-y-1">
+                 <p className="flex items-center gap-2 justify-center md:justify-start">
+                    <Mail size={14} className="text-co-red" /> rod@ascendacademy5280.com
+                 </p>
+                 <p className="flex items-center gap-2 justify-center md:justify-start">
+                    <Phone size={14} className="text-co-yellow" /> 303-943-2787
+                 </p>
+              </div>
+              <p className="text-zinc-600 text-xs mt-4">© {new Date().getFullYear()} All rights reserved.</p>
             </div>
             
             <div className="flex space-x-6">

@@ -94,20 +94,11 @@ const CheckoutPage: React.FC = () => {
     const activeKid = kids.find(k => k.id === activeKidId);
     if (activeKid && activeKid.subscriptionStatus === 'active') {
         const confirmed = await showConfirm(
-            "Switch Plan?", 
-            `You are about to switch ${activeKid.firstName}'s plan to ${pkg.name}. Stripe will automatically prorate the difference.`
+            "Manage Subscription", 
+            `To switch ${activeKid.firstName}'s plan to ${pkg.name}, please use our secure Billing Portal. We will redirect you there now.`
         );
-        if (!confirmed) return;
-
-        setProcessing(true);
-        try {
-            await api.billing.switchSubscription(activeKid.id, pkg.stripePriceId);
-            showAlert('Success', 'Plan updated successfully!', 'success');
-            await loadData(); // Reload to show new plan
-        } catch (e: any) {
-            showAlert('Update Failed', e.message || 'Could not switch plan.', 'error');
-        } finally {
-            setProcessing(false);
+        if (confirmed) {
+            handleOpenPortal();
         }
         return;
     }
