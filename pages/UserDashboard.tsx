@@ -375,7 +375,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                             </div>
 
                             <div className="flex-1 min-w-0 pr-6">
-                                <h3 className="font-teko text-3xl text-white uppercase leading-none mt-1 truncate">{kid.firstName} {kid.lastName}</h3>
+                                <h3 
+                                    className={`font-teko text-3xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
+                                    onClick={() => {
+                                        if (kid.subscriptionStatus !== 'active') {
+                                            navigate(`/checkout/p_elite?kidId=${kid.id}`);
+                                        }
+                                    }}
+                                >
+                                    {kid.firstName} {kid.lastName}
+                                </h3>
                                 <p className="text-zinc-500 text-sm mt-1">{kid.sports.join(', ')}</p>
                                 
                                 <div className="mt-3">
@@ -387,7 +396,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     </div>
                                     ) : (
                                     <button 
-                                        onClick={() => navigate('/checkout/p_elite')} 
+                                        onClick={() => navigate(`/checkout/p_elite?kidId=${kid.id}`)} 
                                         className="text-[10px] uppercase font-medium bg-red-900/40 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center gap-1"
                                     >
                                         No Active Plan <ExternalLink size={10} />

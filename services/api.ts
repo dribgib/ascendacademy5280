@@ -471,6 +471,23 @@ const supabaseApi = {
         return await response.json();
     },
 
+    // NEW METHOD to update subscription plan
+    switchSubscription: async (childId: string, newPriceId: string) => {
+        const response = await fetch('/api/switch-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ childId, newPriceId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to update subscription.');
+        }
+
+        return data;
+    },
+
     createDonationSession: async (amount: number, userId?: string) => {
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe not initialized.");

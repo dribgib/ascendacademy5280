@@ -8,7 +8,7 @@ import { useModal } from '../context/ModalContext';
 import LoadingScreen from '../components/LoadingScreen';
 
 const CheckoutPage: React.FC = () => {
-  const { showAlert } = useModal();
+  const { showAlert, showConfirm } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const { packageId } = useParams<{ packageId: string }>();
@@ -90,6 +90,29 @@ const CheckoutPage: React.FC = () => {
     const pkg = PACKAGES.find(p => p.id === pkgId);
     if (!pkg) return;
 
+    // Check if child already has an active subscription
+    const activeKid = kids.find(k => k.id === activeKidId);
+    if (activeKid && activeKid.subscriptionStatus === 'active') {
+        const confirmed = await showConfirm(
+            "Switch Plan?", 
+            `You are about to switch ${activeKid.firstName}'s plan to ${pkg.name}. Stripe will automatically prorate the difference.`
+        );
+        if (!confirmed) return;
+
+        setProcessing(true);
+        try {
+            await api.billing.switchSubscription(activeKid.id, pkg.stripePriceId);
+            showAlert('Success', 'Plan updated successfully!', 'success');
+            await loadData(); // Reload to show new plan
+        } catch (e: any) {
+            showAlert('Update Failed', e.message || 'Could not switch plan.', 'error');
+        } finally {
+            setProcessing(false);
+        }
+        return;
+    }
+
+    // NEW SUBSCRIPTION FLOW
     // Calculate count of OTHER kids with active subs
     const activeSubscriptionCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
 
@@ -241,9 +264,6 @@ const CheckoutPage: React.FC = () => {
               
               const finalPrice = discountPercent > 0 ? Math.round(pkg.price * (1 - discountPercent / 100)) : pkg.price;
 
-              // STYLING: Matching Home Page Cards
-              // "bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2"
-              // PLUS checkout specific selection rings
               return (
                 <div 
                   key={pkg.id} 
@@ -302,7 +322,7 @@ const CheckoutPage: React.FC = () => {
                           : 'bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow'}
                       `}
                     >
-                      {processing ? 'Processing...' : (isSelectedFromUrl ? 'Select Plan' : 'Subscribe')}
+                      {processing ? 'Processing...' : 'Select Plan'}
                     </button>
                   )}
                 </div>
