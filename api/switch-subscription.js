@@ -1,18 +1,24 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuration
 const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
-const supabaseUrl = process.env.VITE_PUBLIC_SUPABASE_URL;
-// Use Service Role Key to bypass RLS and read subscriptions
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
 if (!stripeKey) throw new Error('Missing Stripe Key');
+if (!supabaseUrl || !supabaseServiceKey) throw new Error('Missing Supabase Config or Service Key');
 
 const stripe = new Stripe(stripeKey);
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false }
+});
 
 export default async function handler(req, res) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -24,7 +30,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Find active subscription in DB for this child
+    // 1. Find active subscription
     const { data: sub, error: subError } = await supabase
         .from('subscriptions')
         .select('stripe_subscription_id')
@@ -38,16 +44,11 @@ export default async function handler(req, res) {
 
     const subscriptionId = sub.stripe_subscription_id;
 
-    // 2. Retrieve Subscription from Stripe
+    // 2. Get Stripe Subscription
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    
-    // 3. Find the subscription item to update
     const itemId = subscription.items.data[0].id;
 
-    // 4. Update the subscription
-    // proration_behavior: 'always_invoice' calculates the difference and creates an invoice immediately (if payment required)
-    // or 'create_prorations' adds it to next cycle.
-    // 'always_invoice' is safer for immediate upgrades to ensure payment succeeds.
+    // 3. Update Stripe Subscription
     const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
       items: [{
         id: itemId,
@@ -56,8 +57,7 @@ export default async function handler(req, res) {
       proration_behavior: 'always_invoice', 
     });
 
-    // 5. Update DB (or wait for webhook)
-    // We'll optimistically update the package_id to reflect change immediately in UI
+    // 4. Update DB Optimistically
     await supabase
         .from('subscriptions')
         .update({ package_id: newPriceId })
