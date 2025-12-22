@@ -77,7 +77,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
       const [kidsData, eventsData] = await Promise.all([kidsPromise, eventsPromise]);
       setKids(kidsData);
-      setEvents(eventsData);
+      
+      // Filter: Only show future events
+      const now = new Date();
+      const futureEvents = eventsData.filter(evt => new Date(evt.isoStart) > now);
+      setEvents(futureEvents);
     } catch (e: any) {
       console.error("Critical Dashboard Load Error:", e);
       setSystemError("Unable to load dashboard data.");
@@ -403,7 +407,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </h2>
 
                     <div className="space-y-4">
-                    {events.length === 0 ? <p className="text-zinc-500">No events scheduled or system offline.</p> : events.map(evt => {
+                    {events.length === 0 ? <p className="text-zinc-500">No upcoming sessions found.</p> : events.map(evt => {
                         const isFull = evt.bookedSlots >= evt.maxSlots;
                         return (
                         <div key={evt.id} className="bg-black border border-zinc-800 p-5 rounded hover:border-zinc-700 transition-colors">
@@ -446,7 +450,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     {isRegistered ? (
                                         <span className="flex items-center justify-center gap-1"><CheckCircle size={12} /> {kid.firstName} In</span>
                                     ) : !hasPlan ? (
-                                        `Plan Required`
+                                        `Plan Required for ${kid.firstName}`
                                     ) : limitReached ? (
                                         `Limit Reached`
                                     ) : isFull ? (
