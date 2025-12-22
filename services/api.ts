@@ -148,20 +148,62 @@ const supabaseApi = {
             stripeCustomerId: p.stripe_customer_id
         }));
     },
+    
+    // UPDATED: Fetches all children AND calculates their usage stats
     getAllChildren: async (): Promise<Child[]> => {
-        const { data, error } = await supabase.from('children').select('*');
+        // 1. Fetch children with active subscriptions
+        const { data: children, error } = await supabase.from('children').select(`
+            *,
+            subscriptions (
+                id,
+                status,
+                package_id
+            )
+        `);
         if (error) throw error;
-        return data.map((c: any) => ({
-            id: c.id,
-            parentId: c.parent_id,
-            firstName: c.first_name,
-            lastName: c.last_name,
-            dob: c.dob,
-            sports: c.sports,
-            qrCode: c.qr_code,
-            image: c.image_url
-        }));
+
+        // 2. Fetch all registrations for current month
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0,0,0,0);
+        const startIso = startOfMonth.toISOString();
+
+        const { data: registrations } = await supabase
+            .from('registrations')
+            .select('child_id, event_id, events(start_time)')
+            .gte('events.start_time', startIso);
+
+        // 3. Map and Calculate Usage
+        return children.map((c: any) => {
+            const activeSub = c.subscriptions?.find((s: any) => s.status === 'active');
+            let usageStats = undefined;
+
+            if (activeSub) {
+                const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
+                const limit = pkg ? pkg.maxSessions : 0;
+                const planName = pkg ? pkg.name : 'Unknown';
+                // Count registrations for this child in this month
+                const used = registrations?.filter((r: any) => r.child_id === c.id).length || 0;
+
+                usageStats = { used, limit, planName };
+            }
+
+            return {
+                id: c.id,
+                parentId: c.parent_id,
+                firstName: c.first_name,
+                lastName: c.last_name,
+                dob: c.dob,
+                sports: c.sports,
+                qrCode: c.qr_code,
+                image: c.image_url,
+                subscriptionId: activeSub?.package_id,
+                subscriptionStatus: activeSub ? 'active' : 'none',
+                usageStats // Now populated for Admin view
+            };
+        });
     },
+
     addRegistration: async (eventId: string, childId: string) => {
         const { error } = await supabase.from('registrations').insert({
             event_id: eventId,
@@ -169,16 +211,29 @@ const supabaseApi = {
         });
         if (error) throw error;
     },
+
     removeRegistration: async (eventId: string, childId: string) => {
         const { error } = await supabase.from('registrations')
             .delete()
             .match({ event_id: eventId, child_id: childId });
         if (error) throw error;
     },
+
+    // UPDATED: Explicitly delete registrations first to ensure usage count drops ("Refund")
     deleteEvent: async (eventId: string) => {
+        // 1. Delete all registrations linked to this event
+        const { error: regError } = await supabase
+            .from('registrations')
+            .delete()
+            .eq('event_id', eventId);
+        
+        if (regError) throw regError;
+
+        // 2. Delete the event itself
         const { error } = await supabase.from('events').delete().eq('id', eventId);
         if (error) throw error;
     },
+
     deleteUser: async (userId: string) => {
         const { error } = await supabase.from('profiles').delete().eq('id', userId);
         if (error) throw error;

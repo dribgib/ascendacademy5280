@@ -13,7 +13,11 @@ type TabView = 'schedule' | 'calendar' | 'users';
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = false }) => {
   const { showAlert, showConfirm } = useModal();
-  const [activeTab, setActiveTab] = useState<TabView>('schedule');
+  const activeTabKey = 'admin_active_tab';
+  const [activeTab, setActiveTab] = useState<TabView>(() => {
+    return (localStorage.getItem(activeTabKey) as TabView) || 'schedule';
+  });
+  
   const [events, setEvents] = useState<Event[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allChildren, setAllChildren] = useState<Child[]>([]);
@@ -34,6 +38,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleTabChange = (tab: TabView) => {
+    setActiveTab(tab);
+    localStorage.setItem(activeTabKey, tab);
+  };
 
   const loadData = async () => {
     try {
@@ -92,13 +101,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   };
 
   const handleDeleteEvent = async (id: string) => {
-      const confirmed = await showConfirm("Delete Session?", "Are you sure you want to cancel and delete this session? This cannot be undone.");
+      const confirmed = await showConfirm("Delete Session?", "Are you sure you want to cancel and delete this session? This will REFUND usage tokens to registered athletes.");
       if (!confirmed) return;
 
       try {
         await (api as any).admin.deleteEvent(id);
         loadData();
-        showAlert('Deleted', 'Session has been cancelled.', 'success');
+        showAlert('Deleted', 'Session has been cancelled and athlete tokens refunded.', 'success');
       } catch (e: any) {
           showAlert('Error', e.message, 'error');
       }
@@ -129,6 +138,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       if (!showRosterModal || !kidToAdd) return;
       await (api as any).admin.addRegistration(showRosterModal.id, kidToAdd);
       
+      // Update local state and reload to sync usage stats
       const updatedEvents = events.map(e => {
           if (e.id === showRosterModal.id) {
              return { ...e, registeredKidIds: [...e.registeredKidIds, kidToAdd] };
@@ -136,6 +146,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           return e;
       });
       setEvents(updatedEvents);
+      loadData(); // Reload to get updated usage stats on Users tab
+      
       const updatedModalEvent = updatedEvents.find(e => e.id === showRosterModal.id);
       setShowRosterModal(updatedModalEvent || null);
       setKidToAdd('');
@@ -143,11 +155,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
   const handleRemoveKidFromRoster = async (childId: string) => {
       if (!showRosterModal) return;
-      const confirmed = await showConfirm("Remove Athlete", "Are you sure you want to remove this athlete from the roster?");
+      const confirmed = await showConfirm("Remove Athlete", "Are you sure you want to remove this athlete from the roster? This will REFUND their usage token.");
       if (!confirmed) return;
 
       await (api as any).admin.removeRegistration(showRosterModal.id, childId);
 
+      // Update local state and reload to sync usage stats
        const updatedEvents = events.map(e => {
         if (e.id === showRosterModal.id) {
            return { ...e, registeredKidIds: e.registeredKidIds.filter(id => id !== childId) };
@@ -155,6 +168,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
         return e;
       });
       setEvents(updatedEvents);
+      loadData(); // Reload to update usage stats
+
       const updatedModalEvent = updatedEvents.find(e => e.id === showRosterModal.id);
       setShowRosterModal(updatedModalEvent || null);
   };
@@ -269,7 +284,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                     <tr>
                         <th className="px-6 py-4 font-medium">Parent Name</th>
                         <th className="px-6 py-4 font-medium">Email / Phone</th>
-                        <th className="px-6 py-4 font-medium">Children</th>
+                        <th className="px-6 py-4 font-medium">Athletes (Usage)</th>
                         <th className="px-6 py-4 font-medium">Role</th>
                         <th className="px-6 py-4 font-medium text-right">Actions</th>
                     </tr>
@@ -284,8 +299,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                     <div>{u.email}</div>
                                     <div className="text-xs opacity-60">{u.phone}</div>
                                 </td>
-                                <td className="px-6 py-4 text-zinc-400">
-                                    {kids.length > 0 ? kids.map(k => k.firstName).join(', ') : <span className="text-zinc-600 italic">None</span>}
+                                <td className="px-6 py-4">
+                                    <div className="flex flex-wrap gap-2">
+                                        {kids.length > 0 ? kids.map(k => {
+                                            const hasStats = k.subscriptionStatus === 'active' && k.usageStats;
+                                            const isLimitReached = hasStats && k.usageStats!.used >= k.usageStats!.limit;
+                                            
+                                            return (
+                                                <div key={k.id} className={`flex items-center gap-2 px-2 py-1 rounded border text-xs ${isLimitReached ? 'bg-red-900/20 border-red-900 text-red-300' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}>
+                                                    <span className="font-bold">{k.firstName}</span>
+                                                    {hasStats ? (
+                                                        <span className={`text-[10px] ${isLimitReached ? 'text-red-400' : 'text-co-yellow'}`}>
+                                                            {k.usageStats!.used}/{k.usageStats!.limit}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-zinc-600">No Plan</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        }) : <span className="text-zinc-600 italic">None</span>}
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`text-xs px-2 py-1 rounded uppercase font-bold ${u.role === 'ADMIN' ? 'bg-co-yellow text-black' : 'bg-zinc-700 text-zinc-300'}`}>
@@ -376,19 +409,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       {/* --- TABS --- */}
       <div className="flex gap-4 border-b border-zinc-800 mb-8 overflow-x-auto">
           <button 
-              onClick={() => setActiveTab('schedule')}
+              onClick={() => handleTabChange('schedule')}
               className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'schedule' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
           >
               <List className="inline-block mr-2 relative -top-[2px]" size={18} /> Schedule List
           </button>
           <button 
-              onClick={() => setActiveTab('calendar')}
+              onClick={() => handleTabChange('calendar')}
               className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'calendar' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
           >
               <CalendarIcon className="inline-block mr-2 relative -top-[2px]" size={18} /> Calendar View
           </button>
           <button 
-              onClick={() => setActiveTab('users')}
+              onClick={() => handleTabChange('users')}
               className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'users' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
           >
               <Users className="inline-block mr-2 relative -top-[2px]" size={18} /> Manage Users
