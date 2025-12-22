@@ -17,31 +17,40 @@ export default async function handler(req, res) {
 
   try {
     // 1. Initialize Supabase
-    // If we have the Auth header, we can use the Anon key and respect RLS.
-    // Otherwise we use Service Role to lookup the customer ID directly.
     const authHeader = req.headers.authorization;
+    
+    // Check if Auth Header is present and valid
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+       console.error("Missing or invalid Authorization header in portal request");
+       // Note: We cannot throw here immediately if we want to fallback, 
+       // but we require auth for this sensitive action.
+    }
+
     const client = createClient(supabaseUrl, supabaseKey, 
         authHeader ? { global: { headers: { Authorization: authHeader } } } : {}
     );
 
-    let userId;
+    // 2. Authenticate User
+    const { data: { user }, error: userError } = await client.auth.getUser();
 
-    if (authHeader) {
-        // Method A: Authenticated Request from Frontend
-        const { data: { user }, error } = await client.auth.getUser();
-        if (error || !user) throw new Error('Unauthorized');
-        userId = user.id;
-    } else {
-        // Method B: Fallback (Not recommended without auth)
-        throw new Error('Missing Authorization Header');
+    if (userError || !user) {
+        console.error("Portal Auth Error:", userError);
+        return res.status(401).json({ error: 'Unauthorized: Unable to verify user session.' });
     }
 
-    // 2. Get Stripe Customer ID
-    const { data: profile } = await client
+    const userId = user.id;
+
+    // 3. Get Stripe Customer ID
+    const { data: profile, error: profileError } = await client
         .from('profiles')
         .select('stripe_customer_id')
         .eq('id', userId)
         .single();
+
+    if (profileError) {
+        console.error("Profile Lookup Error:", profileError);
+        return res.status(500).json({ error: 'Database error retrieving profile.' });
+    }
 
     if (!profile?.stripe_customer_id) {
         return res.status(400).json({ error: 'No billing history found. Please subscribe to a plan first.' });
@@ -49,7 +58,7 @@ export default async function handler(req, res) {
 
     const { returnUrl } = req.body;
 
-    // 3. Create Portal Session
+    // 4. Create Portal Session
     const session = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: returnUrl,

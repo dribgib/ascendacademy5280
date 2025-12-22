@@ -519,13 +519,24 @@ const supabaseApi = {
 
     createPortalSession: async () => {
       // Need auth headers to allow backend to verify user
-      const { data: { session } } = await supabase.auth.getSession();
+      // 1. Force refresh session to ensure token is valid and present
+      let { data: { session } } = await supabase.auth.getSession();
       
+      if (!session) {
+         // Attempt refresh if session is null
+         const { data } = await supabase.auth.refreshSession();
+         session = data.session;
+      }
+      
+      if (!session?.access_token) {
+          throw new Error("Please sign in again to access the billing portal.");
+      }
+
       const response = await fetch('/api/create-portal-session', {
           method: 'POST',
           headers: { 
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session?.access_token}`
+              'Authorization': `Bearer ${session.access_token}`
           },
           body: JSON.stringify({ returnUrl: window.location.origin + '/dashboard' })
       });
