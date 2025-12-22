@@ -54,6 +54,33 @@
       input[type="date"], input[type="time"] {
         color-scheme: dark;
       }
+
+      /* Loading Screen Animations */
+      .animate-draw-path {
+        stroke-dasharray: 400;
+        stroke-dashoffset: 400;
+        animation: dash 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      .animate-draw-arrow {
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        animation: dash-arrow 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      
+      @keyframes dash {
+        0% { stroke-dashoffset: 400; opacity: 0; }
+        10% { opacity: 1; }
+        70% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: 0; }
+      }
+      
+      @keyframes dash-arrow {
+        0% { stroke-dashoffset: 100; opacity: 0; }
+        65% { stroke-dashoffset: 100; opacity: 0; }
+        70% { opacity: 1; }
+        90% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: 0; }
+      }
     </style>
 <script type="importmap">
 {

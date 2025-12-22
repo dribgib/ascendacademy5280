@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { Child, User } from '../types';
 import { Check, Shield, AlertCircle, CreditCard, User as UserIcon, Tag, Loader2, CheckCircle, RefreshCw } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
+import LoadingScreen from '../components/LoadingScreen';
 
 const CheckoutPage: React.FC = () => {
   const { showAlert } = useModal();
@@ -134,15 +135,10 @@ const CheckoutPage: React.FC = () => {
 
 
   if (loading || syncingPayment) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
-        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center uppercase">
-          {syncingPayment ? 'Confirming Payment...' : 'Loading Account...'}
-        </div>
-        <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
-        </div>
-        {syncingPayment && <p className="text-zinc-500 text-xs uppercase tracking-wide">Securing your spot on the roster</p>}
-    </div>
+    <LoadingScreen 
+        text={syncingPayment ? 'Confirming Payment...' : 'Loading Account...'} 
+        subText={syncingPayment ? 'Securing your spot on the roster' : undefined} 
+    />
   );
 
   if (!user && !loading) {

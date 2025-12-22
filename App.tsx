@@ -6,6 +6,7 @@ import { api } from './services/api';
 import { supabase } from './lib/supabase';
 import { ModalProvider } from './context/ModalContext';
 import GlobalModal from './components/GlobalModal';
+import LoadingScreen from './components/LoadingScreen';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -107,16 +108,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  if (loading) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
-        <div className="text-co-yellow font-teko text-5xl animate-pulse tracking-widest text-center uppercase">
-          Ascend Academy
-        </div>
-        <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-co-red animate-[shimmer_0.5s_infinite] w-1/2"></div>
-        </div>
-    </div>
-  );
+  if (loading) return <LoadingScreen text="Ascend Academy" />;
 
   return (
     <ModalProvider>

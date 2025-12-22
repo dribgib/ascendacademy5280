@@ -379,6 +379,14 @@ const supabaseApi = {
       });
       if (error) throw error;
     },
+    
+    // NEW UNREGISTER METHOD
+    unregister: async (eventId: string, childId: string) => {
+        const { error } = await supabase.from('registrations')
+            .delete()
+            .match({ event_id: eventId, child_id: childId });
+        if (error) throw error;
+    },
 
     checkIn: async (eventId: string, qrCode: string) => {
       const { data: child, error: childError } = await supabase

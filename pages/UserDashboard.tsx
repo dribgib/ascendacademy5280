@@ -7,6 +7,7 @@ import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
 import { useModal } from '../context/ModalContext';
+import LoadingScreen from '../components/LoadingScreen';
 
 interface UserDashboardProps {
   user: User;
@@ -240,13 +241,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
-  if (loading && !isAdminView) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
-        <div className="text-co-yellow font-teko text-5xl animate-pulse tracking-widest text-center uppercase">
-          Loading Dashboard
-        </div>
-    </div>
-  );
+  const handleUnregister = async (eventId: string, kidId: string) => {
+    const confirmed = await showConfirm("Cancel Registration?", "Are you sure you want to remove this athlete from the session?");
+    if (!confirmed) return;
+
+    try {
+      await api.registrations.unregister(eventId, kidId);
+      loadData();
+      showAlert('Success', 'Registration cancelled.', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showAlert('Error', e.message || 'Failed to cancel.', 'error');
+    }
+  };
+
+  if (loading && !isAdminView) return <LoadingScreen text="Loading Dashboard" />;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
@@ -433,13 +442,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 return (
                                     <button
                                     key={kid.id}
-                                    // Removed isFull check so parents can join waitlist
-                                    disabled={isRegistered || (!isRegistered && limitReached) || !hasPlan}
-                                    onClick={() => handleRegister(evt.id, kid.id, isFull)}
+                                    disabled={(!isRegistered && limitReached) || (!isRegistered && !hasPlan)}
+                                    onClick={() => isRegistered ? handleUnregister(evt.id, kid.id) : handleRegister(evt.id, kid.id, isFull)}
                                     className={`
                                         text-xs py-2 px-3 rounded uppercase font-bold transition-colors
                                         ${isRegistered 
-                                        ? 'bg-green-900/30 text-green-500 border border-green-900 cursor-default' 
+                                        ? 'bg-green-900/30 text-green-500 border border-green-900 hover:bg-red-900/50 hover:text-red-200 hover:border-red-900 cursor-pointer' 
                                         : (limitReached || !hasPlan)
                                             ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed border border-zinc-800'
                                             : isFull

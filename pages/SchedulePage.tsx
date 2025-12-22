@@ -4,6 +4,7 @@ import { Event, User, Child } from '../types';
 import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 import { useNavigate } from 'react-router-dom';
+import LoadingScreen from '../components/LoadingScreen';
 
 interface SchedulePageProps {
   user: User | null;
@@ -79,6 +80,27 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     }
   };
 
+  const handleUnregister = async (eventId: string, kidId: string) => {
+    const confirmed = await showConfirm("Cancel Registration?", "Are you sure you want to remove this athlete from the session?");
+    if (!confirmed) return;
+
+    try {
+      await api.registrations.unregister(eventId, kidId);
+      await loadEvents();
+      await loadKids();
+
+      // Update local modal state
+      const updatedEvents = await api.events.list();
+      const updatedSelected = updatedEvents.find(e => e.id === eventId);
+      if (updatedSelected) setSelectedEvent(updatedSelected);
+
+      showAlert('Success', 'Registration cancelled.', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showAlert('Error', e.message || 'Failed to cancel.', 'error');
+    }
+  };
+
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -142,11 +164,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     return days;
   };
 
-  if (loading) return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-          <div className="text-co-yellow animate-pulse font-teko text-4xl">LOADING SCHEDULE...</div>
-      </div>
-  );
+  if (loading) return <LoadingScreen text="Loading Schedule..." />;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
@@ -284,12 +302,12 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                                 return (
                                     <button
                                         key={kid.id}
-                                        disabled={isRegistered || (!isRegistered && limitReached) || !hasPlan}
-                                        onClick={() => handleRegister(selectedEvent.id, kid.id, isFull)}
+                                        disabled={(!isRegistered && limitReached) || (!isRegistered && !hasPlan)}
+                                        onClick={() => isRegistered ? handleUnregister(selectedEvent.id, kid.id) : handleRegister(selectedEvent.id, kid.id, isFull)}
                                         className={`
                                             w-full flex items-center justify-between p-3 rounded uppercase font-bold text-sm transition-colors border
                                             ${isRegistered 
-                                                ? 'bg-green-900/20 text-green-500 border-green-900 cursor-default' 
+                                                ? 'bg-green-900/20 text-green-500 border-green-900 hover:bg-red-900/50 hover:text-red-200 hover:border-red-900 cursor-pointer' 
                                                 : (!hasPlan || limitReached)
                                                     ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
                                                     : isFull
