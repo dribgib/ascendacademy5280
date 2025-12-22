@@ -127,7 +127,7 @@ const App: React.FC = () => {
         <Layout user={user} setUser={setUser}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/schedule" element={<SchedulePage user={user} />} />
             <Route 
               path="/login" 
               element={!user ? <AuthPage setUser={setUser} /> : <Navigate to="/dashboard" replace />} 

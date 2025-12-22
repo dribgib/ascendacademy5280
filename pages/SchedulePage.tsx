@@ -1,17 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Event } from '../types';
-import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircle } from 'lucide-react';
+import { Event, User, Child } from '../types';
+import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { useModal } from '../context/ModalContext';
+import { useNavigate } from 'react-router-dom';
 
-const SchedulePage: React.FC = () => {
+interface SchedulePageProps {
+  user: User | null;
+}
+
+const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
+  const { showConfirm, showAlert } = useModal();
+  const navigate = useNavigate();
+  
   const [events, setEvents] = useState<Event[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // User children data for registration
+  const [kids, setKids] = useState<Child[]>([]);
 
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+        loadKids();
+    }
+  }, [user]);
 
   const loadEvents = async () => {
     try {
@@ -21,6 +39,43 @@ const SchedulePage: React.FC = () => {
       console.error("Failed to load events", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadKids = async () => {
+    if (!user) return;
+    try {
+        const data = await api.children.list(user.id);
+        setKids(data);
+    } catch (e) {
+        console.error("Failed to load athletes", e);
+    }
+  };
+
+  const handleRegister = async (eventId: string, kidId: string, isWaitlist: boolean) => {
+    if (!user) {
+        navigate('/login');
+        return;
+    }
+
+    const action = isWaitlist ? "Join Waitlist" : "Register";
+    const confirmed = await showConfirm(`Confirm ${action}`, `${action} for this session?`);
+    if (!confirmed) return;
+
+    try {
+      await api.registrations.register(eventId, kidId);
+      await loadEvents(); // Reload events to update slot counts
+      await loadKids(); // Reload kids to update usage stats if needed
+      
+      // Update the selected event in the modal locally to reflect changes immediately
+      const updatedEvents = await api.events.list();
+      const updatedSelected = updatedEvents.find(e => e.id === eventId);
+      if (updatedSelected) setSelectedEvent(updatedSelected);
+
+      showAlert('Success', isWaitlist ? 'Added to Waitlist!' : 'Registration Successful!', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showAlert('Registration Failed', e.message || 'Please try again.', 'error');
     }
   };
 
@@ -99,7 +154,6 @@ const SchedulePage: React.FC = () => {
         <h1 className="font-teko text-6xl text-white uppercase mb-4">Training Schedule</h1>
         <p className="text-zinc-500 max-w-2xl mx-auto">
             View upcoming sessions. Select a session to view details and availability status. 
-            Login to your dashboard to register.
         </p>
       </div>
 
@@ -183,8 +237,8 @@ const SchedulePage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* STATUS BADGE - PRIVACY RESPECTED (No Numbers) */}
-                <div className="border-t border-zinc-800 pt-6">
+                {/* Status Badge */}
+                <div className="mb-6">
                     {selectedEvent.bookedSlots >= selectedEvent.maxSlots ? (
                         <div className="flex items-center gap-2 text-zinc-400 bg-zinc-900 p-3 rounded border border-zinc-800">
                             <AlertCircle size={20} />
@@ -194,6 +248,72 @@ const SchedulePage: React.FC = () => {
                         <div className="flex items-center gap-2 text-black bg-co-yellow p-3 rounded font-bold uppercase tracking-wide justify-center">
                             <div className="w-2 h-2 bg-black rounded-full animate-pulse"></div>
                             Registration Open
+                        </div>
+                    )}
+                </div>
+
+                {/* Registration Buttons */}
+                <div className="border-t border-zinc-800 pt-6">
+                    <h3 className="font-teko text-2xl text-white uppercase mb-4">Register Athletes</h3>
+                    
+                    {!user ? (
+                        <button 
+                            onClick={() => navigate('/login')}
+                            className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-3 uppercase font-teko text-xl rounded transition-colors"
+                        >
+                            Login to Register
+                        </button>
+                    ) : kids.length === 0 ? (
+                        <div className="text-center">
+                             <p className="text-zinc-500 text-sm mb-3">No athletes found on your account.</p>
+                             <button 
+                                onClick={() => navigate('/dashboard')}
+                                className="text-co-yellow underline uppercase font-teko text-xl"
+                            >
+                                Add Athlete on Dashboard
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-2">
+                             {kids.map(kid => {
+                                const isRegistered = selectedEvent.registeredKidIds.includes(kid.id);
+                                const limitReached = kid.usageStats && kid.usageStats.used >= kid.usageStats.limit;
+                                const hasPlan = kid.subscriptionStatus === 'active';
+                                const isFull = selectedEvent.bookedSlots >= selectedEvent.maxSlots;
+
+                                return (
+                                    <button
+                                        key={kid.id}
+                                        disabled={isRegistered || (!isRegistered && limitReached) || !hasPlan}
+                                        onClick={() => handleRegister(selectedEvent.id, kid.id, isFull)}
+                                        className={`
+                                            w-full flex items-center justify-between p-3 rounded uppercase font-bold text-sm transition-colors border
+                                            ${isRegistered 
+                                                ? 'bg-green-900/20 text-green-500 border-green-900 cursor-default' 
+                                                : (!hasPlan || limitReached)
+                                                    ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
+                                                    : isFull
+                                                        ? 'bg-zinc-800 text-white border-zinc-700 hover:border-co-yellow'
+                                                        : 'bg-zinc-900 text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow'}
+                                        `}
+                                    >
+                                        <span>{kid.firstName}</span>
+                                        <span>
+                                            {isRegistered ? (
+                                                <span className="flex items-center gap-1"><CheckCircle size={14} /> Registered</span>
+                                            ) : !hasPlan ? (
+                                                <span className="text-zinc-600 text-[10px] font-normal">Plan Required</span>
+                                            ) : limitReached ? (
+                                                 <span className="text-zinc-600 text-[10px] font-normal">Limit Reached</span>
+                                            ) : isFull ? (
+                                                "Waitlist"
+                                            ) : (
+                                                "Sign Up"
+                                            )}
+                                        </span>
+                                    </button>
+                                );
+                             })}
                         </div>
                     )}
                 </div>

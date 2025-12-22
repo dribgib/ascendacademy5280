@@ -353,7 +353,9 @@ const supabaseApi = {
       
       if (!activeSub) throw new Error("Athlete does not have an active membership.");
       
-      const pkg = PACKAGES.find(p => p.id === activeSub.package_id) || PACKAGES.find(p => activeSub.package_id.includes(p.id));
+      // FIX: Robust check for Package ID (internal) OR Stripe Price ID
+      const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
+      
       if (!pkg) throw new Error("Unknown subscription package.");
       
       const startOfMonth = new Date();

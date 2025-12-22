@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Event, Child } from '../types';
 import { api } from '../services/api';
-import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, UserPlus, Grid, List } from 'lucide-react';
+import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, UserPlus, Grid, List, X, Search } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 
 interface AdminDashboardProps {
@@ -279,38 +279,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         const kids = allChildren.filter(c => c.parentId === u.id);
                         return (
                             <tr key={u.id} className="hover:bg-zinc-800/50 transition-colors">
-                                <td className="px-6 py-4 font-medium text-white">{u.firstName} {u.lastName}</td>
+                                <td className="px-6 py-4 text-white font-medium">{u.firstName} {u.lastName}</td>
                                 <td className="px-6 py-4 text-zinc-400">
-                                    <div className="text-white">{u.email}</div>
-                                    <div className="text-xs">{u.phone}</div>
+                                    <div>{u.email}</div>
+                                    <div className="text-xs opacity-60">{u.phone}</div>
+                                </td>
+                                <td className="px-6 py-4 text-zinc-400">
+                                    {kids.length > 0 ? kids.map(k => k.firstName).join(', ') : <span className="text-zinc-600 italic">None</span>}
                                 </td>
                                 <td className="px-6 py-4">
-                                    {kids.length > 0 ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            {kids.map(k => (
-                                                <span key={k.id} className="bg-zinc-800 text-zinc-300 px-2 py-1 rounded text-xs border border-zinc-700">
-                                                    {k.firstName} {k.lastName}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-zinc-600 italic">No kids added</span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${u.role === 'ADMIN' ? 'bg-co-yellow text-black' : 'bg-zinc-800 text-zinc-400'}`}>
+                                    <span className={`text-xs px-2 py-1 rounded uppercase font-bold ${u.role === 'ADMIN' ? 'bg-co-yellow text-black' : 'bg-zinc-700 text-zinc-300'}`}>
                                         {u.role}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button 
-                                        onClick={() => handleDeleteUser(u)}
-                                        disabled={u.id === user.id}
-                                        className="text-zinc-500 hover:text-red-500 transition-colors disabled:opacity-30 disabled:hover:text-zinc-500"
-                                        title="Delete User"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    {u.role !== 'ADMIN' && (
+                                        <button 
+                                            onClick={() => handleDeleteUser(u)}
+                                            className="text-zinc-500 hover:text-red-500 transition-colors"
+                                            title="Delete User"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         );
@@ -320,193 +311,217 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
          </div>
       </div>
   );
-  
+
   return (
-    <div className={!hideHeader ? `w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10` : "w-full"}>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        {!hideHeader && (
-          <div>
-            <h1 className="font-teko text-5xl text-white uppercase">Coach's Dashboard</h1>
-            <p className="text-zinc-500">Welcome back, {user.firstName}.</p>
-          </div>
-        )}
-        
-        <div className={`flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 ${hideHeader ? 'w-full md:w-auto' : ''}`}>
-            {(['schedule', 'calendar', 'users'] as const).map(tab => (
-                <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-6 py-2 rounded font-teko text-xl uppercase transition-all ${hideHeader ? 'flex-1 md:flex-none' : ''} ${activeTab === tab ? 'bg-co-yellow text-black shadow' : 'text-zinc-400 hover:text-white'}`}
-                >
-                    {tab}
-                </button>
-            ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {activeTab !== 'users' && (
-            <div className="lg:col-span-1">
-                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 sticky top-24">
-                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-zinc-800">
-                        <QrCode className="text-co-yellow" size={28} />
-                        <h2 className="font-teko text-3xl text-white uppercase">Check-In</h2>
-                    </div>
-
-                    <form onSubmit={handleCheckIn}>
-                        <label className="block text-zinc-400 text-xs uppercase mb-2">1. Select Session</label>
-                        <select 
-                            value={selectedEventId} 
-                            onChange={(e) => setSelectedEventId(e.target.value)}
-                            className="w-full bg-black border border-zinc-700 p-3 mb-4 text-white rounded focus:border-co-yellow outline-none text-sm"
-                        >
-                            <option value="">-- Select --</option>
-                            {events.map(e => (
-                                <option key={e.id} value={e.id}>{e.date} | {e.title}</option>
-                            ))}
-                        </select>
-
-                        <label className="block text-zinc-400 text-xs uppercase mb-2">2. Scan / Enter Code</label>
-                        <div className="flex gap-2 mb-4">
-                            <input 
-                                type="text" 
-                                value={qrInput}
-                                onChange={(e) => setQrInput(e.target.value)}
-                                placeholder="Scan QR..."
-                                className="flex-1 bg-black border border-zinc-700 p-3 text-white rounded focus:border-co-yellow outline-none"
-                            />
-                            <button type="submit" className="bg-white text-black font-medium uppercase px-4 rounded hover:bg-zinc-200">
-                                GO
-                            </button>
-                        </div>
-                    </form>
-
-                    {checkInStatus && (
-                        <div className={`p-3 rounded text-center text-sm font-medium ${checkInStatus.success ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
-                            {checkInStatus.msg}
-                        </div>
-                    )}
-                </div>
+    <div className={`w-full max-w-7xl mx-auto ${hideHeader ? '' : 'px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]'}`}>
+      {!hideHeader && (
+          <div className="flex justify-between items-center mb-10">
+            <div>
+                <h1 className="font-teko text-6xl text-white uppercase mb-2">Coach's Dashboard</h1>
+                <p className="text-zinc-500">Manage schedule, roster, and check-ins.</p>
             </div>
-        )}
+          </div>
+      )}
 
-        <div className={activeTab === 'users' ? 'lg:col-span-3' : 'lg:col-span-2'}>
-            {activeTab === 'schedule' && renderScheduleTab()}
-            {activeTab === 'calendar' && renderCalendarTab()}
-            {activeTab === 'users' && renderUsersTab()}
-        </div>
+      {/* --- QUICK CHECK-IN BAR --- */}
+      <div className="bg-card-bg border border-zinc-700 p-6 rounded-lg mb-8 shadow-xl">
+          <h2 className="font-teko text-3xl text-white uppercase mb-4 flex items-center gap-2">
+              <QrCode className="text-co-yellow" /> Quick Check-In
+          </h2>
+          <form onSubmit={handleCheckIn} className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex-grow w-full md:w-auto">
+                  <label className="block text-zinc-400 text-xs uppercase mb-1">Select Session</label>
+                  <select 
+                      className="w-full bg-black border border-zinc-700 p-3 text-white rounded focus:border-co-yellow outline-none"
+                      value={selectedEventId}
+                      onChange={(e) => setSelectedEventId(e.target.value)}
+                  >
+                      <option value="">-- Select Event --</option>
+                      {events.filter(e => new Date(e.isoStart) > new Date(new Date().getTime() - 86400000)).map(e => (
+                          <option key={e.id} value={e.id}>
+                              {e.date} | {e.startTime} - {e.title}
+                          </option>
+                      ))}
+                  </select>
+              </div>
+              <div className="flex-grow w-full md:w-auto">
+                   <label className="block text-zinc-400 text-xs uppercase mb-1">Scan QR / Enter Code</label>
+                   <div className="relative">
+                        <Smartphone className="absolute left-3 top-3 text-zinc-600" size={20} />
+                        <input 
+                            type="text" 
+                            className="w-full bg-black border border-zinc-700 p-3 pl-10 text-white rounded focus:border-co-yellow outline-none font-mono"
+                            placeholder="Scan or type code..."
+                            value={qrInput}
+                            onChange={e => setQrInput(e.target.value)}
+                            autoFocus
+                        />
+                   </div>
+              </div>
+              <button 
+                type="submit" 
+                className="w-full md:w-auto bg-white text-black font-teko text-xl uppercase px-8 py-3 rounded hover:bg-zinc-200 transition-colors"
+              >
+                  Check In
+              </button>
+          </form>
+          {checkInStatus && (
+              <div className={`mt-4 p-3 rounded flex items-center gap-2 ${checkInStatus.success ? 'bg-green-900/30 text-green-400 border border-green-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
+                  {checkInStatus.success ? <CheckCircle size={20} /> : <Trash2 size={20} />}
+                  <span className="font-bold uppercase">{checkInStatus.msg}</span>
+              </div>
+          )}
       </div>
+
+      {/* --- TABS --- */}
+      <div className="flex gap-4 border-b border-zinc-800 mb-8 overflow-x-auto">
+          <button 
+              onClick={() => setActiveTab('schedule')}
+              className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'schedule' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
+          >
+              <List className="inline-block mr-2 relative -top-[2px]" size={18} /> Schedule List
+          </button>
+          <button 
+              onClick={() => setActiveTab('calendar')}
+              className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'calendar' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
+          >
+              <CalendarIcon className="inline-block mr-2 relative -top-[2px]" size={18} /> Calendar View
+          </button>
+          <button 
+              onClick={() => setActiveTab('users')}
+              className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'users' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
+          >
+              <Users className="inline-block mr-2 relative -top-[2px]" size={18} /> Manage Users
+          </button>
+      </div>
+
+      {/* --- TAB CONTENT --- */}
+      <div className="animate-fade-in">
+          {activeTab === 'schedule' && renderScheduleTab()}
+          {activeTab === 'calendar' && renderCalendarTab()}
+          {activeTab === 'users' && renderUsersTab()}
+      </div>
+
+      {/* --- MODALS --- */}
       
+      {/* Create Event Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}>
+            <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-lg w-full" onClick={e => e.stopPropagation()}>
+                <h2 className="font-teko text-4xl text-white uppercase mb-6">Create New Session</h2>
+                <form onSubmit={handleCreateEvent} className="space-y-4">
+                    <div>
+                        <label className="block text-zinc-400 text-xs uppercase mb-1">Title</label>
+                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
+                    </div>
+                    <div>
+                        <label className="block text-zinc-400 text-xs uppercase mb-1">Description</label>
+                        <textarea className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>
+                            <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">Max Capacity</label>
+                            <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.maxSlots} onChange={e => setNewEvent({...newEvent, maxSlots: parseInt(e.target.value)})} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">Start Time</label>
+                            <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={newEvent.startTime} onChange={e => setNewEvent({...newEvent, startTime: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">End Time</label>
+                            <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={newEvent.endTime} onChange={e => setNewEvent({...newEvent, endTime: e.target.value})} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-zinc-400 text-xs uppercase mb-1">Location</label>
+                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} />
+                    </div>
+                    <div className="flex gap-4 pt-4">
+                        <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
+                        <button type="submit" className="flex-1 bg-co-red hover:bg-white hover:text-black text-white py-3 uppercase font-teko text-xl rounded">Create Session</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      )}
+
+      {/* Roster Management Modal */}
       {showRosterModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowRosterModal(null)}>
-            <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <h2 className="font-teko text-4xl text-white uppercase">{showRosterModal.title}</h2>
                         <p className="text-zinc-500">{showRosterModal.date} @ {showRosterModal.startTime}</p>
                     </div>
-                    <button onClick={() => setShowRosterModal(null)} className="text-zinc-500 hover:text-white">&times;</button>
+                    <button onClick={() => setShowRosterModal(null)} className="text-zinc-500 hover:text-white"><X size={24} /></button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Current Roster */}
                     <div>
-                        <h3 className="text-sm font-medium text-white uppercase mb-4 border-b border-zinc-800 pb-2">Roster ({showRosterModal.registeredKidIds.length})</h3>
-                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                            {showRosterModal.registeredKidIds.length === 0 && <p className="text-zinc-600 text-sm italic">No athletes registered.</p>}
-                            {showRosterModal.registeredKidIds.map(kidId => (
-                                <div key={kidId} className="flex justify-between items-center bg-black p-2 rounded border border-zinc-800">
-                                    <span className="text-zinc-300 text-sm">{getKidName(kidId)}</span>
-                                    <button onClick={() => handleRemoveKidFromRoster(kidId)} className="text-red-500 hover:text-red-400">
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                        <h3 className="font-teko text-2xl text-white uppercase mb-4 border-b border-zinc-800 pb-2">Registered Athletes ({showRosterModal.registeredKidIds.length})</h3>
+                        <ul className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                            {showRosterModal.registeredKidIds.map(kidId => {
+                                const isCheckedIn = showRosterModal.checkedInKidIds.includes(kidId);
+                                return (
+                                    <li key={kidId} className="flex justify-between items-center bg-zinc-900 p-3 rounded border border-zinc-800">
+                                        <div>
+                                            <div className="text-white font-medium">{getKidName(kidId)}</div>
+                                            {isCheckedIn && <div className="text-[10px] text-green-500 font-bold uppercase flex items-center gap-1"><CheckCircle size={10} /> Checked In</div>}
+                                        </div>
+                                        <button 
+                                            onClick={() => handleRemoveKidFromRoster(kidId)}
+                                            className="text-zinc-600 hover:text-red-500 p-1"
+                                            title="Remove"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                            {showRosterModal.registeredKidIds.length === 0 && <p className="text-zinc-600 italic">No athletes registered.</p>}
+                        </ul>
                     </div>
 
+                    {/* Add Athlete */}
                     <div>
-                        <h3 className="text-sm font-medium text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add Athlete</h3>
-                        <div className="flex gap-2">
+                        <h3 className="font-teko text-2xl text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add to Roster</h3>
+                        <div className="flex gap-2 mb-4">
                             <select 
-                                value={kidToAdd} 
-                                onChange={(e) => setKidToAdd(e.target.value)}
-                                className="flex-1 bg-black border border-zinc-700 p-2 text-white text-sm rounded outline-none focus:border-co-yellow"
+                                className="flex-1 bg-black border border-zinc-700 p-2 text-white rounded text-sm outline-none"
+                                value={kidToAdd}
+                                onChange={e => setKidToAdd(e.target.value)}
                             >
-                                <option value="">-- Select Athlete --</option>
+                                <option value="">Select Athlete...</option>
                                 {allChildren
-                                    .filter(c => !showRosterModal.registeredKidIds.includes(c.id)) 
+                                    .filter(c => !showRosterModal.registeredKidIds.includes(c.id))
+                                    .sort((a,b) => a.lastName.localeCompare(b.lastName))
                                     .map(c => (
-                                    <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
-                                ))}
+                                        <option key={c.id} value={c.id}>{c.lastName}, {c.firstName}</option>
+                                    ))
+                                }
                             </select>
                             <button 
                                 onClick={handleAddKidToRoster}
                                 disabled={!kidToAdd}
-                                className="bg-co-yellow disabled:opacity-50 text-black px-3 rounded hover:bg-white transition-colors"
+                                className="bg-white text-black px-4 uppercase font-teko text-lg rounded hover:bg-zinc-200 disabled:opacity-50"
                             >
-                                <Plus size={20} />
+                                Add
                             </button>
                         </div>
-                        <p className="text-zinc-600 text-xs mt-2">
-                            Adding an athlete manually bypasses subscription limits and payment checks.
+                        <p className="text-xs text-zinc-500">
+                            Manually adding an athlete bypasses subscription limits and checks. Use for drop-ins or corrections.
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
-      )}
-
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
-           <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-teko text-3xl text-white uppercase mb-6">Create New Session</h2>
-            <form onSubmit={handleCreateEvent} className="space-y-4">
-              <div>
-                <label className="block text-zinc-400 text-xs uppercase mb-1">Title</label>
-                <input required className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-zinc-400 text-xs uppercase mb-1">Description</label>
-                <textarea className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                   <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>
-                   {/* STYLED DATE PICKER */}
-                   <input 
-                      required 
-                      type="date" 
-                      className="w-full bg-black border border-zinc-700 p-2 text-white focus:border-co-yellow focus:ring-1 focus:ring-co-yellow rounded outline-none appearance-none" 
-                      value={newEvent.date} 
-                      onChange={e => setNewEvent({...newEvent, date: e.target.value})} 
-                   />
-                </div>
-                <div>
-                   <label className="block text-zinc-400 text-xs uppercase mb-1">Max Slots</label>
-                   <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.maxSlots} onChange={e => setNewEvent({...newEvent, maxSlots: parseInt(e.target.value)})} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                   <label className="block text-zinc-400 text-xs uppercase mb-1">Start Time</label>
-                   <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.startTime} onChange={e => setNewEvent({...newEvent, startTime: e.target.value})} />
-                </div>
-                 <div>
-                   <label className="block text-zinc-400 text-xs uppercase mb-1">End Time</label>
-                   <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.endTime} onChange={e => setNewEvent({...newEvent, endTime: e.target.value})} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-zinc-400 text-xs uppercase mb-1">Location</label>
-                <input required className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                <button type="submit" className="flex-1 bg-co-red hover:bg-red-800 text-white py-3 uppercase font-teko text-xl font-medium rounded">Create</button>
-              </div>
-            </form>
-           </div>
         </div>
       )}
     </div>

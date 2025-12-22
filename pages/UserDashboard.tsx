@@ -589,7 +589,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </div>
                 <div>
                     <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
-                    <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
+                    <input 
+                        required 
+                        type="date" 
+                        className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark]" 
+                        value={newKidDob} 
+                        onChange={e => setNewKidDob(e.target.value)} 
+                    />
                 </div>
                 <div>
                     <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
