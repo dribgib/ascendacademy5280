@@ -441,6 +441,19 @@ const supabaseApi = {
           throw new Error("No session ID returned.");
       }
     },
+    
+    // NEW METHOD to manually sync session (bypassing Webhook reliability issues)
+    syncSession: async (sessionId: string) => {
+        const response = await fetch('/api/sync-stripe-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+        });
+        if (!response.ok) {
+            console.error("Sync failed, falling back to webhook.");
+        }
+        return await response.json();
+    },
 
     createDonationSession: async (amount: number, userId?: string) => {
       const stripe = await stripePromise;

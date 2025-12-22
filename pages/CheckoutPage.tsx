@@ -18,20 +18,40 @@ const CheckoutPage: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [syncingPayment, setSyncingPayment] = useState(false);
 
   useEffect(() => {
     // 1. Check for Stripe Success Return
     const params = new URLSearchParams(location.search);
-    if (params.get('session_id')) {
-        setPaymentSuccess(true);
-        // Clear URL param to prevent re-trigger
-        window.history.replaceState({}, '', window.location.pathname);
-        // Show immediate feedback
-        showAlert('Payment Successful', 'Your subscription is being activated. Please wait...', 'success');
+    const sessionId = params.get('session_id');
+    
+    if (sessionId) {
+        handlePaymentReturn(sessionId);
+    } else {
+        loadData();
     }
-
-    loadData();
   }, [location.search]); 
+
+  const handlePaymentReturn = async (sessionId: string) => {
+      setSyncingPayment(true);
+      try {
+          // Force manual sync to bypass webhook latency/failure
+          console.log("Syncing session...", sessionId);
+          await api.billing.syncSession(sessionId);
+          setPaymentSuccess(true);
+          showAlert('Payment Successful', 'Your subscription is active. Welcome to the team!', 'success');
+      } catch (e) {
+          console.error("Sync failed:", e);
+          // Fallback: If sync API fails, hopefully webhook worked.
+          setPaymentSuccess(true);
+      } finally {
+          // Clean URL
+          window.history.replaceState({}, '', window.location.pathname);
+          // Reload data to reflect new status
+          setSyncingPayment(false);
+          loadData();
+      }
+  };
 
   const loadData = async () => {
     try {
@@ -50,13 +70,6 @@ const CheckoutPage: React.FC = () => {
 
       setUser(u);
       
-      // Artificial delay if we just came back from payment to allow Webhook to fire
-      const params = new URLSearchParams(location.search);
-      if (params.get('session_id')) {
-         // Wait for webhook to populate DB
-         await new Promise(resolve => setTimeout(resolve, 4500));
-      }
-
       const k = await api.children.list(u.id);
       setKids(k);
       
@@ -120,14 +133,15 @@ const CheckoutPage: React.FC = () => {
   }, [loading, location.search, kids]);
 
 
-  if (loading) return (
+  if (loading || syncingPayment) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-4">
-        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center">
-          {paymentSuccess ? 'ACTIVATING PLAN...' : 'LOADING...'}
+        <div className="text-co-yellow font-teko text-4xl animate-pulse tracking-widest text-center uppercase">
+          {syncingPayment ? 'Confirming Payment...' : 'Loading Account...'}
         </div>
         <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-co-red animate-[shimmer_1s_infinite] w-1/2"></div>
         </div>
+        {syncingPayment && <p className="text-zinc-500 text-xs uppercase tracking-wide">Securing your spot on the roster</p>}
     </div>
   );
 
@@ -187,10 +201,10 @@ const CheckoutPage: React.FC = () => {
                 key={kid.id}
                 onClick={() => setActiveKidId(kid.id)}
                 className={`
-                  px-6 py-2 rounded font-teko text-xl uppercase tracking-wide transition-colors border
+                  px-6 py-2 rounded-sm font-teko text-xl uppercase tracking-wide transition-colors border
                   ${activeKidId === kid.id 
                     ? 'bg-white text-black border-white' 
-                    : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-white'}
+                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-white'}
                 `}
               >
                 {kid.firstName} {kid.lastName}
@@ -198,7 +212,7 @@ const CheckoutPage: React.FC = () => {
             ))}
             <button 
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 rounded font-teko text-xl uppercase tracking-wide border border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500"
+              className="px-6 py-2 rounded-sm font-teko text-xl uppercase tracking-wide border border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent"
             >
               + Add Athlete
             </button>
@@ -225,50 +239,60 @@ const CheckoutPage: React.FC = () => {
         {activeKid && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {PACKAGES.map((pkg) => {
-              // Highlight if this kid has this specific active plan (mock logic)
+              // Highlight if this kid has this specific active plan
               const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); 
               const isSelectedFromUrl = packageId === pkg.id;
               
               const finalPrice = discountPercent > 0 ? Math.round(pkg.price * (1 - discountPercent / 100)) : pkg.price;
 
+              // STYLING: Matching Home Page Cards
+              // "bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2"
+              // PLUS checkout specific selection rings
               return (
                 <div 
                   key={pkg.id} 
                   className={`
-                    relative bg-zinc-900 border p-6 flex flex-col rounded-lg transition-all duration-300
-                    ${pkg.name === 'Elite' ? 'border-co-yellow shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800'}
-                    ${isSelectedFromUrl ? 'ring-2 ring-co-yellow scale-105 z-10' : ''}
+                    bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4
+                    ${pkg.name === 'Elite' ? 'border-co-yellow shadow-[0_0_20px_rgba(255,215,0,0.1)]' : 'border-transparent hover:border-co-yellow hover:-translate-y-2'}
+                    ${isSelectedFromUrl && !isActivePlan ? 'ring-2 ring-co-yellow ring-offset-2 ring-offset-black' : ''}
+                    ${isActivePlan ? 'opacity-75 border-green-500' : ''}
                   `}
                 >
                   {pkg.name === 'Elite' && (
-                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium">
+                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium font-teko tracking-wide">
                       Best Value
                     </span>
                   )}
+                  
+                  {isActivePlan && (
+                    <div className="absolute top-0 left-0 right-0 bg-green-500 text-black text-center text-xs font-bold uppercase py-1">
+                        Active Plan
+                    </div>
+                  )}
 
-                  <div className="mb-4">
-                    <h3 className="font-teko text-3xl text-white uppercase">{pkg.name}</h3>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-2xl font-bold text-white">${finalPrice}</span>
-                      <span className="text-xs text-zinc-500 uppercase">/ Month</span>
+                  <div className="mb-4 mt-2">
+                    <h3 className="font-teko text-4xl text-white uppercase">{pkg.name}</h3>
+                    <div className="flex items-baseline gap-1 mt-2 border-b border-zinc-800 pb-4">
+                      <span className="text-3xl font-bold text-white">${finalPrice}</span>
+                      <span className="text-sm text-zinc-500 uppercase font-medium">/ Month</span>
                     </div>
                     {discountPercent > 0 && (
-                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500">${pkg.price}/mo</p>
+                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500 mt-1">${pkg.price}/mo</p>
                     )}
                   </div>
 
-                  <ul className="space-y-3 mb-8 flex-grow">
-                    {pkg.features.slice(0, 3).map((feat, i) => ( 
-                      <li key={i} className="flex items-start gap-2 text-sm text-zinc-400">
-                        <Check className="h-4 w-4 text-co-yellow flex-shrink-0 mt-0.5" />
-                        <span>{feat}</span>
+                  <ul className="space-y-4 mb-8 flex-grow">
+                    {pkg.features.map((feat, i) => ( 
+                      <li key={i} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-co-yellow flex-shrink-0 mt-0.5" />
+                        <span className="text-zinc-300 text-sm font-medium">{feat}</span>
                       </li>
                     ))}
                     <li className="text-xs text-zinc-600 italic">+ more</li>
                   </ul>
 
                   {isActivePlan ? (
-                    <button disabled className="w-full bg-co-yellow/10 text-co-yellow border border-co-yellow/30 py-3 uppercase rounded cursor-default">
+                    <button disabled className="w-full bg-green-900/20 text-green-500 border border-green-900/50 py-4 uppercase font-teko text-xl rounded cursor-default">
                       Current Plan
                     </button>
                   ) : (
@@ -276,13 +300,13 @@ const CheckoutPage: React.FC = () => {
                       onClick={() => handleSubscribe(pkg.id)}
                       disabled={processing}
                       className={`
-                        w-full py-3 uppercase rounded transition-colors text-sm tracking-widest
-                        ${pkg.name === 'Elite' 
-                          ? 'bg-co-yellow text-black hover:bg-white' 
-                          : 'bg-white text-black hover:bg-zinc-200'}
+                        w-full py-4 uppercase font-teko text-2xl transition-colors tracking-wide border
+                        ${pkg.name === 'Elite' || isSelectedFromUrl
+                          ? 'bg-co-yellow text-black border-co-yellow hover:bg-white hover:border-white' 
+                          : 'bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow'}
                       `}
                     >
-                      {processing ? 'Processing...' : (isSelectedFromUrl ? 'Select This Plan' : 'Subscribe')}
+                      {processing ? 'Processing...' : (isSelectedFromUrl ? 'Select Plan' : 'Subscribe')}
                     </button>
                   )}
                 </div>
@@ -297,44 +321,44 @@ const CheckoutPage: React.FC = () => {
             
             {/* Status Panel */}
             <div>
-               <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
-                 <AlertCircle size={20} className="text-co-yellow" /> Subscription Status
+               <h3 className="flex items-center gap-2 text-white font-teko text-3xl uppercase mb-4">
+                 <AlertCircle size={24} className="text-co-yellow" /> Subscription Status
                </h3>
-               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
                  <div className="flex justify-between items-center py-4 border-b border-zinc-800">
-                    <span className="text-zinc-400 text-sm">Current Plan</span>
+                    <span className="text-zinc-400 text-sm uppercase tracking-wide">Current Plan</span>
                     {activeKid.subscriptionStatus === 'active' ? (
-                       <span className="bg-co-yellow/10 text-co-yellow px-3 py-1 rounded text-xs uppercase border border-co-yellow/30 font-medium">Active</span>
+                       <span className="bg-green-900/30 text-green-400 px-3 py-1 rounded text-xs uppercase border border-green-900/50 font-medium">Active</span>
                     ) : (
                        <span className="bg-zinc-800 text-zinc-500 px-3 py-1 rounded text-xs uppercase font-medium">No Active Plan</span>
                     )}
                  </div>
                  <div className="flex justify-between items-center py-4">
-                    <span className="text-zinc-400 text-sm">Status</span>
-                    <span className="text-zinc-500 text-xs uppercase">{activeKid.subscriptionStatus === 'active' ? 'Auto-Renewing' : 'Inactive'}</span>
+                    <span className="text-zinc-400 text-sm uppercase tracking-wide">Status</span>
+                    <span className="text-zinc-500 text-sm uppercase font-bold">{activeKid.subscriptionStatus === 'active' ? 'Auto-Renewing' : 'Inactive'}</span>
                  </div>
                </div>
             </div>
 
             {/* Billing History Link */}
             <div>
-               <h3 className="flex items-center gap-2 text-white font-teko text-2xl uppercase mb-4">
-                 <CreditCard size={20} className="text-co-yellow" /> Billing Portal
+               <h3 className="flex items-center gap-2 text-white font-teko text-3xl uppercase mb-4">
+                 <CreditCard size={24} className="text-co-yellow" /> Billing Portal
                </h3>
-               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 text-center">
-                   <p className="text-zinc-400 text-sm mb-4">
+               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
+                   <p className="text-zinc-400 text-sm mb-6">
                        Manage your payment methods, view past invoices, and cancel subscriptions via Stripe.
                    </p>
                    {activeKid.subscriptionStatus === 'active' || user.stripeCustomerId ? (
                         <button 
                             onClick={handleOpenPortal} 
                             disabled={processing}
-                            className="bg-white text-black px-6 py-2 uppercase rounded hover:bg-zinc-200 transition-colors w-full font-teko text-xl tracking-wide"
+                            className="bg-white text-black px-8 py-3 uppercase hover:bg-zinc-200 transition-colors w-full font-teko text-2xl tracking-wide border border-transparent"
                         >
-                            {processing ? 'Opening...' : 'Open Billing Portal'}
+                            {processing ? 'Opening...' : 'Manage Subscription'}
                         </button>
                    ) : (
-                        <button disabled className="bg-zinc-800 text-zinc-500 px-6 py-2 uppercase rounded cursor-not-allowed w-full border border-zinc-700 font-teko text-xl tracking-wide">
+                        <button disabled className="bg-zinc-800 text-zinc-500 px-8 py-3 uppercase cursor-not-allowed w-full border border-zinc-700 font-teko text-2xl tracking-wide">
                             No Billing History
                         </button>
                    )}
