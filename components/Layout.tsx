@@ -192,27 +192,36 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
 
       <footer className="bg-black border-t border-zinc-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-8 md:mb-0 text-center md:text-left">
-              <span className="font-teko text-3xl font-bold tracking-tight uppercase text-white">
+          {/* Desktop Layout: 3 Columns. Mobile: Stacked */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center">
+            
+            {/* Left: Brand & Copyright */}
+            <div className="md:text-left flex flex-col items-center md:items-start">
+              <span className="font-teko text-3xl font-bold tracking-tight uppercase text-white cursor-pointer" onClick={() => navigate('/')}>
                 Ascend<span className="text-co-red">Academy</span><span className="text-co-yellow">5280</span>
               </span>
-              <div className="mt-4 text-zinc-400 text-sm space-y-1">
-                 <p className="flex items-center gap-2 justify-center md:justify-start">
-                    <Mail size={14} className="text-co-red" /> rod@ascendacademy5280.com
-                 </p>
-                 <p className="flex items-center gap-2 justify-center md:justify-start">
-                    <Phone size={14} className="text-co-yellow" /> 303-943-2787
-                 </p>
-              </div>
-              <p className="text-zinc-600 text-xs mt-4">© {new Date().getFullYear()} All rights reserved.</p>
+              <p className="text-zinc-600 text-xs mt-2">© {new Date().getFullYear()} All rights reserved.</p>
+            </div>
+
+            {/* Center: Contact Info */}
+            <div className="flex flex-col items-center justify-center space-y-2">
+                 <a href="mailto:rod@ascendacademy5280.com" className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm transition-colors group">
+                    <Mail size={14} className="text-co-red group-hover:text-co-yellow transition-colors" /> 
+                    <span>rod@ascendacademy5280.com</span>
+                 </a>
+                 <a href="tel:3039432787" className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm transition-colors group">
+                    <Phone size={14} className="text-co-yellow group-hover:text-co-red transition-colors" /> 
+                    <span>303-943-2787</span>
+                 </a>
             </div>
             
-            <div className="flex space-x-6">
+            {/* Right: Socials */}
+            <div className="flex justify-center md:justify-end space-x-6">
               <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><Instagram /></a>
               <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><Youtube /></a>
               <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><TikTokIcon /></a>
             </div>
+
           </div>
         </div>
       </footer>

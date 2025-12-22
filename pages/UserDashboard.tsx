@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2 } from 'lucide-react';
-import { POPULAR_SPORTS, WAIVER_CONFIG } from '../constants';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw } from 'lucide-react';
+import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
@@ -254,6 +254,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       showAlert('Error', e.message || 'Failed to cancel.', 'error');
     }
   };
+  
+  // Helper to map current subscription ID to a friendly package ID for URL if possible
+  const getPackageIdForUrl = (subId?: string) => {
+      if (!subId) return 'p_elite'; // Default fallback
+      // Try to find if subId matches a known package
+      const pkg = PACKAGES.find(p => p.id === subId || p.stripePriceId === subId);
+      return pkg ? pkg.id : subId;
+  };
 
   if (loading && !isAdminView) return <LoadingScreen text="Loading Dashboard" />;
 
@@ -389,10 +397,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 
                                 <div className="mt-3">
                                     {kid.subscriptionStatus === 'active' && kid.usageStats ? (
-                                    <div>
-                                        <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 mb-2 inline-block">
+                                    <div className="flex flex-col items-start gap-2">
+                                        <span className="text-[10px] uppercase font-medium bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 inline-block">
                                             {kid.usageStats.planName} Plan
                                         </span>
+                                        <button 
+                                            onClick={() => navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`)}
+                                            className="text-[10px] text-zinc-400 hover:text-white uppercase font-bold flex items-center gap-1 border border-zinc-700 px-2 py-1 rounded hover:bg-zinc-800 transition-colors"
+                                        >
+                                            <RefreshCw size={10} /> Change Plan
+                                        </button>
                                     </div>
                                     ) : (
                                     <button 
