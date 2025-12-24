@@ -126,7 +126,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
 
     // Empty cells for previous month
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-32 bg-zinc-900/50 border border-zinc-800/50"></div>);
+      days.push(<div key={`empty-${i}`} className="h-32 bg-zinc-900/50 border-b border-r border-zinc-800/50"></div>);
     }
 
     // Days of current month
@@ -136,7 +136,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
       const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
 
       days.push(
-        <div key={day} className={`h-32 bg-zinc-900 border border-zinc-800 p-2 overflow-y-auto custom-scrollbar ${isToday ? 'bg-zinc-800/50 ring-1 ring-inset ring-co-yellow' : ''}`}>
+        <div key={day} className={`h-32 bg-zinc-900 border-b border-r border-zinc-800 p-2 overflow-y-auto custom-scrollbar ${isToday ? 'bg-zinc-800/50 ring-1 ring-inset ring-co-yellow' : ''}`}>
           <div className={`text-right text-sm mb-2 ${isToday ? 'text-co-yellow font-bold' : 'text-zinc-500'}`}>{day}</div>
           <div className="space-y-1">
             {dayEvents.map(evt => {
@@ -188,22 +188,29 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
         </button>
       </div>
 
-      {/* Calendar Grid Header */}
-      <div className="grid grid-cols-7 bg-zinc-950 border-x border-t border-zinc-800">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="py-3 text-center text-zinc-500 text-sm font-bold uppercase tracking-wider">
-                {day}
-            </div>
-        ))}
-      </div>
+      {/* SCROLLABLE CALENDAR WRAPPER */}
+      <div className="border border-zinc-800 rounded-b-lg overflow-hidden mb-12">
+        <div className="overflow-x-auto custom-scrollbar">
+            <div className="min-w-[800px]">
+                {/* Calendar Grid Header */}
+                <div className="grid grid-cols-7 bg-zinc-950 border-b border-zinc-800">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} className="py-3 text-center text-zinc-500 text-sm font-bold uppercase tracking-wider border-r border-zinc-800 last:border-r-0">
+                            {day}
+                        </div>
+                    ))}
+                </div>
 
-      {/* Calendar Grid Body */}
-      <div className="grid grid-cols-7 border-b border-l border-zinc-800 mb-12">
-        {renderCalendarDays()}
+                {/* Calendar Grid Body */}
+                <div className="grid grid-cols-7 bg-zinc-900">
+                    {renderCalendarDays()}
+                </div>
+            </div>
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="flex gap-6 justify-center text-sm mb-12">
+      <div className="flex gap-6 justify-center text-sm mb-12 flex-wrap">
         <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-co-yellow/10 border border-co-yellow rounded"></div>
             <span className="text-zinc-400">Open Slots</span>
@@ -212,6 +219,10 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
             <div className="w-3 h-3 bg-zinc-800 border border-zinc-700 rounded"></div>
             <span className="text-zinc-400">Waitlist Only</span>
         </div>
+      </div>
+      
+      <div className="md:hidden text-center text-zinc-600 text-xs mb-8 -mt-8 flex items-center justify-center gap-2">
+        <ChevronLeft size={12} /> Swipe calendar to view details <ChevronRight size={12} />
       </div>
 
       {/* Event Details Modal */}
