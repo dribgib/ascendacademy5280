@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { User } from './types';
@@ -50,6 +50,13 @@ const AuthRedirectHandler = ({ user }: { user: User | null }) => {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Track current user ID to avoid redundant fetches on tab focus
+  const currentUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentUserIdRef.current = user?.id || null;
+  }, [user]);
 
   useEffect(() => {
     let mounted = true;
@@ -59,7 +66,13 @@ const App: React.FC = () => {
       try {
         const u = await api.auth.getUser();
         if (mounted) {
-           setUser(u);
+           if (u) {
+             setUser(u);
+             currentUserIdRef.current = u.id;
+           } else {
+             setUser(null);
+             currentUserIdRef.current = null;
+           }
            setLoading(false); // Unblock UI immediately
         }
 
@@ -68,10 +81,14 @@ const App: React.FC = () => {
             const freshProfile = await api.auth.refreshProfile(u.id);
             if (freshProfile && mounted) {
                 // If role/details changed in DB vs Session, update state
-                if (freshProfile.role !== u.role || freshProfile.firstName !== u.firstName) {
-                    console.log('Syncing profile from DB...');
-                    setUser(prev => prev ? ({ ...prev, ...freshProfile }) : null);
-                }
+                setUser(prev => {
+                    if (!prev) return null;
+                    if (prev.role !== freshProfile.role || prev.firstName !== freshProfile.firstName || prev.stripeCustomerId !== freshProfile.stripeCustomerId) {
+                        console.log('Syncing profile from DB...');
+                        return { ...prev, ...freshProfile };
+                    }
+                    return prev;
+                });
             }
         }
       } catch (e) {
@@ -88,15 +105,33 @@ const App: React.FC = () => {
       
       if (event === 'SIGNED_OUT') {
         setUser(null);
+        currentUserIdRef.current = null;
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
+           // OPTIMIZATION: If user ID matches current state, skip the full getUser() construction
+           // This prevents "re-login" flash on tab switch/focus
+           if (session.user.id === currentUserIdRef.current) {
+               // Just run a silent background profile refresh to catch role changes
+               api.auth.refreshProfile(session.user.id).then(fresh => {
+                   if (fresh && mounted) {
+                       setUser(prev => {
+                           if (!prev) return null;
+                           // Deep compare strictly necessary fields to avoid re-render
+                           if (prev.role !== fresh.role || prev.firstName !== fresh.firstName || prev.stripeCustomerId !== fresh.stripeCustomerId) {
+                               return { ...prev, ...fresh };
+                           }
+                           return prev; // Return same reference -> No Re-render
+                       });
+                   }
+               });
+               return;
+           }
+
+           // Full Fetch for new/different user
            const u = await api.auth.getUser(session.user);
-           if (mounted) setUser(u);
-           // Also trigger background verify
-           if (u) {
-             api.auth.refreshProfile(u.id).then(fresh => {
-                if (fresh && mounted) setUser(prev => prev ? ({...prev, ...fresh}) : null);
-             });
+           if (mounted) {
+               setUser(u);
+               currentUserIdRef.current = u ? u.id : null;
            }
         }
       }
