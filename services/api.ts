@@ -175,7 +175,8 @@ const supabaseApi = {
         return children.map((c: any) => {
             // Fix: subscriptions comes as an array. Sort by created_at desc or filter active.
             const subs = c.subscriptions || [];
-            const activeSub = subs.find((s: any) => s.status === 'active' || s.status === 'trialing');
+            // We now check for 'active', 'trialing', AND 'paused'
+            const activeSub = subs.find((s: any) => ['active', 'trialing', 'paused'].includes(s.status));
             
             let usageStats = undefined;
 
@@ -198,7 +199,7 @@ const supabaseApi = {
                 qrCode: c.qr_code,
                 image: c.image_url,
                 subscriptionId: activeSub?.package_id,
-                subscriptionStatus: activeSub ? 'active' : 'none',
+                subscriptionStatus: activeSub ? activeSub.status : 'none', // Pass through specific status (active/paused)
                 usageStats 
             };
         });
@@ -261,7 +262,8 @@ const supabaseApi = {
 
       return children.map((c: any) => {
         const subs = c.subscriptions || [];
-        const activeSub = subs.find((s: any) => s.status === 'active' || s.status === 'trialing');
+        // Check for active, trialing, OR paused
+        const activeSub = subs.find((s: any) => ['active', 'trialing', 'paused'].includes(s.status));
         
         let usageStats = undefined;
 
@@ -285,7 +287,7 @@ const supabaseApi = {
             qrCode: c.qr_code,
             image: c.image_url,
             subscriptionId: activeSub?.package_id,
-            subscriptionStatus: activeSub ? 'active' : 'none',
+            subscriptionStatus: activeSub ? activeSub.status : 'none', // Return 'active' or 'paused'
             usageStats
         };
       });
@@ -579,6 +581,24 @@ const supabaseApi = {
             // We allow partial failure (e.g. no sub found) but log it
             console.warn("Cancel subscription API reported an error (might be already cancelled).");
         }
+    },
+    
+    pauseSubscription: async (childId: string) => {
+        const response = await fetch('/api/pause-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ childId })
+        });
+        if (!response.ok) throw new Error('Failed to pause subscription');
+    },
+
+    resumeSubscription: async (childId: string) => {
+        const response = await fetch('/api/resume-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ childId })
+        });
+        if (!response.ok) throw new Error('Failed to resume subscription');
     },
 
     createDonationSession: async (amount: number, userId?: string) => {

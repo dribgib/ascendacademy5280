@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
 import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -207,6 +207,38 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       showAlert('Error', e.message || 'Failed to delete profile.', 'error');
     }
   };
+  
+  const handlePauseSubscription = async (kid: Child) => {
+      const confirmed = await showConfirm(
+          "Pause Subscription?",
+          `Are you sure you want to pause billing for ${kid.firstName}? This will void upcoming invoices but keep the account on file.`
+      );
+      if (!confirmed) return;
+      
+      try {
+          await (api.billing as any).pauseSubscription(kid.id);
+          loadData();
+          showAlert('Paused', 'Subscription has been paused.', 'success');
+      } catch (e: any) {
+          showAlert('Error', e.message || 'Failed to pause.', 'error');
+      }
+  };
+
+  const handleResumeSubscription = async (kid: Child) => {
+      const confirmed = await showConfirm(
+          "Resume Subscription?",
+          `Resume billing for ${kid.firstName}? This will reactivate the subscription immediately.`
+      );
+      if (!confirmed) return;
+
+      try {
+          await (api.billing as any).resumeSubscription(kid.id);
+          loadData();
+          showAlert('Resumed', 'Subscription is active again!', 'success');
+      } catch (e: any) {
+          showAlert('Error', e.message || 'Failed to resume.', 'error');
+      }
+  };
 
   const resetForm = () => {
     setNewKidName({ first: '', last: '' });
@@ -358,7 +390,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 ) : (
                     kids.map(kid => (
                     <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group hover:border-zinc-600 transition-colors">
-                        <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : 'bg-zinc-700'}`}></div>
+                        <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : kid.subscriptionStatus === 'paused' ? 'bg-amber-500' : 'bg-zinc-700'}`}></div>
                         
                         {/* Delete Button */}
                         <button 
@@ -384,9 +416,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
                             <div className="flex-1 min-w-0 pr-6">
                                 <h3 
-                                    className={`font-teko text-3xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
+                                    className={`font-teko text-3xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
                                     onClick={() => {
-                                        if (kid.subscriptionStatus !== 'active') {
+                                        if (kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused') {
                                             navigate(`/checkout/p_elite?kidId=${kid.id}`);
                                         }
                                     }}
@@ -407,16 +439,36 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             </span>
                                         </div>
                                         
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`);
-                                            }}
-                                            className="w-full bg-white hover:bg-zinc-200 text-black text-xs uppercase font-bold py-3 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide mt-1"
-                                        >
-                                            <RefreshCw size={14} /> Change Plan
-                                        </button>
+                                        <div className="flex gap-2 w-full">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`);
+                                                }}
+                                                className="flex-1 bg-white hover:bg-zinc-200 text-black text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                            >
+                                                <RefreshCw size={12} /> Change Plan
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handlePauseSubscription(kid); }}
+                                                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-teko tracking-wide"
+                                            >
+                                                <PauseCircle size={12} /> Pause
+                                            </button>
+                                        </div>
                                     </div>
+                                    ) : kid.subscriptionStatus === 'paused' ? (
+                                        <div className="flex flex-col items-start gap-3">
+                                            <span className="text-[10px] uppercase font-medium bg-amber-900/40 text-amber-400 px-2 py-1 rounded border border-amber-900/50 inline-block">
+                                                Subscription Paused
+                                            </span>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); handleResumeSubscription(kid); }}
+                                                className="w-full bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                            >
+                                                <PlayCircle size={12} /> Resume Subscription
+                                            </button>
+                                        </div>
                                     ) : (
                                     <button 
                                         onClick={() => navigate(`/checkout/p_elite?kidId=${kid.id}`)} 
