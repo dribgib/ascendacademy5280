@@ -313,6 +313,21 @@ const supabaseApi = {
     },
 
     delete: async (childId: string) => {
+        // 1. Cancel Billing & Delete Subscription Records (Backend)
+        // This handles stopping Stripe billing AND deleting the 'subscriptions' rows
+        // which prevents the foreign key constraint error.
+        try {
+            await supabaseApi.billing.cancelSubscription(childId);
+        } catch (e) {
+            console.warn("Subscription cancellation/cleanup failed:", e);
+        }
+
+        // 2. Delete Registrations (Frontend RLS usually allows this)
+        // Also a dependency that must be removed.
+        const { error: regError } = await supabase.from('registrations').delete().eq('child_id', childId);
+        if (regError) console.error("Registration cleanup warning:", regError);
+
+        // 3. Delete Child
         const { error } = await supabase.from('children').delete().eq('id', childId);
         if (error) throw error;
     },
@@ -552,6 +567,18 @@ const supabaseApi = {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Failed to update subscription.');
         return data;
+    },
+    
+    cancelSubscription: async (childId: string) => {
+        const response = await fetch('/api/cancel-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ childId })
+        });
+        if (!response.ok) {
+            // We allow partial failure (e.g. no sub found) but log it
+            console.warn("Cancel subscription API reported an error (might be already cancelled).");
+        }
     },
 
     createDonationSession: async (amount: number, userId?: string) => {
