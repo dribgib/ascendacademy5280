@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,86 +19,45 @@ export default async function handler(req, res) {
     }
     const { email, name } = body || {};
 
-    if (!email || !name) {
-        return res.status(200).json({ verified: false, message: 'Missing email or name' });
+    if (!email) {
+        return res.status(200).json({ verified: false, message: 'Missing email.' });
     }
 
-    const apiKey = process.env.WAIVERSIGN_API_KEY;
-    if (!apiKey) {
-        return res.status(200).json({ 
-            verified: false, 
-            message: 'Server Config Error: WAIVERSIGN_API_KEY missing.' 
-        });
+    // 1. WHITELIST OVERRIDE
+    const WHITELIST = ['colton.joseph@gmail.com', 'mrrljackson@gmail.com', 'admin@ascend5280.com'];
+    if (WHITELIST.includes(email.toLowerCase().trim())) {
+        return res.status(200).json({ verified: true, message: 'Verified via whitelist.' });
     }
 
-    // Attempt the API call
-    try {
-        const searchUrl = `https://api.waiversign.com/v1/signatures?email=${encodeURIComponent(email)}`;
-        console.log(`[WaiverCheck] Fetching: ${searchUrl}`);
+    // 2. CHECK LOCAL DATABASE (Populated by Zapier/Webhooks)
+    // We look for any waiver record matching this email.
+    const { data: waivers, error } = await supabase
+        .from('waivers')
+        .select('*')
+        .ilike('email', email.trim());
 
-        const response = await fetch(searchUrl, {
-            method: 'GET',
-            headers: {
-                'X-API-KEY': apiKey,
-                'Accept': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-             const errorText = await response.text();
-             console.error(`[WaiverCheck] API Error ${response.status}: ${errorText}`);
-             // If 403/401, key is likely wrong. If 404, endpoint wrong.
-             return res.status(200).json({ 
-                 verified: false, 
-                 message: `WaiverSign Connection Error: ${response.status}. The API Key or Endpoint might be incorrect.` 
-             });
-        }
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-            return res.status(200).json({ verified: false, message: 'Invalid response from WaiverSign.' });
-        }
-
-        // Logic to match name
-        const targetName = name.toLowerCase().trim();
-        const match = data.find(sig => {
-            const fname = (sig.fname || '').toLowerCase().trim();
-            const lname = (sig.lname || '').toLowerCase().trim();
-            const fullName = `${fname} ${lname}`;
-            
-            return fullName === targetName || 
-                   fullName.includes(targetName) || 
-                   targetName.includes(fullName) ||
-                   `${lname} ${fname}` === targetName;
-        });
-
-        if (match) {
-            return res.status(200).json({ verified: true });
-        } else {
-            const foundNames = data
-              .map(s => `${s.fname} ${s.lname}`)
-              .filter(n => n.trim().length > 0)
-              .join(', ');
-
-            return res.status(200).json({ 
-                verified: false, 
-                message: foundNames 
-                  ? `Found waivers for ${email} but names didn't match "${name}". Found: ${foundNames}` 
-                  : `No waivers found for ${email}.`
-            });
-        }
-
-    } catch (networkError) {
-        console.error("[WaiverCheck] Network/Fetch Error:", networkError);
-        return res.status(200).json({ 
-            verified: false, 
-            message: `Connection failed: ${networkError.message}. (API might be unreachable)`
-        });
+    if (error) {
+        console.error("DB Error checking waiver:", error);
+        throw error;
     }
+
+    if (waivers && waivers.length > 0) {
+        // Optional: We could do fuzzy name matching here, but usually email match is sufficient
+        // if the parent signed it.
+        return res.status(200).json({ verified: true });
+    }
+
+    // 3. Not found
+    return res.status(200).json({ 
+        verified: false, 
+        message: 'No waiver found for this email. If you just signed, please wait 2 minutes for the system to sync, or use the manual override below.' 
+    });
 
   } catch (error) {
       console.error("[WaiverCheck] Critical Error:", error);
-      return res.status(200).json({ verified: false, message: `Internal Error: ${error.message}` });
+      return res.status(200).json({ 
+          verified: false, 
+          message: 'System error. Please use manual confirmation.' 
+      });
   }
 }
