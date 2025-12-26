@@ -23,13 +23,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ verified: false, message: 'Missing email.' });
     }
 
-    // 1. WHITELIST OVERRIDE
-    const WHITELIST = ['colton.joseph@gmail.com', 'mrrljackson@gmail.com', 'admin@ascend5280.com'];
-    if (WHITELIST.includes(email.toLowerCase().trim())) {
-        return res.status(200).json({ verified: true, message: 'Verified via whitelist.' });
-    }
-
-    // 2. CHECK LOCAL DATABASE (Populated by Zapier/Webhooks)
+    // 1. CHECK LOCAL DATABASE (Populated by Zapier/Webhooks)
     // We look for any waiver record matching this email.
     const { data: waivers, error } = await supabase
         .from('waivers')
@@ -42,12 +36,10 @@ export default async function handler(req, res) {
     }
 
     if (waivers && waivers.length > 0) {
-        // Optional: We could do fuzzy name matching here, but usually email match is sufficient
-        // if the parent signed it.
         return res.status(200).json({ verified: true });
     }
 
-    // 3. Not found
+    // 2. Not found
     return res.status(200).json({ 
         verified: false, 
         message: 'No waiver found for this email. If you just signed, please wait 2 minutes for the system to sync, or use the manual override below.' 
