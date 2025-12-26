@@ -149,17 +149,18 @@ const supabaseApi = {
         }));
     },
     
-    // UPDATED: Fetches all children AND calculates their usage stats
     getAllChildren: async (): Promise<Child[]> => {
-        // 1. Fetch children with active subscriptions
-        // Join with FULL subscription data to ensure we catch active status properly
+        // 1. Fetch children with explicit subscription join
+        // We use !inner join to filter or left join to include all
+        // Here we want all children, so standard join.
+        // We select all fields from subscriptions to ensure we can filter by status in JS
         const { data: children, error } = await supabase.from('children').select(`
             *,
             subscriptions (*)
         `);
         if (error) throw error;
 
-        // 2. Fetch all registrations for current month
+        // 2. Fetch usage stats
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0,0,0,0);
@@ -170,16 +171,18 @@ const supabaseApi = {
             .select('child_id, event_id, events(start_time)')
             .gte('events.start_time', startIso);
 
-        // 3. Map and Calculate Usage
+        // 3. Map Data
         return children.map((c: any) => {
-            const activeSub = c.subscriptions?.find((s: any) => s.status === 'active');
+            // Fix: subscriptions comes as an array. Sort by created_at desc or filter active.
+            const subs = c.subscriptions || [];
+            const activeSub = subs.find((s: any) => s.status === 'active' || s.status === 'trialing');
+            
             let usageStats = undefined;
 
             if (activeSub) {
                 const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
                 const limit = pkg ? pkg.maxSessions : 0;
-                const planName = pkg ? pkg.name : 'Unknown';
-                // Count registrations for this child in this month
+                const planName = pkg ? pkg.name : 'Unknown Plan';
                 const used = registrations?.filter((r: any) => r.child_id === c.id).length || 0;
 
                 usageStats = { used, limit, planName };
@@ -196,7 +199,7 @@ const supabaseApi = {
                 image: c.image_url,
                 subscriptionId: activeSub?.package_id,
                 subscriptionStatus: activeSub ? 'active' : 'none',
-                usageStats // Now populated for Admin view
+                usageStats 
             };
         });
     },
@@ -216,9 +219,7 @@ const supabaseApi = {
         if (error) throw error;
     },
 
-    // UPDATED: Explicitly delete registrations first to ensure usage count drops ("Refund")
     deleteEvent: async (eventId: string) => {
-        // 1. Delete all registrations linked to this event
         const { error: regError } = await supabase
             .from('registrations')
             .delete()
@@ -226,7 +227,6 @@ const supabaseApi = {
         
         if (regError) throw regError;
 
-        // 2. Delete the event itself
         const { error } = await supabase.from('events').delete().eq('id', eventId);
         if (error) throw error;
     },
@@ -260,11 +260,12 @@ const supabaseApi = {
         .gte('events.start_time', startIso);
 
       return children.map((c: any) => {
-        const activeSub = c.subscriptions?.find((s: any) => s.status === 'active');
+        const subs = c.subscriptions || [];
+        const activeSub = subs.find((s: any) => s.status === 'active' || s.status === 'trialing');
+        
         let usageStats = undefined;
 
         if (activeSub) {
-            // FIX: Check for match on local ID OR Stripe Price ID to ensure Plan Name resolves
             const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
             
             const limit = pkg ? pkg.maxSessions : 0;
@@ -371,7 +372,7 @@ const supabaseApi = {
         bookedSlots: e.registrations?.length || 0,
         registeredKidIds: e.registrations?.map((r: any) => r.child_id) || [],
         checkedInKidIds: e.registrations?.filter((r: any) => r.checked_in).map((r: any) => r.child_id) || [],
-        allowedPackages: e.allowed_packages // New field from DB
+        allowedPackages: e.allowed_packages
       }));
     },
 
@@ -383,15 +384,29 @@ const supabaseApi = {
         end_time: event.endTime,
         location: event.location,
         max_slots: event.maxSlots,
-        allowed_packages: event.allowedPackages // Save allowed packages
+        allowed_packages: event.allowedPackages
       });
+      if (error) throw error;
+    },
+    
+    // NEW: Update existing event
+    update: async (id: string, event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }) => {
+      const { error } = await supabase.from('events').update({
+        title: event.title,
+        description: event.description,
+        start_time: event.startTime,
+        end_time: event.endTime,
+        location: event.location,
+        max_slots: event.maxSlots,
+        allowed_packages: event.allowedPackages
+      }).eq('id', id);
+      
       if (error) throw error;
     }
   },
 
   registrations: {
     register: async (eventId: string, childId: string) => {
-      // 1. Fetch Child and active sub
       const { data: child, error: childError } = await supabase
         .from('children')
         .select(`*, subscriptions(*)`)
@@ -400,7 +415,7 @@ const supabaseApi = {
         
       if (childError) throw new Error("Could not find athlete profile.");
       
-      const activeSub = child.subscriptions?.find((s: any) => s.status === 'active');
+      const activeSub = child.subscriptions?.find((s: any) => s.status === 'active' || s.status === 'trialing');
       
       if (!activeSub) throw new Error("Athlete does not have an active membership.");
       
@@ -408,7 +423,6 @@ const supabaseApi = {
       
       if (!pkg) throw new Error("Unknown subscription package.");
 
-      // 2. Fetch Event to check restrictions
       const { data: evt, error: evtError } = await supabase
         .from('events')
         .select('allowed_packages')
@@ -417,20 +431,18 @@ const supabaseApi = {
 
       if (evtError) throw new Error("Event not found.");
 
-      // 3. CHECK PACKAGE RESTRICTIONS
+      // Check restrictions
       if (evt.allowed_packages && evt.allowed_packages.length > 0) {
-          // Check if user's package ID or name matches
-          // We allow matching by internal ID (p_elite) or name (Elite)
           const isAllowed = evt.allowed_packages.includes(pkg.id);
           if (!isAllowed) {
-              throw new Error(`This session is restricted to ${evt.allowed_packages.map(p => {
-                  const matched = PACKAGES.find(pk => pk.id === p);
-                  return matched ? matched.name : p;
-              }).join(' or ')} packages.`);
+              const allowedNames = evt.allowed_packages
+                .map((pid: string) => PACKAGES.find(p => p.id === pid)?.name || pid)
+                .join(' or ');
+              throw new Error(`Restricted session. Requires: ${allowedNames}. Your plan: ${pkg.name}.`);
           }
       }
       
-      // 4. Check Usage Limits
+      // Check usage limits
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0,0,0,0);
@@ -453,7 +465,6 @@ const supabaseApi = {
       if (error) throw error;
     },
     
-    // NEW UNREGISTER METHOD
     unregister: async (eventId: string, childId: string) => {
         const { error } = await supabase.from('registrations')
             .delete()
@@ -478,7 +489,7 @@ const supabaseApi = {
         .maybeSingle();
 
       if (regError) return { success: false, message: 'Lookup error' };
-      if (!reg) return { success: false, message: 'Athlete not registered for this session.' };
+      if (!reg) return { success: false, message: 'Athlete not registered.' };
       if (reg.checked_in) return { success: false, message: 'Already checked in.', childName: child.first_name };
 
       const { error: updateError } = await supabase
@@ -501,12 +512,9 @@ const supabaseApi = {
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe not initialized.");
       
-      // Use Vercel /api route instead of Supabase function
       const response = await fetch('/api/create-checkout-session', {
           method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
               priceId, 
               childId, 
@@ -518,46 +526,31 @@ const supabaseApi = {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-          throw new Error(data.error || 'Failed to initiate checkout.');
-      }
+      if (!response.ok) throw new Error(data.error || 'Checkout failed.');
 
       if (data?.sessionId) {
           const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
           if (result.error) throw new Error(result.error.message);
-      } else {
-          throw new Error("No session ID returned.");
       }
     },
     
-    // NEW METHOD to manually sync session (bypassing Webhook reliability issues)
     syncSession: async (sessionId: string) => {
         const response = await fetch('/api/sync-stripe-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sessionId })
         });
-        if (!response.ok) {
-            console.error("Sync failed, falling back to webhook.");
-        }
         return await response.json();
     },
 
-    // NEW METHOD to update subscription plan
     switchSubscription: async (childId: string, newPriceId: string) => {
         const response = await fetch('/api/switch-subscription', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ childId, newPriceId })
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to update subscription.');
-        }
-
+        if (!response.ok) throw new Error(data.error || 'Failed to update subscription.');
         return data;
     },
 
@@ -565,7 +558,6 @@ const supabaseApi = {
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe not initialized.");
 
-      // Use Vercel /api route
       const response = await fetch('/api/create-donation-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -577,32 +569,23 @@ const supabaseApi = {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-          throw new Error(data.error || "Donation system unavailable.");
-      }
-
+      if (!response.ok) throw new Error(data.error || "Donation failed.");
       if (data?.sessionId) {
         const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
         if (result.error) throw new Error(result.error.message);
-      } else {
-        throw new Error("No session ID returned.");
       }
     },
 
     createPortalSession: async () => {
-      // Need auth headers to allow backend to verify user
-      // 1. Force refresh session to ensure token is valid and present
       let { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-         // Attempt refresh if session is null
          const { data } = await supabase.auth.refreshSession();
          session = data.session;
       }
       
       if (!session?.access_token) {
-          throw new Error("Please sign in again to access the billing portal.");
+          throw new Error("Please sign in again.");
       }
 
       const response = await fetch('/api/create-portal-session', {
@@ -615,7 +598,6 @@ const supabaseApi = {
       });
 
       const data = await response.json();
-
       if (!response.ok || !data.url) throw new Error(data.error || 'Portal unavailable.');
       window.location.href = data.url;
     }
@@ -642,19 +624,18 @@ const supabaseApi = {
                 body: JSON.stringify({ email: parentEmail, name: childName })
             });
             const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Verification failed');
             return data.verified === true;
         } catch (e) {
             console.error("Waiver check failed:", e);
-            return false;
+            throw e;
         }
     }
   },
 
   general: {
       sendSponsorshipInquiry: async (formData: any) => {
-          const { error } = await supabase
-            .from('inquiries')
-            .insert({
+          const { error } = await supabase.from('inquiries').insert({
                 name: formData.name,
                 email: formData.email,
                 company: formData.company,

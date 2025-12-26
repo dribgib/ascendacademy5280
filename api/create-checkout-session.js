@@ -14,10 +14,16 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false }
 });
 
-// Configure these Coupons in your Stripe Dashboard!
+// HARDCODED COUPON IDS PROVIDED BY USER
 const COUPONS = {
-    SIBLING_45: 'SIBLING_45', // 45% OFF
-    SIBLING_65: 'SIBLING_65'  // 65% OFF
+  TEST: {
+    SIBLING_45: 'fdvUgssw',
+    SIBLING_65: 'IktqmbKi'
+  },
+  LIVE: {
+    SIBLING_45: '2fW4gpPa',
+    SIBLING_65: 'C4cNT90G'
+  }
 };
 
 export default async function handler(req, res) {
@@ -66,15 +72,16 @@ export default async function handler(req, res) {
     }
     
     // 3. APPLY SIBLING DISCOUNT
-    // If user has existing active subscriptions, apply discount to this new one
     if (activeSubscriptionCount > 0) {
-        // 1 Sibling exists -> 45% off (2nd kid)
-        // 2+ Siblings exist -> 65% off (3rd+ kid)
-        const couponCode = activeSubscriptionCount >= 2 ? COUPONS.SIBLING_65 : COUPONS.SIBLING_45;
+        // Determine Mode
+        const isTestMode = stripeKey.startsWith('sk_test');
+        const couponMap = isTestMode ? COUPONS.TEST : COUPONS.LIVE;
         
-        // Note: Coupon must exist in Stripe. If not found, this might throw error, 
-        // but we'll try/catch specifically or just let it fail so admin knows to create coupons.
-        sessionConfig.discounts = [{ coupon: couponCode }];
+        // Select Coupon ID
+        const couponId = activeSubscriptionCount >= 2 ? couponMap.SIBLING_65 : couponMap.SIBLING_45;
+
+        // Apply Coupon
+        sessionConfig.discounts = [{ coupon: couponId }];
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
@@ -82,10 +89,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ sessionId: session.id });
   } catch (error) {
     console.error('Checkout API Error:', error);
-    // If error is about coupon missing
-    if (error.message.includes('No such coupon')) {
-        return res.status(400).json({ error: 'System Error: Sibling Discount Coupon missing in Stripe. Please contact support.' });
-    }
     return res.status(500).json({ error: error.message });
   }
 }

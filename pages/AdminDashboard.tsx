@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Event, Child } from '../types';
 import { api } from '../services/api';
-import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, UserPlus, Grid, List, X, Search, ShieldCheck } from 'lucide-react';
+import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, Edit, Grid, List, X, ShieldCheck } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 import { PACKAGES } from '../constants';
 
@@ -28,9 +28,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+
   const [showRosterModal, setShowRosterModal] = useState<Event | null>(null);
 
-  const [newEvent, setNewEvent] = useState({
+  const [eventForm, setEventForm] = useState({
     title: '', 
     description: '', 
     date: '', 
@@ -84,33 +87,62 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
     loadData();
   };
 
-  const handleCreateEvent = async (e: React.FormEvent) => {
+  const openCreateModal = () => {
+      setIsEditing(false);
+      setEditingEventId(null);
+      setEventForm({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20, allowedPackages: [] });
+      setShowCreateModal(true);
+  };
+
+  const openEditModal = (evt: Event) => {
+      setIsEditing(true);
+      setEditingEventId(evt.id);
+      setEventForm({
+          title: evt.title,
+          description: evt.description,
+          date: evt.date, // Formatted YYYY-MM-DD
+          startTime: evt.startTime, // Formatted HH:MM
+          endTime: evt.endTime,
+          location: evt.location,
+          maxSlots: evt.maxSlots,
+          allowedPackages: evt.allowedPackages || []
+      });
+      setShowCreateModal(true);
+  };
+
+  const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const startIso = new Date(`${newEvent.date}T${newEvent.startTime}`).toISOString();
-      const endIso = new Date(`${newEvent.date}T${newEvent.endTime}`).toISOString();
+      const startIso = new Date(`${eventForm.date}T${eventForm.startTime}`).toISOString();
+      const endIso = new Date(`${eventForm.date}T${eventForm.endTime}`).toISOString();
 
-      await api.events.create({
-        title: newEvent.title,
-        description: newEvent.description,
+      const payload = {
+        title: eventForm.title,
+        description: eventForm.description,
         startTime: startIso,
         endTime: endIso,
-        location: newEvent.location,
-        maxSlots: newEvent.maxSlots,
-        allowedPackages: newEvent.allowedPackages
-      });
+        location: eventForm.location,
+        maxSlots: eventForm.maxSlots,
+        allowedPackages: eventForm.allowedPackages
+      };
+
+      if (isEditing && editingEventId) {
+          await (api.events as any).update(editingEventId, payload);
+          showAlert('Updated', 'Session details updated successfully.', 'success');
+      } else {
+          await api.events.create(payload);
+          showAlert('Success', 'Event created successfully.', 'success');
+      }
 
       setShowCreateModal(false);
       loadData();
-      setNewEvent({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20, allowedPackages: [] });
-      showAlert('Success', 'Event created successfully.', 'success');
     } catch (e: any) {
-      showAlert('Error', e.message || 'Failed to create event.', 'error');
+      showAlert('Error', e.message || 'Failed to save event.', 'error');
     }
   };
 
   const handleTogglePackage = (pkgId: string) => {
-      setNewEvent(prev => {
+      setEventForm(prev => {
           if (prev.allowedPackages.includes(pkgId)) {
               return { ...prev, allowedPackages: prev.allowedPackages.filter(p => p !== pkgId) };
           } else {
@@ -157,7 +189,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       if (!showRosterModal || !kidToAdd) return;
       await (api as any).admin.addRegistration(showRosterModal.id, kidToAdd);
       
-      // Update local state and reload to sync usage stats
       const updatedEvents = events.map(e => {
           if (e.id === showRosterModal.id) {
              return { ...e, registeredKidIds: [...e.registeredKidIds, kidToAdd] };
@@ -165,7 +196,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           return e;
       });
       setEvents(updatedEvents);
-      loadData(); // Reload to get updated usage stats on Users tab
+      loadData();
       
       const updatedModalEvent = updatedEvents.find(e => e.id === showRosterModal.id);
       setShowRosterModal(updatedModalEvent || null);
@@ -179,15 +210,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
       await (api as any).admin.removeRegistration(showRosterModal.id, childId);
 
-      // Update local state and reload to sync usage stats
-       const updatedEvents = events.map(e => {
+      const updatedEvents = events.map(e => {
         if (e.id === showRosterModal.id) {
            return { ...e, registeredKidIds: e.registeredKidIds.filter(id => id !== childId) };
         }
         return e;
       });
       setEvents(updatedEvents);
-      loadData(); // Reload to update usage stats
+      loadData();
 
       const updatedModalEvent = updatedEvents.find(e => e.id === showRosterModal.id);
       setShowRosterModal(updatedModalEvent || null);
@@ -204,7 +234,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
             <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
                 <List className="text-zinc-400" /> Upcoming Sessions
             </h2>
-            <button onClick={() => setShowCreateModal(true)} className="bg-co-red text-white px-4 py-1 text-sm uppercase rounded hover:bg-red-800 flex items-center gap-2 font-medium">
+            <button onClick={openCreateModal} className="bg-co-red text-white px-4 py-1 text-sm uppercase rounded hover:bg-red-800 flex items-center gap-2 font-medium">
                 <Plus size={16} /> New Session
             </button>
           </div>
@@ -241,7 +271,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
               
               <div className="flex gap-3 mt-4 pt-4 border-t border-zinc-800">
                 <button onClick={() => setShowRosterModal(evt)} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded uppercase font-medium flex items-center gap-2">
-                   <Users size={14} /> Manage Roster
+                   <Users size={14} /> Roster
+                </button>
+                <button onClick={() => openEditModal(evt)} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded uppercase font-medium flex items-center gap-2">
+                   <Edit size={14} /> Edit
                 </button>
                 <button onClick={() => handleDeleteEvent(evt.id)} className="text-xs text-co-red hover:text-red-400 ml-auto uppercase font-medium flex items-center gap-1">
                    <Trash2 size={14} /> Cancel
@@ -267,7 +300,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                     <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
                         <CalendarIcon className="text-zinc-400" /> Calendar View
                     </h2>
-                    <button onClick={() => setShowCreateModal(true)} className="bg-co-red text-white px-4 py-1 text-sm font-medium uppercase rounded hover:bg-red-800 flex items-center gap-2">
+                    <button onClick={openCreateModal} className="bg-co-red text-white px-4 py-1 text-sm font-medium uppercase rounded hover:bg-red-800 flex items-center gap-2">
                         <Plus size={16} /> New Session
                     </button>
                </div>
@@ -280,12 +313,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                            </div>
                            <div className="p-4 space-y-3">
                                {grouped[date].map(evt => (
-                                   <div key={evt.id} className="cursor-pointer hover:bg-zinc-800 p-2 rounded transition-colors" onClick={() => setShowRosterModal(evt)}>
+                                   <div key={evt.id} className="cursor-pointer hover:bg-zinc-800 p-2 rounded transition-colors group" onClick={() => setShowRosterModal(evt)}>
                                        <div className="flex justify-between text-xs text-zinc-400 mb-1">
                                            <span>{evt.startTime}</span>
                                            <span>{evt.registeredKidIds.length}/{evt.maxSlots}</span>
                                        </div>
                                        <div className="text-white font-medium text-sm truncate">{evt.title}</div>
+                                       <button onClick={(e) => { e.stopPropagation(); openEditModal(evt); }} className="text-xs text-zinc-500 hover:text-co-yellow mt-1">Edit</button>
                                    </div>
                                ))}
                            </div>
@@ -461,19 +495,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
       {/* --- MODALS --- */}
       
-      {/* Create Event Modal */}
+      {/* Create / Edit Event Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}>
             <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <h2 className="font-teko text-4xl text-white uppercase mb-6">Create New Session</h2>
-                <form onSubmit={handleCreateEvent} className="space-y-4">
+                <h2 className="font-teko text-4xl text-white uppercase mb-6">{isEditing ? 'Edit Session' : 'Create New Session'}</h2>
+                <form onSubmit={handleSaveEvent} className="space-y-4">
                     <div>
                         <label className="block text-zinc-400 text-xs uppercase mb-1">Title</label>
-                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
+                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} />
                     </div>
                     <div>
                         <label className="block text-zinc-400 text-xs uppercase mb-1">Description</label>
-                        <textarea className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} />
+                        <textarea className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} />
                     </div>
                     
                     {/* Allowed Packages Section */}
@@ -483,7 +517,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                             {PACKAGES.map(pkg => {
-                                const isSelected = newEvent.allowedPackages.includes(pkg.id);
+                                const isSelected = eventForm.allowedPackages.includes(pkg.id);
                                 return (
                                     <button
                                         type="button"
@@ -502,30 +536,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>
-                            <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+                            <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={eventForm.date} onChange={e => setEventForm({...eventForm, date: e.target.value})} />
                         </div>
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Max Capacity</label>
-                            <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.maxSlots} onChange={e => setNewEvent({...newEvent, maxSlots: parseInt(e.target.value)})} />
+                            <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.maxSlots} onChange={e => setEventForm({...eventForm, maxSlots: parseInt(e.target.value)})} />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Start Time</label>
-                            <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={newEvent.startTime} onChange={e => setNewEvent({...newEvent, startTime: e.target.value})} />
+                            <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={eventForm.startTime} onChange={e => setEventForm({...eventForm, startTime: e.target.value})} />
                         </div>
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">End Time</label>
-                            <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={newEvent.endTime} onChange={e => setNewEvent({...newEvent, endTime: e.target.value})} />
+                            <input required type="time" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={eventForm.endTime} onChange={e => setEventForm({...eventForm, endTime: e.target.value})} />
                         </div>
                     </div>
                     <div>
                         <label className="block text-zinc-400 text-xs uppercase mb-1">Location</label>
-                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} />
+                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.location} onChange={e => setEventForm({...eventForm, location: e.target.value})} />
                     </div>
                     <div className="flex gap-4 pt-4">
                         <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                        <button type="submit" className="flex-1 bg-co-red hover:bg-white hover:text-black text-white py-3 uppercase font-teko text-xl rounded">Create Session</button>
+                        <button type="submit" className="flex-1 bg-co-red hover:bg-white hover:text-black text-white py-3 uppercase font-teko text-xl rounded">
+                            {isEditing ? 'Save Changes' : 'Create Session'}
+                        </button>
                     </div>
                 </form>
             </div>
