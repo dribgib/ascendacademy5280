@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight, PauseCircle, PlayCircle, ShieldAlert } from 'lucide-react';
 import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -42,7 +42,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const [accountMsg, setAccountMsg] = useState('');
 
   const [verifyingWaiver, setVerifyingWaiver] = useState(false);
-  const [waiverSigned, setWaiverSigned] = useState(false);
+  // Manual Override State
+  const [verificationFailed, setVerificationFailed] = useState(false);
+  const [manualOverride, setManualOverride] = useState(false);
+  const [failMessage, setFailMessage] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -79,7 +82,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       const [kidsData, eventsData] = await Promise.all([kidsPromise, eventsPromise]);
       setKids(kidsData);
       
-      // Filter: Only show future events
       const now = new Date();
       const futureEvents = eventsData.filter(evt => new Date(evt.isoStart) > now);
       setEvents(futureEvents);
@@ -98,7 +100,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     } catch (e: any) {
       console.error("Billing Error:", e);
       const msg = e.message || '';
-      // If error is strictly about missing history, we can show a friendlier modal
       if (msg.includes('No billing history') || msg.includes('No billing account') || msg.includes('subscribe')) {
          showAlert('No Billing History', 'You do not have any active subscriptions or payment history yet. Subscribe to a plan first.', 'info');
       } else {
@@ -144,47 +145,59 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     setAddStep(2);
   };
 
+  const createChildProfile = async () => {
+      setImageUploading(true);
+      let imageUrl = undefined;
+      
+      if (kidImage && (api as any).children.uploadImage) {
+          try {
+              const uploaded = await (api as any).children.uploadImage(kidImage, user.id);
+              if (uploaded) imageUrl = uploaded;
+          } catch (uploadErr) {
+              console.error("Image upload failed, proceeding without image:", uploadErr);
+          }
+      }
+
+      await api.children.create({
+          parentId: user.id,
+          firstName: newKidName.first,
+          lastName: newKidName.last,
+          dob: newKidDob,
+          sports: selectedSports,
+          imageUrl
+      });
+      
+      setShowAddKidModal(false);
+      loadData();
+      resetForm();
+      showAlert('Success', 'Athlete added successfully!', 'success');
+  };
+
   const handleVerifyAndAdd = async () => {
+    if (manualOverride) {
+        // Bypass Verification
+        await createChildProfile();
+        return;
+    }
+
     setVerifyingWaiver(true);
+    setVerificationFailed(false);
+    setFailMessage('');
+
     try {
         const result = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
         
         if (result.verified) {
-            setWaiverSigned(true);
-            setImageUploading(true);
-            
-            let imageUrl = undefined;
-            // Attempt Upload - NON BLOCKING
-            if (kidImage && (api as any).children.uploadImage) {
-                try {
-                    const uploaded = await (api as any).children.uploadImage(kidImage, user.id);
-                    if (uploaded) imageUrl = uploaded;
-                } catch (uploadErr) {
-                    console.error("Image upload failed, proceeding without image:", uploadErr);
-                }
-            }
-
-            // Create Child Profile
-            await api.children.create({
-                parentId: user.id,
-                firstName: newKidName.first,
-                lastName: newKidName.last,
-                dob: newKidDob,
-                sports: selectedSports,
-                imageUrl
-            });
-            
-            setShowAddKidModal(false);
-            loadData();
-            resetForm();
-            showAlert('Success', 'Athlete added successfully!', 'success');
+            await createChildProfile();
         } else {
-            // Display exact message from backend for transparency
-            showAlert('Waiver Required', result.message || "Waiver signature not found. Please sign the document in the new tab.", 'error');
+            // Failed verification
+            setVerificationFailed(true);
+            setFailMessage(result.message || "Waiver verification returned false.");
         }
     } catch (e: any) {
         console.error(e);
-        showAlert('Verification Error', e.message || 'Error verifying waiver. Please try again.', 'error');
+        setVerificationFailed(true);
+        setFailMessage(e.message || 'Network error verifying waiver.');
     } finally {
         setVerifyingWaiver(false);
         setImageUploading(false);
@@ -247,7 +260,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     setKidImage(null);
     setKidImagePreview(null);
     setAddStep(1);
-    setWaiverSigned(false);
+    setVerificationFailed(false);
+    setManualOverride(false);
+    setFailMessage('');
   };
 
   const toggleSport = (sport: string) => {
@@ -287,10 +302,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
   
-  // Helper to map current subscription ID to a friendly package ID for URL if possible
   const getPackageIdForUrl = (subId?: string) => {
-      if (!subId) return 'p_elite'; // Default fallback
-      // Try to find if subId matches a known package
+      if (!subId) return 'p_elite'; 
       const pkg = PACKAGES.find(p => p.id === subId || p.stripePriceId === subId);
       return pkg ? pkg.id : subId;
   };
@@ -300,7 +313,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       
-      {/* --- HEADER SECTION --- */}
+      {/* --- HEADER --- */}
       <div className="flex flex-col mb-10 border-b border-zinc-800 pb-8">
         <div className="flex flex-wrap justify-between items-start gap-6">
             <div className="flex-1 min-w-[300px]">
@@ -315,7 +328,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </p>
             </div>
 
-            {/* Right Side: Action Buttons */}
             {!isAdminView && (
                 <div className="flex flex-wrap gap-3 w-full lg:w-auto mt-4 lg:mt-0 justify-start lg:justify-end">
                     <button 
@@ -340,7 +352,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             )}
         </div>
 
-        {/* Toggle Row - Separated */}
         {user.role === 'ADMIN' && (
             <div className="mt-8 flex">
                 <div className="bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
@@ -371,7 +382,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
           </div>
       )}
 
-      {/* --- CONTENT AREA --- */}
+      {/* --- CONTENT --- */}
       {isAdminView ? (
           <AdminDashboard user={user} hideHeader={true} />
       ) : (
@@ -392,7 +403,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group hover:border-zinc-600 transition-colors">
                         <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : kid.subscriptionStatus === 'paused' ? 'bg-amber-500' : 'bg-zinc-700'}`}></div>
                         
-                        {/* Delete Button */}
                         <button 
                             onClick={(e) => { e.stopPropagation(); handleDeleteKid(kid); }}
                             className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors z-10"
@@ -403,7 +413,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
                         <div className="flex justify-between items-start mb-4">
                         <div className="flex gap-4">
-                            {/* Kid Avatar */}
                             <div className="h-16 w-16 rounded-full overflow-hidden bg-zinc-800 border-2 border-zinc-700 flex-shrink-0">
                             {kid.image ? (
                                 <img src={kid.image} alt={kid.firstName} className="h-full w-full object-cover" />
@@ -498,7 +507,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     <h2 className="font-teko text-3xl text-white uppercase mb-6 flex items-center gap-2">
                     <Calendar className="text-co-red" /> Upcoming Sessions
                     </h2>
-
                     <div className="space-y-4">
                     {events.length === 0 ? <p className="text-zinc-500">No upcoming sessions found.</p> : events.map(evt => {
                         const isFull = evt.bookedSlots >= evt.maxSlots;
@@ -516,13 +524,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 {evt.bookedSlots} / {evt.maxSlots} Slots Taken
                                 </div>
                             </div>
-
                             <div className="flex flex-col gap-2 min-w-[140px]">
                                 {kids.map(kid => {
                                 const isRegistered = evt.registeredKidIds.includes(kid.id);
                                 const limitReached = kid.usageStats && kid.usageStats.used >= kid.usageStats.limit;
                                 const hasPlan = kid.subscriptionStatus === 'active';
-
                                 return (
                                     <button
                                     key={kid.id}
@@ -541,15 +547,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     >
                                     {isRegistered ? (
                                         <span className="flex items-center justify-center gap-1"><CheckCircle size={12} /> {kid.firstName} In</span>
-                                    ) : !hasPlan ? (
-                                        `Plan Required for ${kid.firstName}`
-                                    ) : limitReached ? (
-                                        `Limit Reached`
-                                    ) : isFull ? (
-                                        `Waitlist ${kid.firstName}`
-                                    ) : (
-                                        `Sign Up ${kid.firstName}`
-                                    )}
+                                    ) : !hasPlan ? `Plan Required for ${kid.firstName}` : limitReached ? `Limit Reached` : isFull ? `Waitlist ${kid.firstName}` : `Sign Up ${kid.firstName}`}
                                     </button>
                                 );
                                 })}
@@ -565,21 +563,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
           </div>
       )}
 
+      {/* Account Modal */}
       {showAccountModal && (
-        <div 
-        className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-        onClick={() => setShowAccountModal(false)}
-        >
-        <div 
-            className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-md w-full relative shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-        >
-            <button 
-                onClick={() => setShowAccountModal(false)}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-white"
-            >
-                <X size={24} />
-            </button>
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowAccountModal(false)}>
+        <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-md w-full relative shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowAccountModal(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white"><X size={24} /></button>
             <div className="text-center mb-8">
                 <Settings className="mx-auto text-co-yellow mb-4" size={48} />
                 <h2 className="font-teko text-4xl text-white uppercase tracking-wide">Account Settings</h2>
@@ -593,53 +581,23 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <p className="text-white text-xl font-teko uppercase mb-4">Change Password</p>
                 <div className="space-y-4">
                     <div>
-                        <input 
-                            required 
-                            type="password" 
-                            placeholder="New Password"
-                            minLength={6} 
-                            value={newPassword} 
-                            onChange={e => setNewPassword(e.target.value)} 
-                            className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" 
-                        />
+                        <input required type="password" placeholder="New Password" minLength={6} value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" />
                     </div>
                     <div>
-                        <input 
-                            required 
-                            type="password" 
-                            placeholder="Confirm Password"
-                            minLength={6} 
-                            value={confirmPassword} 
-                            onChange={e => setConfirmPassword(e.target.value)} 
-                            className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" 
-                        />
+                        <input required type="password" placeholder="Confirm Password" minLength={6} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" />
                     </div>
-                    <button 
-                        type="submit" 
-                        className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded transition-colors shadow-lg mt-2"
-                    >
-                        Update Password
-                    </button>
+                    <button type="submit" className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded transition-colors shadow-lg mt-2">Update Password</button>
                 </div>
-                {accountMsg && (
-                    <div className={`mt-4 text-center p-2 rounded text-sm ${accountMsg.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-                        {accountMsg}
-                    </div>
-                )}
+                {accountMsg && <div className={`mt-4 text-center p-2 rounded text-sm ${accountMsg.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>{accountMsg}</div>}
             </form>
         </div>
         </div>
       )}
 
+      {/* Add Kid Modal */}
       {showAddKidModal && (
-        <div 
-        className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-        onClick={() => setShowAddKidModal(false)}
-        >
-        <div 
-            className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-        >
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowAddKidModal(false)}>
+        <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-8 text-sm">
                 <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : 'text-green-500'}`}>1. Details</span>
                 <span className="text-zinc-600">/</span>
@@ -650,14 +608,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <>
                 <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
                 <form onSubmit={handleDetailsSubmit} className="space-y-4">
-                
                 <div className="flex items-center gap-6 mb-6 p-4 bg-black rounded border border-zinc-800">
                     <div className="h-20 w-20 rounded-full overflow-hidden bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 relative">
-                        {kidImagePreview ? (
-                            <img src={kidImagePreview} alt="Preview" className="h-full w-full object-cover" />
-                        ) : (
-                            <Camera className="text-zinc-600" />
-                        )}
+                        {kidImagePreview ? <img src={kidImagePreview} alt="Preview" className="h-full w-full object-cover" /> : <Camera className="text-zinc-600" />}
                     </div>
                     <div className="flex-1">
                         <label className="block text-zinc-400 text-xs uppercase mb-2">Profile Photo (Optional)</label>
@@ -668,37 +621,25 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         {kidImage && <p className="text-[10px] text-green-500 mt-2">Image Selected</p>}
                     </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                    <label className="block text-zinc-400 text-xs uppercase mb-1">First Name</label>
-                    <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.first} onChange={e => setNewKidName({...newKidName, first: e.target.value})} />
+                        <label className="block text-zinc-400 text-xs uppercase mb-1">First Name</label>
+                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.first} onChange={e => setNewKidName({...newKidName, first: e.target.value})} />
                     </div>
                     <div>
-                    <label className="block text-zinc-400 text-xs uppercase mb-1">Last Name</label>
-                    <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.last} onChange={e => setNewKidName({...newKidName, last: e.target.value})} />
+                        <label className="block text-zinc-400 text-xs uppercase mb-1">Last Name</label>
+                        <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={newKidName.last} onChange={e => setNewKidName({...newKidName, last: e.target.value})} />
                     </div>
                 </div>
                 <div>
                     <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
-                    <input 
-                        required 
-                        type="date" 
-                        className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark]" 
-                        value={newKidDob} 
-                        onChange={e => setNewKidDob(e.target.value)} 
-                    />
+                    <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark]" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
                 </div>
                 <div>
                     <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {POPULAR_SPORTS.map(sport => (
-                        <button
-                        type="button"
-                        key={sport}
-                        onClick={() => toggleSport(sport)}
-                        className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
-                        >
+                        <button type="button" key={sport} onClick={() => toggleSport(sport)} className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}>
                         {sport}
                         </button>
                     ))}
@@ -706,9 +647,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </div>
                 <div className="flex gap-4 pt-4">
                     <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-medium rounded flex items-center justify-center gap-2">
-                        Next: Sign Waiver <ArrowRight size={18} />
-                    </button>
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-medium rounded flex items-center justify-center gap-2">Next: Sign Waiver <ArrowRight size={18} /></button>
                 </div>
                 </form>
                 </>
@@ -718,34 +657,55 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="text-center">
                     <h2 className="font-teko text-3xl text-white uppercase mb-2">Liability Waiver</h2>
                     <p className="text-zinc-500 text-sm mb-8">
-                        Participation in Ascend Academy 5280 requires a signed liability waiver for <span className="text-white font-bold">{newKidName.first} {newKidName.last}</span>.
+                        Participation requires a signed waiver for <span className="text-white font-bold">{newKidName.first} {newKidName.last}</span>.
                     </p>
 
                     <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
                         <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
                         <p className="text-zinc-400 text-sm mb-4">
-                            1. Click the link below to sign on WaiverSign.<br/>
-                            2. Return here and click "Verify Waiver".
+                            1. Click to sign on WaiverSign.<br/>
+                            2. Return here and click "Verify".
                         </p>
-                        
-                        <a 
-                            href={WAIVER_CONFIG.url}
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide"
-                        >
+                        <a href={WAIVER_CONFIG.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide">
                             Open Waiver Form <ExternalLink size={16} />
                         </a>
                     </div>
+                    
+                    {/* Failure Message & Manual Override */}
+                    {verificationFailed && (
+                        <div className="mb-8 bg-red-900/20 border border-red-900/50 p-4 rounded text-left">
+                            <div className="flex items-start gap-3">
+                                <ShieldAlert className="text-red-500 flex-shrink-0" />
+                                <div>
+                                    <h4 className="text-red-400 font-bold uppercase text-sm mb-1">Verification Failed</h4>
+                                    <p className="text-red-300 text-xs">{failMessage}</p>
+                                    
+                                    <div className="mt-4 pt-4 border-t border-red-900/30">
+                                        <label className="flex items-start gap-2 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                className="mt-1"
+                                                checked={manualOverride}
+                                                onChange={(e) => setManualOverride(e.target.checked)}
+                                            />
+                                            <span className="text-zinc-400 text-xs">
+                                                I attest that I have physically signed the waiver for this athlete and understand that falsifying this information is a violation of the terms of service.
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex gap-4">
                         <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
                         <button 
                             onClick={handleVerifyAndAdd}
-                            disabled={verifyingWaiver || imageUploading}
+                            disabled={(verifyingWaiver || imageUploading) && !manualOverride}
                             className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50 font-medium"
                         >
-                            {verifyingWaiver || imageUploading ? <Loader2 className="animate-spin" /> : 'Verify Waiver'}
+                            {(verifyingWaiver || imageUploading) ? <Loader2 className="animate-spin" /> : (manualOverride ? 'Force Add Athlete' : 'Verify Waiver')}
                         </button>
                     </div>
                 </div>
