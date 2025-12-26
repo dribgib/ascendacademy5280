@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,28 +7,24 @@ export default async function handler(req, res) {
 
   const { email, name } = req.body;
 
-  // STRICT VALIDATION
   if (!email || !name) {
       return res.status(400).json({ error: 'Missing required fields: name and email', verified: false });
   }
 
-  // PRODUCTION READY LOGIC
-  // This connects to the WaiverSign API.
-  // Requirement: Env Var WAIVERSIGN_API_KEY must be set in Vercel.
-  
   const apiKey = process.env.WAIVERSIGN_API_KEY;
 
   if (!apiKey) {
       return res.status(500).json({ 
-          error: 'Server Error: WaiverSign API Key is not configured. Please contact support.', 
+          error: 'Server Error: WaiverSign API Key is not configured.', 
           verified: false 
       });
   }
 
   try {
-      // WaiverSign API Search
-      // Logic: Search for a signature matching Email AND Name
-      const searchUrl = `https://api.waiversign.com/v1/signatures?email=${encodeURIComponent(email)}&signerName=${encodeURIComponent(name)}`;
+      // 1. Search by Email Only (Broad Search)
+      // The API's signerName filter can be too strict or check the wrong field.
+      // We fetch all waivers for this parent and filter in code.
+      const searchUrl = `https://api.waiversign.com/v1/signatures?email=${encodeURIComponent(email)}`;
       
       const response = await fetch(searchUrl, {
           headers: {
@@ -39,23 +34,48 @@ export default async function handler(req, res) {
       });
 
       if (!response.ok) {
-           // If API returns 404 or error, we assume not found/valid
            console.error("WaiverSign API Error", response.status);
-           return res.status(200).json({ verified: false, message: 'Waiver record not found.' });
+           return res.status(200).json({ verified: false, message: 'Could not connect to WaiverSign provider.' });
       }
 
       const data = await response.json();
 
-      // Check if we have results
-      // Assuming API returns array of matches
-      if (Array.isArray(data) && data.length > 0) {
+      if (!Array.isArray(data)) {
+          return res.status(200).json({ verified: false, message: 'Invalid response from waiver provider.' });
+      }
+
+      // 2. Perform Matching Logic
+      const targetName = name.toLowerCase().trim();
+      
+      const match = data.find(sig => {
+          const fname = (sig.fname || '').toLowerCase().trim();
+          const lname = (sig.lname || '').toLowerCase().trim();
+          const fullName = `${fname} ${lname}`;
+          
+          // Check for exact match, inverted match, or partial containment
+          return fullName === targetName || 
+                 fullName.includes(targetName) || 
+                 targetName.includes(fullName);
+      });
+
+      if (match) {
           return res.status(200).json({ verified: true });
       } else {
-          return res.status(200).json({ verified: false });
+          // Helpful debug info for the user
+          const foundNames = data
+            .map(s => `${s.fname} ${s.lname}`)
+            .filter(n => n.trim().length > 0)
+            .join(', ');
+
+          const msg = foundNames 
+            ? `Waivers found for ${email}, but names did not match "${name}". Found: ${foundNames}.` 
+            : `No waivers found for ${email}. Please ensure you signed using this email address.`;
+
+          return res.status(200).json({ verified: false, message: msg });
       }
 
   } catch (error) {
       console.error("Waiver Verification Exception:", error);
-      return res.status(500).json({ error: 'Failed to verify waiver status with provider.', verified: false });
+      return res.status(500).json({ error: 'Internal verification error.', verified: false });
   }
 }

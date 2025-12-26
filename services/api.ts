@@ -663,7 +663,7 @@ const supabaseApi = {
   },
 
   waivers: {
-    checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
+    checkStatus: async (parentEmail: string, childName: string): Promise<{verified: boolean, message?: string}> => {
         try {
             const response = await fetch('/api/check-waiver', {
                 method: 'POST',
@@ -672,7 +672,7 @@ const supabaseApi = {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Verification failed');
-            return data.verified === true;
+            return { verified: data.verified === true, message: data.message };
         } catch (e) {
             console.error("Waiver check failed:", e);
             throw e;

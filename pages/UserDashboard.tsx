@@ -147,21 +147,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const handleVerifyAndAdd = async () => {
     setVerifyingWaiver(true);
     try {
-        const isSigned = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
-        if (isSigned) {
+        const result = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
+        
+        if (result.verified) {
             setWaiverSigned(true);
             setImageUploading(true);
             
             let imageUrl = undefined;
             // Attempt Upload - NON BLOCKING
-            // We intentionally swallow upload errors to ensure the child profile is created even if image storage fails
             if (kidImage && (api as any).children.uploadImage) {
                 try {
                     const uploaded = await (api as any).children.uploadImage(kidImage, user.id);
                     if (uploaded) imageUrl = uploaded;
                 } catch (uploadErr) {
-                    console.error("Image upload failed (RLS or Network), proceeding with registration without image:", uploadErr);
-                    // Do not bubble error up - proceed to create child
+                    console.error("Image upload failed, proceeding without image:", uploadErr);
                 }
             }
 
@@ -180,7 +179,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             resetForm();
             showAlert('Success', 'Athlete added successfully!', 'success');
         } else {
-            showAlert('Waiver Required', "Waiver signature not found. Please sign the document in the new tab and click verify again.", 'error');
+            // Display exact message from backend for transparency
+            showAlert('Waiver Required', result.message || "Waiver signature not found. Please sign the document in the new tab.", 'error');
         }
     } catch (e: any) {
         console.error(e);
