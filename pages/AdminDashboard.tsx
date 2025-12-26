@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { User, Event, Child } from '../types';
 import { api } from '../services/api';
-import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, UserPlus, Grid, List, X, Search } from 'lucide-react';
+import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, UserPlus, Grid, List, X, Search, ShieldCheck } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
+import { PACKAGES } from '../constants';
 
 interface AdminDashboardProps {
   user: User;
@@ -30,7 +31,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const [showRosterModal, setShowRosterModal] = useState<Event | null>(null);
 
   const [newEvent, setNewEvent] = useState({
-    title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20
+    title: '', 
+    description: '', 
+    date: '', 
+    startTime: '', 
+    endTime: '', 
+    location: '', 
+    maxSlots: 20,
+    allowedPackages: [] as string[]
   });
 
   const [kidToAdd, setKidToAdd] = useState('');
@@ -88,16 +96,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
         startTime: startIso,
         endTime: endIso,
         location: newEvent.location,
-        maxSlots: newEvent.maxSlots
+        maxSlots: newEvent.maxSlots,
+        allowedPackages: newEvent.allowedPackages
       });
 
       setShowCreateModal(false);
       loadData();
-      setNewEvent({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20 });
+      setNewEvent({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20, allowedPackages: [] });
       showAlert('Success', 'Event created successfully.', 'success');
     } catch (e: any) {
       showAlert('Error', e.message || 'Failed to create event.', 'error');
     }
+  };
+
+  const handleTogglePackage = (pkgId: string) => {
+      setNewEvent(prev => {
+          if (prev.allowedPackages.includes(pkgId)) {
+              return { ...prev, allowedPackages: prev.allowedPackages.filter(p => p !== pkgId) };
+          } else {
+              return { ...prev, allowedPackages: [...prev.allowedPackages, pkgId] };
+          }
+      });
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -199,6 +218,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                   <div className="flex items-center gap-2 mb-1">
                      <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-1 rounded font-mono uppercase">{evt.date}</span>
                      <span className="text-co-yellow font-bold text-sm">{evt.startTime} - {evt.endTime}</span>
+                     {evt.allowedPackages && evt.allowedPackages.length > 0 && (
+                         <span className="bg-zinc-800 text-zinc-400 text-[10px] px-2 py-1 rounded border border-zinc-700 uppercase">
+                             Restricted ({evt.allowedPackages.length})
+                         </span>
+                     )}
                   </div>
                   <h3 className="font-bold text-white text-xl">{evt.title}</h3>
                   <p className="text-zinc-500 text-sm mt-1">{evt.location}</p>
@@ -440,7 +464,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       {/* Create Event Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}>
-            <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-lg w-full" onClick={e => e.stopPropagation()}>
+            <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="font-teko text-4xl text-white uppercase mb-6">Create New Session</h2>
                 <form onSubmit={handleCreateEvent} className="space-y-4">
                     <div>
@@ -451,6 +475,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         <label className="block text-zinc-400 text-xs uppercase mb-1">Description</label>
                         <textarea className="w-full bg-black border border-zinc-700 p-2 text-white" value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} />
                     </div>
+                    
+                    {/* Allowed Packages Section */}
+                    <div>
+                        <label className="block text-zinc-400 text-xs uppercase mb-2 flex items-center gap-2">
+                             <ShieldCheck size={14} /> Allowed Packages (Restricted Access)
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {PACKAGES.map(pkg => {
+                                const isSelected = newEvent.allowedPackages.includes(pkg.id);
+                                return (
+                                    <button
+                                        type="button"
+                                        key={pkg.id}
+                                        onClick={() => handleTogglePackage(pkg.id)}
+                                        className={`text-xs p-2 rounded border transition-colors ${isSelected ? 'bg-co-yellow text-black border-co-yellow' : 'bg-black border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
+                                    >
+                                        {pkg.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-[10px] text-zinc-600 mt-1">If no packages selected, anyone with an active subscription can join.</p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>

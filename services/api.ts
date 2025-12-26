@@ -152,13 +152,10 @@ const supabaseApi = {
     // UPDATED: Fetches all children AND calculates their usage stats
     getAllChildren: async (): Promise<Child[]> => {
         // 1. Fetch children with active subscriptions
+        // Join with FULL subscription data to ensure we catch active status properly
         const { data: children, error } = await supabase.from('children').select(`
             *,
-            subscriptions (
-                id,
-                status,
-                package_id
-            )
+            subscriptions (*)
         `);
         if (error) throw error;
 
@@ -246,11 +243,7 @@ const supabaseApi = {
         .from('children')
         .select(`
             *,
-            subscriptions (
-                id,
-                status,
-                package_id
-            )
+            subscriptions (*)
         `)
         .eq('parent_id', parentId);
       
@@ -377,18 +370,20 @@ const supabaseApi = {
         maxSlots: e.max_slots,
         bookedSlots: e.registrations?.length || 0,
         registeredKidIds: e.registrations?.map((r: any) => r.child_id) || [],
-        checkedInKidIds: e.registrations?.filter((r: any) => r.checked_in).map((r: any) => r.child_id) || []
+        checkedInKidIds: e.registrations?.filter((r: any) => r.checked_in).map((r: any) => r.child_id) || [],
+        allowedPackages: e.allowed_packages // New field from DB
       }));
     },
 
-    create: async (event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number }) => {
+    create: async (event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }) => {
       const { error } = await supabase.from('events').insert({
         title: event.title,
         description: event.description,
         start_time: event.startTime,
         end_time: event.endTime,
         location: event.location,
-        max_slots: event.maxSlots
+        max_slots: event.maxSlots,
+        allowed_packages: event.allowedPackages // Save allowed packages
       });
       if (error) throw error;
     }
@@ -396,6 +391,7 @@ const supabaseApi = {
 
   registrations: {
     register: async (eventId: string, childId: string) => {
+      // 1. Fetch Child and active sub
       const { data: child, error: childError } = await supabase
         .from('children')
         .select(`*, subscriptions(*)`)
@@ -408,11 +404,33 @@ const supabaseApi = {
       
       if (!activeSub) throw new Error("Athlete does not have an active membership.");
       
-      // FIX: Robust check for Package ID (internal) OR Stripe Price ID
       const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
       
       if (!pkg) throw new Error("Unknown subscription package.");
+
+      // 2. Fetch Event to check restrictions
+      const { data: evt, error: evtError } = await supabase
+        .from('events')
+        .select('allowed_packages')
+        .eq('id', eventId)
+        .single();
+
+      if (evtError) throw new Error("Event not found.");
+
+      // 3. CHECK PACKAGE RESTRICTIONS
+      if (evt.allowed_packages && evt.allowed_packages.length > 0) {
+          // Check if user's package ID or name matches
+          // We allow matching by internal ID (p_elite) or name (Elite)
+          const isAllowed = evt.allowed_packages.includes(pkg.id);
+          if (!isAllowed) {
+              throw new Error(`This session is restricted to ${evt.allowed_packages.map(p => {
+                  const matched = PACKAGES.find(pk => pk.id === p);
+                  return matched ? matched.name : p;
+              }).join(' or ')} packages.`);
+          }
+      }
       
+      // 4. Check Usage Limits
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0,0,0,0);
@@ -617,9 +635,18 @@ const supabaseApi = {
 
   waivers: {
     checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
-        // Mock success for simplicity if no backend
-        // To implement real waiver check, add another Vercel function /api/check-waiver
-        return new Promise(resolve => setTimeout(() => resolve(true), 800));
+        try {
+            const response = await fetch('/api/check-waiver', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: parentEmail, name: childName })
+            });
+            const data = await response.json();
+            return data.verified === true;
+        } catch (e) {
+            console.error("Waiver check failed:", e);
+            return false;
+        }
     }
   },
 

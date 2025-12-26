@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube, Shield, Mail, Phone } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, Instagram, Youtube, Shield, Mail, Phone, Package } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -52,11 +52,23 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
     }
   };
 
+  const handlePackagesClick = () => {
+      setIsMenuOpen(false);
+      if (user) {
+          // If logged in, go to the checkout page directly
+          navigate('/checkout');
+      } else {
+          // If logged out, scroll to homepage packages section
+          handleScrollTo('packages');
+      }
+  };
+
   // Helper to determine active state
   // "Coach" is active if ?view=admin
   // "Dashboard" (My Team) is active if /dashboard AND NOT ?view=admin
-  const isActive = (type: 'coach' | 'dashboard' | 'schedule') => {
+  const isActive = (type: 'coach' | 'dashboard' | 'schedule' | 'packages') => {
     if (type === 'schedule') return location.pathname === '/schedule';
+    if (type === 'packages') return location.pathname.startsWith('/checkout');
     
     if (location.pathname !== '/dashboard') return false;
     const isAdminView = location.search.includes('view=admin');
@@ -84,7 +96,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             <div className="hidden md:flex items-center">
               <div className="ml-10 flex items-center space-x-6">
                 <button onClick={() => handleScrollTo('about')} className={navLinkClass}>About</button>
-                <button onClick={() => handleScrollTo('packages')} className={navLinkClass}>Training</button>
+                <button 
+                    onClick={handlePackagesClick} 
+                    className={`${navLinkClass} ${isActive('packages') ? 'text-co-yellow' : ''}`}
+                >
+                    Packages
+                </button>
                 <button 
                     onClick={() => navigate('/schedule')} 
                     className={`${navLinkClass} ${isActive('schedule') ? 'text-co-yellow' : ''}`}
@@ -147,7 +164,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               <button onClick={() => handleScrollTo('about')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">About</button>
-              <button onClick={() => handleScrollTo('packages')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Training</button>
+              <button onClick={handlePackagesClick} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Packages</button>
               <button onClick={() => { setIsMenuOpen(false); navigate('/schedule'); }} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Schedule</button>
               
               {user ? (

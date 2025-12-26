@@ -14,6 +14,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false }
 });
 
+// Configure these Coupons in your Stripe Dashboard!
+const COUPONS = {
+    SIBLING_45: 'SIBLING_45', // 45% OFF
+    SIBLING_65: 'SIBLING_65'  // 65% OFF
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -22,10 +28,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { priceId, userId, childId, returnUrl, userEmail } = req.body;
+    const { priceId, userId, childId, returnUrl, userEmail, activeSubscriptionCount } = req.body;
 
     // 1. Get/Create Stripe Customer ID
-    // We try to find existing mapping in Supabase first
     const { data: profile } = await supabase
         .from('profiles')
         .select('stripe_customer_id')
@@ -34,12 +39,10 @@ export default async function handler(req, res) {
 
     let customerId = profile?.stripe_customer_id;
 
-    // Fallback: Check Stripe for existing customer by email to avoid duplicates
     if (!customerId && userEmail) {
         const existingCustomers = await stripe.customers.list({ email: userEmail, limit: 1 });
         if (existingCustomers.data.length > 0) {
             customerId = existingCustomers.data[0].id;
-            // Sync found ID back to DB
             await supabase.from('profiles').update({ stripe_customer_id: customerId }).eq('id', userId);
         }
     }
@@ -61,12 +64,28 @@ export default async function handler(req, res) {
     } else {
         sessionConfig.customer_email = userEmail;
     }
+    
+    // 3. APPLY SIBLING DISCOUNT
+    // If user has existing active subscriptions, apply discount to this new one
+    if (activeSubscriptionCount > 0) {
+        // 1 Sibling exists -> 45% off (2nd kid)
+        // 2+ Siblings exist -> 65% off (3rd+ kid)
+        const couponCode = activeSubscriptionCount >= 2 ? COUPONS.SIBLING_65 : COUPONS.SIBLING_45;
+        
+        // Note: Coupon must exist in Stripe. If not found, this might throw error, 
+        // but we'll try/catch specifically or just let it fail so admin knows to create coupons.
+        sessionConfig.discounts = [{ coupon: couponCode }];
+    }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return res.status(200).json({ sessionId: session.id });
   } catch (error) {
     console.error('Checkout API Error:', error);
+    // If error is about coupon missing
+    if (error.message.includes('No such coupon')) {
+        return res.status(400).json({ error: 'System Error: Sibling Discount Coupon missing in Stripe. Please contact support.' });
+    }
     return res.status(500).json({ error: error.message });
   }
 }

@@ -132,6 +132,7 @@ const App: React.FC = () => {
               path="/admin" 
               element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/login" replace />} 
             />
+            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/checkout/:packageId" element={<CheckoutPage />} />
             <Route path="/set-password" element={<SetPasswordPage />} />
             <Route path="/sponsor" element={<SponsorPage />} />

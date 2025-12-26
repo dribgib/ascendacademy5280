@@ -55,6 +55,7 @@ export interface Event {
   bookedSlots: number;
   registeredKidIds: string[]; // List of IDs of kids registered
   checkedInKidIds: string[]; // List of IDs of kids who attended
+  allowedPackages?: string[]; // IDs of packages allowed to register (e.g. ['p_elite', 'p_pro'])
 }
 
 export interface Donation {
