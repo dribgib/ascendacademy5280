@@ -86,11 +86,11 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
           <div className="flex items-center justify-between h-20">
             
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="flex items-center">
-                <span className="font-teko text-4xl font-bold tracking-tight uppercase text-white leading-none">
-                  Ascend<span className="text-co-red">Academy</span><span className="text-co-yellow">5280</span>
-                </span>
-              </div>
+              <img 
+                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/1764999317387.jpg" 
+                alt="Ascend Academy 5280" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             
             <div className="hidden md:flex items-center">
@@ -214,9 +214,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             
             {/* Left: Brand & Copyright */}
             <div className="md:text-left flex flex-col items-center md:items-start">
-              <span className="font-teko text-3xl font-bold tracking-tight uppercase text-white cursor-pointer" onClick={() => navigate('/')}>
-                Ascend<span className="text-co-red">Academy</span><span className="text-co-yellow">5280</span>
-              </span>
+              <img 
+                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/1764999317387.jpg" 
+                alt="Ascend Academy 5280" 
+                className="h-20 w-auto object-contain cursor-pointer mb-2"
+                onClick={() => navigate('/')}
+              />
               <p className="text-zinc-600 text-xs mt-2">© {new Date().getFullYear()} All rights reserved.</p>
             </div>
 
