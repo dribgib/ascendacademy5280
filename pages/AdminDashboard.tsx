@@ -545,7 +545,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                 <input 
                                     required 
                                     type="date" 
-                                    className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark] cursor-pointer" 
+                                    className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark] cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0" 
                                     value={eventForm.date} 
                                     onChange={e => setEventForm({...eventForm, date: e.target.value})} 
                                     onClick={(e) => (e.target as HTMLInputElement).showPicker()}
