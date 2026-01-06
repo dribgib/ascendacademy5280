@@ -1,3 +1,4 @@
+
 export type UserRole = 'ADMIN' | 'PARENT';
 
 export interface User {
@@ -45,9 +46,11 @@ export interface Event {
   id: string;
   title: string;
   description: string;
-  date: string; // Formatted date string for UI (YYYY-MM-DD)
-  startTime: string; // Formatted time string (HH:MM)
-  endTime: string; // Formatted time string (HH:MM)
+  date: string; // Formatted date string for UI (YYYY-MM-DD) in Denver Time
+  startTime: string; // Formatted time string (h:mm A) for Display
+  endTime: string; // Formatted time string (h:mm A) for Display
+  startTime24?: string; // Formatted time string (HH:mm) for Input Controls
+  endTime24?: string; // Formatted time string (HH:mm) for Input Controls
   isoStart: string; // Full ISO timestamp for logic
   isoEnd: string; // Full ISO timestamp for logic
   location: string;

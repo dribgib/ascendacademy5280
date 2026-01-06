@@ -1,3 +1,4 @@
+
 import { User, Child, Event } from '../types';
 import { MOCK_ADMIN, MOCK_PARENT, MOCK_EVENTS } from '../constants';
 
@@ -223,7 +224,9 @@ export const mockApi = {
         checkedInKidIds: [],
         date: eventData.startTime.split('T')[0], 
         isoStart: eventData.startTime,
-        isoEnd: eventData.endTime
+        isoEnd: eventData.endTime,
+        startTime24: eventData.startTime.split('T')[1]?.substring(0,5) || '10:00',
+        endTime24: eventData.endTime.split('T')[1]?.substring(0,5) || '11:00'
       };
       events.push(newEvent);
     }
@@ -299,9 +302,9 @@ export const mockApi = {
   },
   
   waivers: {
-    checkStatus: async (parentEmail: string, childName: string): Promise<boolean> => {
+    checkStatus: async (parentEmail: string, childName: string): Promise<{verified: boolean, message?: string}> => {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        return true; 
+        return { verified: true, message: 'Mock Verification' }; 
     }
   },
 

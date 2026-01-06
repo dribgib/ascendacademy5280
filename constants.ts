@@ -1,3 +1,4 @@
+
 import { TrainingPackage, User, Event } from './types';
 
 export const POPULAR_SPORTS = [
@@ -147,8 +148,10 @@ export const MOCK_EVENTS: Event[] = [
     title: 'Elite/Pro Performance Session',
     description: 'Speed and agility focus.',
     date: '2023-11-20',
-    startTime: '16:00',
-    endTime: '17:15',
+    startTime: '4:00 PM',
+    endTime: '5:15 PM',
+    startTime24: '16:00',
+    endTime24: '17:15',
     isoStart: '2023-11-20T16:00:00.000Z',
     isoEnd: '2023-11-20T17:15:00.000Z',
     location: 'Main Field',
@@ -162,8 +165,10 @@ export const MOCK_EVENTS: Event[] = [
     title: 'Rookie Foundations',
     description: 'Basic motor skills and fun drills.',
     date: '2023-11-20',
-    startTime: '17:30',
-    endTime: '18:15',
+    startTime: '5:30 PM',
+    endTime: '6:15 PM',
+    startTime24: '17:30',
+    endTime24: '18:15',
     isoStart: '2023-11-20T17:30:00.000Z',
     isoEnd: '2023-11-20T18:15:00.000Z',
     location: 'Gym A',
@@ -177,8 +182,10 @@ export const MOCK_EVENTS: Event[] = [
     title: 'Open Combine Testing',
     description: 'Quarterly combine stats measurement.',
     date: '2023-11-24',
-    startTime: '09:00',
-    endTime: '12:00',
+    startTime: '9:00 AM',
+    endTime: '12:00 PM',
+    startTime24: '09:00',
+    endTime24: '12:00',
     isoStart: '2023-11-24T09:00:00.000Z',
     isoEnd: '2023-11-24T12:00:00.000Z',
     location: 'Stadium Track',

@@ -1,18 +1,42 @@
+
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, Child, Event } from '../types';
 import { stripePromise } from '../lib/stripe';
 import { PACKAGES } from '../constants';
 
-// Helper to format ISO timestamp to HH:MM
+// Helper to format ISO timestamp to h:mm A (12-hour) in Denver Time
 const formatTime = (isoString: string) => {
   if (!isoString) return '';
-  return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  return new Date(isoString).toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true,
+    timeZone: 'America/Denver' 
+  });
 };
 
-// Helper to format ISO timestamp to YYYY-MM-DD
+// Helper to format ISO timestamp to HH:mm (24-hour) in Denver Time for Inputs
+const formatTime24 = (isoString: string) => {
+  if (!isoString) return '';
+  // en-GB forces 24h format "HH:mm" usually
+  return new Date(isoString).toLocaleTimeString('en-GB', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false,
+    timeZone: 'America/Denver' 
+  });
+};
+
+// Helper to format ISO timestamp to YYYY-MM-DD in Denver Time
 const formatDate = (isoString: string) => {
   if (!isoString) return '';
-  return new Date(isoString).toISOString().split('T')[0];
+  // en-CA format is YYYY-MM-DD
+  return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Denver',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+  }).format(new Date(isoString));
 };
 
 // --- REAL SUPABASE IMPLEMENTATION ---
@@ -316,16 +340,13 @@ const supabaseApi = {
 
     delete: async (childId: string) => {
         // 1. Cancel Billing & Delete Subscription Records (Backend)
-        // This handles stopping Stripe billing AND deleting the 'subscriptions' rows
-        // which prevents the foreign key constraint error.
         try {
             await supabaseApi.billing.cancelSubscription(childId);
         } catch (e) {
             console.warn("Subscription cancellation/cleanup failed:", e);
         }
 
-        // 2. Delete Registrations (Frontend RLS usually allows this)
-        // Also a dependency that must be removed.
+        // 2. Delete Registrations
         const { error: regError } = await supabase.from('registrations').delete().eq('child_id', childId);
         if (regError) console.error("Registration cleanup warning:", regError);
 
@@ -380,8 +401,10 @@ const supabaseApi = {
         title: e.title,
         description: e.description,
         date: formatDate(e.start_time),
-        startTime: formatTime(e.start_time),
-        endTime: formatTime(e.end_time),
+        startTime: formatTime(e.start_time), // h:mm A (12h)
+        endTime: formatTime(e.end_time),     // h:mm A (12h)
+        startTime24: formatTime24(e.start_time), // HH:mm (24h) for inputs
+        endTime24: formatTime24(e.end_time),     // HH:mm (24h) for inputs
         isoStart: e.start_time,
         isoEnd: e.end_time,
         location: e.location,
@@ -406,7 +429,6 @@ const supabaseApi = {
       if (error) throw error;
     },
     
-    // NEW: Update existing event
     update: async (id: string, event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }) => {
       const { error } = await supabase.from('events').update({
         title: event.title,

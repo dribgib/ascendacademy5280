@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Event, Child } from '../types';
 import { api } from '../services/api';
@@ -101,8 +102,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           title: evt.title,
           description: evt.description,
           date: evt.date, // Formatted YYYY-MM-DD
-          startTime: evt.startTime, // Formatted HH:MM
-          endTime: evt.endTime,
+          startTime: evt.startTime24 || '', // Use the 24h format for <input type="time">
+          endTime: evt.endTime24 || '',     // Use the 24h format for <input type="time">
           location: evt.location,
           maxSlots: evt.maxSlots,
           allowedPackages: evt.allowedPackages || []
@@ -309,7 +310,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                    {Object.keys(grouped).map(date => (
                        <div key={date} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
                            <div className="bg-zinc-950 p-3 border-b border-zinc-800 text-center">
-                               <span className="text-co-yellow font-teko text-2xl">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+                               {/* Date string here is already formatted by API as YYYY-MM-DD in Denver time. 
+                                   We parse it back to local just for getting the weekday name, or we can rely on string parsing to be safe */}
+                               <span className="text-co-yellow font-teko text-2xl">
+                                  {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                               </span>
                            </div>
                            <div className="p-4 space-y-3">
                                {grouped[date].map(evt => (
