@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Event, User, Child } from '../types';
@@ -119,6 +120,12 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
   };
 
+  const handleDateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if(!e.target.value) return;
+    const date = new Date(e.target.value + 'T12:00:00'); // simple parse to avoid timezone shifts on just setting month
+    setCurrentDate(date);
+  };
+
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
@@ -180,9 +187,21 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
         <button onClick={prevMonth} className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors">
             <ChevronLeft size={24} />
         </button>
-        <h2 className="font-teko text-4xl text-white uppercase">
-            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-        </h2>
+        
+        <div className="relative group cursor-pointer">
+            <h2 className="font-teko text-4xl text-white uppercase flex items-center gap-3">
+                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                <Calendar size={24} className="text-zinc-500 group-hover:text-co-yellow transition-colors" />
+            </h2>
+            {/* The hidden input sits on top of the text to trigger the picker on click */}
+            <input 
+                type="date" 
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                onChange={handleDateSelect}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+            />
+        </div>
+
         <button onClick={nextMonth} className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors">
             <ChevronRight size={24} />
         </button>

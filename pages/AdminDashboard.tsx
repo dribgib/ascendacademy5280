@@ -535,13 +535,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                 );
                             })}
                         </div>
-                        <p className="text-[10px] text-zinc-600 mt-1">If no packages selected, anyone with an active subscription can join.</p>
+                        <p className="text-zinc-600 text-[10px] mt-1">If no packages selected, anyone with an active subscription can join.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>
-                            <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark]" value={eventForm.date} onChange={e => setEventForm({...eventForm, date: e.target.value})} />
+                            <div className="relative">
+                                <input 
+                                    required 
+                                    type="date" 
+                                    className="w-full bg-black border border-zinc-700 p-2 text-white [color-scheme:dark] cursor-pointer" 
+                                    value={eventForm.date} 
+                                    onChange={e => setEventForm({...eventForm, date: e.target.value})} 
+                                    onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+                                />
+                                <CalendarIcon className="absolute right-3 top-2.5 text-zinc-500 pointer-events-none" size={16} />
+                            </div>
                         </div>
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Max Capacity</label>

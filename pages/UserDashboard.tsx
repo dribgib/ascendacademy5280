@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
@@ -633,7 +634,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </div>
                 <div>
                     <label className="block text-zinc-400 text-xs uppercase mb-1">Date of Birth</label>
-                    <input required type="date" className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark]" value={newKidDob} onChange={e => setNewKidDob(e.target.value)} />
+                    <div className="relative">
+                         <input 
+                             required 
+                             type="date" 
+                             className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark] cursor-pointer" 
+                             value={newKidDob} 
+                             onChange={e => setNewKidDob(e.target.value)} 
+                             onClick={(e) => (e.target as HTMLInputElement).showPicker()} 
+                         />
+                         <Calendar className="absolute right-3 top-2.5 text-zinc-500 pointer-events-none" size={16} />
+                    </div>
                 </div>
                 <div>
                     <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
