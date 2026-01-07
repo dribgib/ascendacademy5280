@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Event, Child } from '../types';
 import { api } from '../services/api';
-import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, Edit, Grid, List, X, ShieldCheck } from 'lucide-react';
+import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, Edit, Grid, List, X, ShieldCheck, Repeat, AlertTriangle } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 import { PACKAGES } from '../constants';
 
@@ -12,6 +12,8 @@ interface AdminDashboardProps {
 }
 
 type TabView = 'schedule' | 'calendar' | 'users';
+
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = false }) => {
   const { showAlert, showConfirm } = useModal();
@@ -33,6 +35,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const [showRosterModal, setShowRosterModal] = useState<Event | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+
+  // Recurrence State
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]); // 0-6
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
 
   const [eventForm, setEventForm] = useState({
     title: '', 
@@ -92,6 +100,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       setIsEditing(false);
       setEditingEventId(null);
       setEventForm({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20, allowedPackages: [] });
+      setIsRecurring(false);
+      setRecurrenceDays([]);
+      setRecurrenceEndDate('');
       setShowCreateModal(true);
   };
 
@@ -108,31 +119,91 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           maxSlots: evt.maxSlots,
           allowedPackages: evt.allowedPackages || []
       });
+      setIsRecurring(false); // Edit is single instance only
       setShowCreateModal(true);
+  };
+
+  const handleToggleRecurrenceDay = (dayIndex: number) => {
+      setRecurrenceDays(prev => 
+          prev.includes(dayIndex) ? prev.filter(d => d !== dayIndex) : [...prev, dayIndex].sort()
+      );
   };
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const startIso = new Date(`${eventForm.date}T${eventForm.startTime}`).toISOString();
-      const endIso = new Date(`${eventForm.date}T${eventForm.endTime}`).toISOString();
-
-      const payload = {
+      const basePayload = {
         title: eventForm.title,
         description: eventForm.description,
-        startTime: startIso,
-        endTime: endIso,
         location: eventForm.location,
         maxSlots: eventForm.maxSlots,
         allowedPackages: eventForm.allowedPackages
       };
 
       if (isEditing && editingEventId) {
-          await (api.events as any).update(editingEventId, payload);
+          // --- SINGLE UPDATE ---
+          const startIso = new Date(`${eventForm.date}T${eventForm.startTime}`).toISOString();
+          const endIso = new Date(`${eventForm.date}T${eventForm.endTime}`).toISOString();
+          
+          await (api.events as any).update(editingEventId, {
+              ...basePayload,
+              startTime: startIso,
+              endTime: endIso
+          });
           showAlert('Updated', 'Session details updated successfully.', 'success');
       } else {
-          await api.events.create(payload);
-          showAlert('Success', 'Event created successfully.', 'success');
+          // --- CREATE NEW (Single or Recurring) ---
+          if (isRecurring) {
+              if (recurrenceDays.length === 0) throw new Error("Please select at least one repeat day.");
+              if (!recurrenceEndDate) throw new Error("Please select an end date for the repetition.");
+              
+              const startDt = new Date(`${eventForm.date}T12:00:00`); // Use T12:00:00 to avoid timezone shifting on date math
+              const endDt = new Date(`${recurrenceEndDate}T12:00:00`);
+              
+              if (endDt < startDt) throw new Error("End date must be after start date.");
+
+              const sessionsToCreate = [];
+              let current = new Date(startDt);
+
+              // 1. Loop through dates
+              while (current <= endDt) {
+                  // 2. Check if current day matches selection
+                  if (recurrenceDays.includes(current.getDay())) {
+                      // 3. Construct the specific YYYY-MM-DD string
+                      const dateStr = current.toISOString().split('T')[0];
+                      
+                      // 4. Construct ISO timestamps
+                      const startIso = new Date(`${dateStr}T${eventForm.startTime}`).toISOString();
+                      const endIso = new Date(`${dateStr}T${eventForm.endTime}`).toISOString();
+
+                      sessionsToCreate.push({
+                          ...basePayload,
+                          startTime: startIso,
+                          endTime: endIso
+                      });
+                  }
+                  // Move to next day
+                  current.setDate(current.getDate() + 1);
+              }
+
+              if (sessionsToCreate.length === 0) throw new Error("No dates matched your selection.");
+              
+              // 5. Send Bulk Insert
+              await api.events.createBulk(sessionsToCreate);
+              showAlert('Success', `Created ${sessionsToCreate.length} recurring sessions.`, 'success');
+
+          } else {
+              // --- SINGLE CREATE ---
+              const startIso = new Date(`${eventForm.date}T${eventForm.startTime}`).toISOString();
+              const endIso = new Date(`${eventForm.date}T${eventForm.endTime}`).toISOString();
+              
+              await api.events.create({
+                  ...basePayload,
+                  startTime: startIso,
+                  endTime: endIso
+              });
+              showAlert('Success', 'Event created successfully.', 'success');
+          }
       }
 
       setShowCreateModal(false);
@@ -152,16 +223,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       });
   };
 
-  const handleDeleteEvent = async (id: string) => {
-      const confirmed = await showConfirm("Delete Session?", "Are you sure you want to cancel and delete this session? This will REFUND usage tokens to registered athletes.");
-      if (!confirmed) return;
+  const initiateDeleteEvent = (evt: Event) => {
+      setEventToDelete(evt);
+  };
 
+  const confirmDelete = async (mode: 'single' | 'future') => {
+      if (!eventToDelete) return;
+      
       try {
-        await (api as any).admin.deleteEvent(id);
-        loadData();
-        showAlert('Deleted', 'Session has been cancelled and athlete tokens refunded.', 'success');
+          if (mode === 'single') {
+               await (api as any).admin.deleteEvent(eventToDelete.id);
+               showAlert('Deleted', 'Session cancelled.', 'success');
+          } else {
+               const count = await (api as any).admin.deleteFutureSeries(eventToDelete);
+               showAlert('Deleted', `${count} sessions cancelled.`, 'success');
+          }
+          loadData();
       } catch (e: any) {
           showAlert('Error', e.message, 'error');
+      } finally {
+          setEventToDelete(null);
       }
   };
 
@@ -277,7 +358,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                 <button onClick={() => openEditModal(evt)} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded uppercase font-medium flex items-center gap-2">
                    <Edit size={14} /> Edit
                 </button>
-                <button onClick={() => handleDeleteEvent(evt.id)} className="text-xs text-co-red hover:text-red-400 ml-auto uppercase font-medium flex items-center gap-1">
+                <button onClick={() => initiateDeleteEvent(evt)} className="text-xs text-co-red hover:text-red-400 ml-auto uppercase font-medium flex items-center gap-1">
                    <Trash2 size={14} /> Cancel
                 </button>
               </div>
@@ -540,7 +621,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-zinc-400 text-xs uppercase mb-1">Date</label>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">Date {isRecurring && '(Start Date)'}</label>
                             <div className="relative">
                                 <input 
                                     required 
@@ -558,6 +639,57 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                             <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.maxSlots} onChange={e => setEventForm({...eventForm, maxSlots: parseInt(e.target.value)})} />
                         </div>
                     </div>
+
+                    {!isEditing && (
+                        <div className="border border-zinc-800 bg-zinc-900/50 p-4 rounded">
+                            <label className="flex items-center gap-2 cursor-pointer mb-4">
+                                <input 
+                                    type="checkbox" 
+                                    className="w-4 h-4 text-co-yellow bg-black border-zinc-700 rounded focus:ring-co-yellow"
+                                    checked={isRecurring}
+                                    onChange={(e) => setIsRecurring(e.target.checked)}
+                                />
+                                <span className="text-zinc-300 text-sm font-bold uppercase flex items-center gap-2">
+                                    <Repeat size={14} /> Repeat Session
+                                </span>
+                            </label>
+
+                            {isRecurring && (
+                                <div className="space-y-4 pl-6 border-l-2 border-zinc-800 animate-fade-in">
+                                    <div>
+                                        <label className="block text-zinc-500 text-xs uppercase mb-2">Repeat On Days</label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {DAYS_OF_WEEK.map((day, idx) => (
+                                                <button
+                                                    key={day}
+                                                    type="button"
+                                                    onClick={() => handleToggleRecurrenceDay(idx)}
+                                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${recurrenceDays.includes(idx) ? 'bg-co-yellow text-black' : 'bg-black border border-zinc-700 text-zinc-500 hover:text-white'}`}
+                                                >
+                                                    {day.charAt(0)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-zinc-500 text-xs uppercase mb-1">Repeat Until (End Date)</label>
+                                        <div className="relative">
+                                            <input 
+                                                required={isRecurring}
+                                                type="date" 
+                                                className="w-full bg-black border border-zinc-700 p-2 text-white rounded focus:border-co-yellow outline-none [color-scheme:dark] cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0" 
+                                                value={recurrenceEndDate} 
+                                                onChange={e => setRecurrenceEndDate(e.target.value)} 
+                                                onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+                                            />
+                                            <CalendarIcon className="absolute right-3 top-2.5 text-zinc-500 pointer-events-none" size={16} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Start Time</label>
@@ -575,10 +707,47 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                     <div className="flex gap-4 pt-4">
                         <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
                         <button type="submit" className="flex-1 bg-co-red hover:bg-white hover:text-black text-white py-3 uppercase font-teko text-xl rounded">
-                            {isEditing ? 'Save Changes' : 'Create Session'}
+                            {isEditing ? 'Save Changes' : (isRecurring ? 'Create Recurring' : 'Create Session')}
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {eventToDelete && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setEventToDelete(null)}>
+            <div className="bg-card-bg border border-red-900/50 p-8 rounded-lg max-w-sm w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-center mb-6">
+                    <AlertTriangle className="text-co-red w-16 h-16" />
+                </div>
+                
+                <h2 className="text-center font-teko text-3xl text-white uppercase mb-2">Cancel Session?</h2>
+                <p className="text-center text-zinc-400 text-sm mb-8">
+                    You are about to cancel <strong className="text-white">{eventToDelete.title}</strong> on {eventToDelete.date}.
+                </p>
+
+                <div className="space-y-3">
+                    <button 
+                        onClick={() => confirmDelete('single')}
+                        className="w-full bg-red-900/40 hover:bg-red-900 text-red-100 border border-red-900 py-3 uppercase font-teko text-xl rounded transition-colors"
+                    >
+                        Delete Just This Session
+                    </button>
+                    <button 
+                        onClick={() => confirmDelete('future')}
+                        className="w-full bg-black hover:bg-zinc-800 text-zinc-300 border border-zinc-700 py-3 uppercase font-teko text-xl rounded transition-colors"
+                    >
+                        Delete This & All Future
+                    </button>
+                    <button 
+                        onClick={() => setEventToDelete(null)}
+                        className="w-full text-zinc-500 hover:text-white text-sm py-2 uppercase tracking-wide"
+                    >
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
       )}

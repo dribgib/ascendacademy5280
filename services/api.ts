@@ -256,6 +256,39 @@ const supabaseApi = {
         if (error) throw error;
     },
 
+    deleteFutureSeries: async (baseEvent: Event) => {
+        // 1. Find all matching future events (Same title, start_time >= current)
+        const { data: futureEvents, error: fetchError } = await supabase
+            .from('events')
+            .select('id')
+            .eq('title', baseEvent.title)
+            .gte('start_time', baseEvent.isoStart);
+        
+        if (fetchError) throw fetchError;
+        
+        const idsToDelete = futureEvents.map((e: any) => e.id);
+        
+        if (idsToDelete.length === 0) return 0;
+
+        // 2. Delete Registrations for these events
+        const { error: regError } = await supabase
+            .from('registrations')
+            .delete()
+            .in('event_id', idsToDelete);
+        
+        if (regError) throw regError;
+
+        // 3. Delete Events
+        const { error: delError } = await supabase
+            .from('events')
+            .delete()
+            .in('id', idsToDelete);
+            
+        if (delError) throw delError;
+        
+        return idsToDelete.length;
+    },
+
     deleteUser: async (userId: string) => {
         const { error } = await supabase.from('profiles').delete().eq('id', userId);
         if (error) throw error;
@@ -426,6 +459,21 @@ const supabaseApi = {
         max_slots: event.maxSlots,
         allowed_packages: event.allowedPackages
       });
+      if (error) throw error;
+    },
+
+    createBulk: async (events: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }[]) => {
+      const dbEvents = events.map(event => ({
+        title: event.title,
+        description: event.description,
+        start_time: event.startTime,
+        end_time: event.endTime,
+        location: event.location,
+        max_slots: event.maxSlots,
+        allowed_packages: event.allowedPackages
+      }));
+      
+      const { error } = await supabase.from('events').insert(dbEvents);
       if (error) throw error;
     },
     
