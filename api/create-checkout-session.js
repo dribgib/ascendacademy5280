@@ -71,7 +71,7 @@ export default async function handler(req, res) {
         sessionConfig.customer_email = userEmail;
     }
     
-    // 3. APPLY SIBLING DISCOUNT
+    // 3. APPLY SIBLING DISCOUNT or ALLOW PROMO CODES
     if (activeSubscriptionCount > 0) {
         // Determine Mode
         const isTestMode = stripeKey.startsWith('sk_test');
@@ -82,6 +82,9 @@ export default async function handler(req, res) {
 
         // Apply Coupon
         sessionConfig.discounts = [{ coupon: couponId }];
+    } else {
+        // If no automatic discount is applied, allow user to enter promo codes
+        sessionConfig.allow_promotion_codes = true;
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
