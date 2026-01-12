@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PACKAGES } from '../constants';
@@ -181,6 +182,15 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
         
+        {/* FULLSCREEN LOADING OVERLAY */}
+        {processing && (
+            <div className="fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center backdrop-blur-md animate-fade-in">
+                <Loader2 className="w-20 h-20 text-co-yellow animate-spin mb-6" />
+                <h2 className="text-white font-teko text-4xl uppercase tracking-widest animate-pulse">Processing...</h2>
+                <p className="text-zinc-500 text-sm mt-3 uppercase tracking-wider">Please do not refresh the page</p>
+            </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="font-teko text-5xl text-white uppercase mb-2">Choose Your Edge</h1>
@@ -205,24 +215,27 @@ const CheckoutPage: React.FC = () => {
 
         {/* Athlete Selector Tabs */}
         {kids.length > 0 ? (
-          <div className="flex justify-center mb-8 gap-2 flex-wrap">
+          <div className="flex justify-center mb-12 gap-4 flex-wrap">
             {kids.map(kid => (
               <button
                 key={kid.id}
                 onClick={() => setActiveKidId(kid.id)}
                 className={`
-                  px-6 py-2 rounded-sm font-teko text-xl uppercase tracking-wide transition-colors border
+                  relative px-8 py-3 rounded transform transition-all duration-300 font-teko text-2xl uppercase tracking-wide border-2
                   ${activeKidId === kid.id 
-                    ? 'bg-white text-black border-white' 
-                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-white'}
+                    ? 'bg-co-yellow text-black border-co-yellow scale-110 z-10 shadow-[0_0_20px_rgba(255,215,0,0.4)]' 
+                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300 grayscale'}
                 `}
               >
-                {kid.firstName} {kid.lastName}
+                {kid.firstName}
+                {activeKidId === kid.id && (
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-co-yellow rotate-45"></div>
+                )}
               </button>
             ))}
             <button 
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 rounded-sm font-teko text-xl uppercase tracking-wide border border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent"
+              className="px-6 py-2 rounded font-teko text-xl uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors"
             >
               + Add Athlete
             </button>
@@ -240,14 +253,14 @@ const CheckoutPage: React.FC = () => {
 
         {/* Discount Banner */}
         {discountPercent > 0 && activeKid && activeKid.subscriptionStatus !== 'active' && (
-             <div className="bg-gradient-to-r from-co-yellow to-yellow-600 text-black p-4 mb-8 rounded text-center uppercase tracking-wide flex items-center justify-center gap-2 animate-pulse font-medium">
+             <div className="bg-gradient-to-r from-co-yellow to-yellow-600 text-black p-4 mb-8 rounded text-center uppercase tracking-wide flex items-center justify-center gap-2 animate-pulse font-medium shadow-lg mx-auto max-w-2xl">
                 <Tag size={20} /> {discountLabel}: Save {discountPercent}% on this subscription!
              </div>
         )}
 
         {/* Pricing Cards (Only if Kid Selected) */}
         {activeKid && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2">
             {PACKAGES.map((pkg) => {
               // Highlight if this kid has this specific active plan
               const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); 
@@ -259,39 +272,40 @@ const CheckoutPage: React.FC = () => {
                 <div 
                   key={pkg.id} 
                   className={`
-                    bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4
-                    ${pkg.name === 'Elite' ? 'border-co-yellow shadow-[0_0_20px_rgba(255,215,0,0.1)]' : 'border-transparent hover:border-co-yellow hover:-translate-y-2'}
-                    ${isSelectedFromUrl && !isActivePlan ? 'ring-2 ring-co-yellow ring-offset-2 ring-offset-black' : ''}
-                    ${isActivePlan ? 'opacity-75 border-green-500' : ''}
+                    bg-card-bg p-8 flex flex-col relative transition-all duration-300 border-2 rounded-sm
+                    ${isActivePlan 
+                        ? 'border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)] scale-[1.02] bg-zinc-900' 
+                        : 'border-zinc-800 hover:border-co-yellow hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] hover:-translate-y-2 hover:bg-zinc-900 group'}
+                    ${isSelectedFromUrl && !isActivePlan ? 'ring-2 ring-co-yellow ring-offset-4 ring-offset-black' : ''}
                   `}
                 >
-                  {pkg.name === 'Elite' && (
-                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium font-teko tracking-wide">
+                  {pkg.name === 'Elite' && !isActivePlan && (
+                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium font-teko tracking-wide z-10">
                       Best Value
                     </span>
                   )}
                   
                   {isActivePlan && (
-                    <div className="absolute top-0 left-0 right-0 bg-green-500 text-black text-center text-xs font-bold uppercase py-1">
-                        Active Plan
+                    <div className="absolute top-0 left-0 right-0 bg-green-500 text-black text-center text-xs font-bold uppercase py-1 tracking-wider">
+                        Current Plan
                     </div>
                   )}
 
-                  <div className="mb-4 mt-2">
-                    <h3 className="font-teko text-4xl text-white uppercase">{pkg.name}</h3>
+                  <div className="mb-4 mt-4">
+                    <h3 className={`font-teko text-4xl uppercase transition-colors ${isActivePlan ? 'text-green-400' : 'text-white group-hover:text-co-yellow'}`}>{pkg.name}</h3>
                     <div className="flex items-baseline gap-1 mt-2 border-b border-zinc-800 pb-4">
                       <span className="text-3xl font-bold text-white">${finalPrice}</span>
                       <span className="text-sm text-zinc-500 uppercase font-medium">/ Month</span>
                     </div>
                     {discountPercent > 0 && (
-                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500 mt-1">${pkg.price}/mo</p>
+                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500 mt-1 opacity-70">${pkg.price}/mo</p>
                     )}
                   </div>
 
                   <ul className="space-y-4 mb-8 flex-grow">
                     {pkg.features.map((feat, i) => ( 
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-co-yellow flex-shrink-0 mt-0.5" />
+                        <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isActivePlan ? 'text-green-500' : 'text-co-yellow'}`} />
                         <span className="text-zinc-300 text-sm font-medium">{feat}</span>
                       </li>
                     ))}
@@ -299,13 +313,12 @@ const CheckoutPage: React.FC = () => {
                   </ul>
 
                   {isActivePlan ? (
-                    <button disabled className="w-full bg-green-900/20 text-green-500 border border-green-900/50 py-4 uppercase font-teko text-xl rounded cursor-default">
-                      Current Plan
+                    <button disabled className="w-full bg-green-900/20 text-green-500 border border-green-900/50 py-4 uppercase font-teko text-xl rounded cursor-default tracking-wide">
+                      Active
                     </button>
                   ) : (
                     <button 
                       onClick={() => handleSubscribe(pkg.id)}
-                      disabled={processing}
                       className={`
                         w-full py-4 uppercase font-teko text-2xl transition-colors tracking-wide border
                         ${pkg.name === 'Elite' || isSelectedFromUrl
@@ -313,7 +326,7 @@ const CheckoutPage: React.FC = () => {
                           : 'bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow'}
                       `}
                     >
-                      {processing ? 'Processing...' : 'Select Plan'}
+                      Select Plan
                     </button>
                   )}
                 </div>
@@ -362,7 +375,7 @@ const CheckoutPage: React.FC = () => {
                             disabled={processing}
                             className="bg-white text-black px-8 py-3 uppercase hover:bg-zinc-200 transition-colors w-full font-teko text-2xl tracking-wide border border-transparent"
                         >
-                            {processing ? 'Opening...' : 'Manage Subscription'}
+                            Manage Subscription
                         </button>
                    ) : (
                         <button disabled className="bg-zinc-800 text-zinc-500 px-8 py-3 uppercase cursor-not-allowed w-full border border-zinc-700 font-teko text-2xl tracking-wide">

@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase with Service Role Key to allow writing to DB
@@ -16,13 +17,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, firstName, lastName } = req.body;
+    const { email, firstName, lastName, documentID } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing email' });
     }
 
-    console.log(`Received Waiver Webhook for: ${email}`);
+    console.log(`Received Waiver Webhook for: ${email}, Document: ${documentID}`);
 
     // Insert into Supabase 'waivers' table
     const { error } = await supabase
@@ -31,6 +32,7 @@ export default async function handler(req, res) {
         email: email.toLowerCase().trim(),
         first_name: firstName,
         last_name: lastName,
+        document_id: documentID ? String(documentID) : null,
         signed_at: new Date().toISOString()
       });
 

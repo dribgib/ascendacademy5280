@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
-import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight, PauseCircle, PlayCircle, ShieldAlert } from 'lucide-react';
+import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight, PauseCircle, PlayCircle, ShieldAlert, Image as ImageIcon } from 'lucide-react';
 import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -42,11 +42,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountMsg, setAccountMsg] = useState('');
 
-  const [verifyingWaiver, setVerifyingWaiver] = useState(false);
-  // Manual Override State
+  // Verification State
+  const [polling, setPolling] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
   const [manualOverride, setManualOverride] = useState(false);
   const [failMessage, setFailMessage] = useState('');
+  const pollIntervalRef = useRef<number | null>(null);
+  const pollTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -62,6 +64,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     if (!isAdminView) loadData();
     else setLoading(false);
   }, [user.id, isAdminView]);
+
+  // Clean up polling on unmount or modal close
+  useEffect(() => {
+      return () => stopPolling();
+  }, []);
+
+  const stopPolling = () => {
+      if (pollIntervalRef.current) window.clearInterval(pollIntervalRef.current);
+      if (pollTimeoutRef.current) window.clearTimeout(pollTimeoutRef.current);
+      setPolling(false);
+  };
 
   const toggleView = (target: 'admin' | 'parent') => {
       if (target === 'admin') navigate('/dashboard?view=admin');
@@ -147,6 +160,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   };
 
   const createChildProfile = async () => {
+      stopPolling();
       setImageUploading(true);
       let imageUrl = undefined;
       
@@ -174,35 +188,45 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       showAlert('Success', 'Athlete added successfully!', 'success');
   };
 
-  const handleVerifyAndAdd = async () => {
-    if (manualOverride) {
-        // Bypass Verification
-        await createChildProfile();
-        return;
-    }
+  // --- NEW: POLLING VERIFICATION LOGIC ---
+  const startVerification = () => {
+      setAddStep(4);
+      setPolling(true);
+      setVerificationFailed(false);
+      setFailMessage('');
 
-    setVerifyingWaiver(true);
-    setVerificationFailed(false);
-    setFailMessage('');
+      // Stop after 2 minutes (120000ms)
+      pollTimeoutRef.current = window.setTimeout(() => {
+          stopPolling();
+          setVerificationFailed(true);
+          setFailMessage("Verification timed out. Systems may be slow.");
+      }, 120000); 
 
-    try {
-        const result = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
-        
-        if (result.verified) {
-            await createChildProfile();
-        } else {
-            // Failed verification
-            setVerificationFailed(true);
-            setFailMessage(result.message || "Waiver verification returned false.");
-        }
-    } catch (e: any) {
-        console.error(e);
-        setVerificationFailed(true);
-        setFailMessage(e.message || 'Network error verifying waiver.');
-    } finally {
-        setVerifyingWaiver(false);
-        setImageUploading(false);
-    }
+      // Initial check
+      checkWaivers();
+
+      // Interval check every 5s
+      pollIntervalRef.current = window.setInterval(checkWaivers, 5000);
+  };
+
+  const checkWaivers = async () => {
+      try {
+          const result = await (api as any).waivers.checkStatus(user.email, `${newKidName.first} ${newKidName.last}`);
+          if (result.verified) {
+              stopPolling();
+              await createChildProfile();
+          } else {
+              // Still missing... keep polling or fail silently until timeout
+              // Optional: Update failMessage to show partial progress if API supported it
+          }
+      } catch (e) {
+          console.error("Waiver poll error:", e);
+      }
+  };
+
+  const handleManualOverride = async () => {
+      if (!manualOverride) return;
+      await createChildProfile();
   };
 
   const handleDeleteKid = async (kid: Child) => {
@@ -261,9 +285,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     setKidImage(null);
     setKidImagePreview(null);
     setAddStep(1);
+    stopPolling();
     setVerificationFailed(false);
     setManualOverride(false);
     setFailMessage('');
+    setImageUploading(false);
   };
 
   const toggleSport = (sport: string) => {
@@ -595,14 +621,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
         </div>
       )}
 
-      {/* Add Kid Modal */}
+      {/* Add Kid Modal - Wizard Steps */}
       {showAddKidModal && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowAddKidModal(false)}>
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => { setShowAddKidModal(false); resetForm(); }}>
         <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 mb-8 text-sm">
-                <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : 'text-green-500'}`}>1. Details</span>
+            <div className="flex items-center justify-center gap-2 mb-8 text-xs uppercase tracking-wide">
+                <span className={`font-bold ${addStep === 1 ? 'text-co-yellow' : addStep > 1 ? 'text-green-500' : 'text-zinc-600'}`}>1. Details</span>
                 <span className="text-zinc-600">/</span>
-                <span className={`font-bold ${addStep === 2 ? 'text-co-yellow' : 'text-zinc-600'}`}>2. Waiver</span>
+                <span className={`font-bold ${addStep === 2 ? 'text-co-yellow' : addStep > 2 ? 'text-green-500' : 'text-zinc-600'}`}>2. Liability</span>
+                <span className="text-zinc-600">/</span>
+                <span className={`font-bold ${addStep === 3 ? 'text-co-yellow' : addStep > 3 ? 'text-green-500' : 'text-zinc-600'}`}>3. Photo</span>
+                <span className="text-zinc-600">/</span>
+                <span className={`font-bold ${addStep === 4 ? 'text-co-yellow' : 'text-zinc-600'}`}>4. Verify</span>
             </div>
 
             {addStep === 1 && (
@@ -658,7 +688,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 </div>
                 <div className="flex gap-4 pt-4">
                     <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-medium rounded flex items-center justify-center gap-2">Next: Sign Waiver <ArrowRight size={18} /></button>
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-medium rounded flex items-center justify-center gap-2">Next: Waiver <ArrowRight size={18} /></button>
                 </div>
                 </form>
                 </>
@@ -668,57 +698,119 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="text-center">
                     <h2 className="font-teko text-3xl text-white uppercase mb-2">Liability Waiver</h2>
                     <p className="text-zinc-500 text-sm mb-8">
-                        Participation requires a signed waiver for <span className="text-white font-bold">{newKidName.first} {newKidName.last}</span>.
+                        Step 1 of 2: General Liability Release.
                     </p>
 
                     <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
                         <FileSignature className="mx-auto text-co-yellow mb-4" size={48} />
                         <p className="text-zinc-400 text-sm mb-4">
-                            1. Click to sign on WaiverSign.<br/>
-                            2. Return here and click "Verify".
+                            Click below to sign the liability waiver for <strong>{newKidName.first}</strong>.
                         </p>
-                        <a href={WAIVER_CONFIG.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide">
-                            Open Waiver Form <ExternalLink size={16} />
+                        <a href={WAIVER_CONFIG.liability.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide">
+                            Open Liability Form <ExternalLink size={16} />
                         </a>
                     </div>
-                    
-                    {/* Failure Message & Manual Override */}
-                    {verificationFailed && (
-                        <div className="mb-8 bg-red-900/20 border border-red-900/50 p-4 rounded text-left">
-                            <div className="flex items-start gap-3">
-                                <ShieldAlert className="text-red-500 flex-shrink-0" />
-                                <div>
-                                    <h4 className="text-red-400 font-bold uppercase text-sm mb-1">Verification Failed</h4>
-                                    <p className="text-red-300 text-xs">{failMessage}</p>
-                                    
-                                    <div className="mt-4 pt-4 border-t border-red-900/30">
-                                        <label className="flex items-start gap-2 cursor-pointer">
-                                            <input 
-                                                type="checkbox" 
-                                                className="mt-1"
-                                                checked={manualOverride}
-                                                onChange={(e) => setManualOverride(e.target.checked)}
-                                            />
-                                            <span className="text-zinc-400 text-xs">
-                                                I attest that I have physically signed the waiver for this athlete and understand that falsifying this information is a violation of the terms of service.
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     <div className="flex gap-4">
                         <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
                         <button 
-                            onClick={handleVerifyAndAdd}
-                            disabled={(verifyingWaiver || imageUploading) && !manualOverride}
-                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50 font-medium"
+                            onClick={() => setAddStep(3)}
+                            className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 font-medium"
                         >
-                            {(verifyingWaiver || imageUploading) ? <Loader2 className="animate-spin" /> : (manualOverride ? 'Force Add Athlete' : 'Verify Waiver')}
+                            Next Step <ArrowRight size={18} />
                         </button>
                     </div>
+                </div>
+            )}
+
+            {addStep === 3 && (
+                <div className="text-center">
+                    <h2 className="font-teko text-3xl text-white uppercase mb-2">Photo & Video Waiver</h2>
+                    <p className="text-zinc-500 text-sm mb-8">
+                        Step 2 of 2: Media Release.
+                    </p>
+
+                    <div className="bg-black/50 border border-zinc-800 p-6 rounded-lg mb-8">
+                        <ImageIcon className="mx-auto text-co-yellow mb-4" size={48} />
+                        <p className="text-zinc-400 text-sm mb-4">
+                            Click below to sign the media release form for <strong>{newKidName.first}</strong>.
+                        </p>
+                        <a href={WAIVER_CONFIG.photo.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide">
+                            Open Media Form <ExternalLink size={16} />
+                        </a>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button type="button" onClick={() => setAddStep(2)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                        <button 
+                            onClick={startVerification}
+                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 font-medium"
+                        >
+                            Verify & Add <CheckCircle size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {addStep === 4 && (
+                <div className="text-center">
+                    <h2 className="font-teko text-3xl text-white uppercase mb-4">Verifying Documents</h2>
+                    
+                    {polling ? (
+                        <div className="py-12">
+                            <div className="relative w-20 h-20 mx-auto mb-6">
+                                <div className="absolute inset-0 border-4 border-zinc-800 rounded-full"></div>
+                                <div className="absolute inset-0 border-4 border-co-yellow rounded-full border-t-transparent animate-spin"></div>
+                            </div>
+                            <p className="text-white text-lg font-bold animate-pulse mb-2">Checking with WaiverSign...</p>
+                            <p className="text-zinc-500 text-xs max-w-xs mx-auto">
+                                This may take up to 2 minutes. Please keep this window open.
+                            </p>
+                        </div>
+                    ) : verificationFailed ? (
+                        <div className="py-6">
+                            <div className="mb-8 bg-red-900/20 border border-red-900/50 p-4 rounded text-left">
+                                <div className="flex items-start gap-3">
+                                    <ShieldAlert className="text-red-500 flex-shrink-0" />
+                                    <div>
+                                        <h4 className="text-red-400 font-bold uppercase text-sm mb-1">Verification Failed</h4>
+                                        <p className="text-red-300 text-xs">{failMessage}</p>
+                                        
+                                        <div className="mt-4 pt-4 border-t border-red-900/30">
+                                            <label className="flex items-start gap-2 cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="mt-1"
+                                                    checked={manualOverride}
+                                                    onChange={(e) => setManualOverride(e.target.checked)}
+                                                />
+                                                <span className="text-zinc-400 text-xs">
+                                                    I attest that I have physically signed <strong>BOTH</strong> waivers for this athlete and understand that falsifying this information is a violation of the terms of service.
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <button type="button" onClick={() => setAddStep(3)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                                <button 
+                                    onClick={handleManualOverride}
+                                    disabled={!manualOverride}
+                                    className="flex-1 bg-red-900 hover:bg-red-800 text-white py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    Force Add Athlete
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="py-12">
+                            <p className="text-green-500 font-bold uppercase text-xl flex items-center justify-center gap-2">
+                                <CheckCircle /> Verified!
+                            </p>
+                            <p className="text-zinc-500 text-sm mt-2">Creating profile...</p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

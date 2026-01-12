@@ -9,7 +9,14 @@ export const POPULAR_SPORTS = [
 ];
 
 export const WAIVER_CONFIG = {
-  url: 'https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none',
+  liability: {
+    url: 'https://app.waiversign.com/e/693223c22919426586c36778/doc/693225b12606e000127945da?event=none',
+    id: '32183'
+  },
+  photo: {
+    url: 'https://app.waiversign.com/e/693223c22919426586c36778/doc/695d80b968f64c0012434882?event=none',
+    id: '32390'
+  }
 };
 
 // --- STRIPE CONFIGURATION ---
@@ -111,11 +118,11 @@ export const PACKAGES: TrainingPackage[] = [
     name: 'Rookie',
     price: 100,
     billingPeriod: 'Monthly',
-    maxSessions: 8, // Approx 2 per week
+    maxSessions: 2, // 2 sessions per month
     description: 'Intro to sports fitness (Grades 6 & Under).',
     color: 'border-white',
     features: [
-      '2 Sessions / Week',
+      '2 Sessions / Month',
       '45min Sessions',
       'Monday & Wednesday Only',
       'Fundamentals Focus'
