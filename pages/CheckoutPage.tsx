@@ -224,7 +224,7 @@ const CheckoutPage: React.FC = () => {
                   relative px-8 py-3 rounded transform transition-all duration-300 font-teko text-2xl uppercase tracking-wide border-2
                   ${activeKidId === kid.id 
                     ? 'bg-co-yellow text-black border-co-yellow scale-110 z-10 shadow-[0_0_20px_rgba(255,215,0,0.4)]' 
-                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300 grayscale'}
+                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300 grayscale opacity-70 hover:opacity-100 hover:grayscale-0'}
                 `}
               >
                 {kid.firstName}
@@ -235,7 +235,7 @@ const CheckoutPage: React.FC = () => {
             ))}
             <button 
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 rounded font-teko text-xl uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors"
+              className="px-6 py-2 rounded font-teko text-xl uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors opacity-70 hover:opacity-100"
             >
               + Add Athlete
             </button>
@@ -272,10 +272,10 @@ const CheckoutPage: React.FC = () => {
                 <div 
                   key={pkg.id} 
                   className={`
-                    bg-card-bg p-8 flex flex-col relative transition-all duration-300 border-2 rounded-sm
+                    bg-card-bg p-8 flex flex-col relative transition-all duration-300 border-2 rounded-sm group
                     ${isActivePlan 
-                        ? 'border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)] scale-[1.02] bg-zinc-900' 
-                        : 'border-zinc-800 hover:border-co-yellow hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] hover:-translate-y-2 hover:bg-zinc-900 group'}
+                        ? 'border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)] scale-[1.02] bg-zinc-900 z-10' 
+                        : 'border-zinc-800 hover:border-co-yellow hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] hover:-translate-y-2 hover:bg-zinc-900'}
                     ${isSelectedFromUrl && !isActivePlan ? 'ring-2 ring-co-yellow ring-offset-4 ring-offset-black' : ''}
                   `}
                 >
