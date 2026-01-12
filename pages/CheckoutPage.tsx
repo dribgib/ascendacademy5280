@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PACKAGES } from '../constants';
@@ -231,7 +230,7 @@ const CheckoutPage: React.FC = () => {
               >
                 {kid.firstName}
                 {activeKidId === kid.id && (
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-co-yellow rotate-45"></div>
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-co-yellow rotate-45"></div>
                 )}
               </button>
             ))}
@@ -323,12 +322,7 @@ const CheckoutPage: React.FC = () => {
                   ) : (
                     <button 
                       onClick={() => handleSubscribe(pkg.id)}
-                      className={`
-                        w-full py-4 uppercase font-teko text-2xl transition-colors tracking-wide border
-                        ${pkg.name === 'Elite' || isSelectedFromUrl
-                          ? 'bg-co-yellow text-black border-co-yellow hover:bg-white hover:border-white' 
-                          : 'bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow'}
-                      `}
+                      className="w-full py-4 uppercase font-teko text-2xl transition-colors tracking-wide border bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow"
                     >
                       Select Plan
                     </button>
