@@ -93,7 +93,9 @@ const CheckoutPage: React.FC = () => {
 
     // Check if child already has an active subscription
     const activeKid = kids.find(k => k.id === activeKidId);
-    if (activeKid && activeKid.subscriptionStatus === 'active') {
+    
+    // Check for any non-canceled/non-none status
+    if (activeKid && ['active', 'trialing', 'paused'].includes(activeKid.subscriptionStatus || '')) {
         const confirmed = await showConfirm(
             "Manage Subscription", 
             `To switch ${activeKid.firstName}'s plan to ${pkg.name}, please use our secure Billing Portal. We will redirect you there now.`
@@ -229,7 +231,7 @@ const CheckoutPage: React.FC = () => {
               >
                 {kid.firstName}
                 {activeKidId === kid.id && (
-                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-co-yellow rotate-45"></div>
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-co-yellow rotate-45"></div>
                 )}
               </button>
             ))}
@@ -253,7 +255,7 @@ const CheckoutPage: React.FC = () => {
 
         {/* Discount Banner */}
         {discountPercent > 0 && activeKid && activeKid.subscriptionStatus !== 'active' && (
-             <div className="bg-gradient-to-r from-co-yellow to-yellow-600 text-black p-4 mb-8 rounded text-center uppercase tracking-wide flex items-center justify-center gap-2 animate-pulse font-medium shadow-lg mx-auto max-w-2xl">
+             <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 mb-8 rounded text-center uppercase tracking-wide flex items-center justify-center gap-2 font-medium shadow-lg mx-auto max-w-2xl">
                 <Tag size={20} /> {discountLabel}: Save {discountPercent}% on this subscription!
              </div>
         )}
@@ -263,7 +265,10 @@ const CheckoutPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2">
             {PACKAGES.map((pkg) => {
               // Highlight if this kid has this specific active plan
-              const isActivePlan = activeKid.subscriptionStatus === 'active' && activeKid.subscriptionId?.includes(pkg.id); 
+              // Check against both internal ID and Stripe Price ID
+              const isActivePlan = (activeKid.subscriptionStatus === 'active' || activeKid.subscriptionStatus === 'trialing') && 
+                  (activeKid.subscriptionId === pkg.id || activeKid.subscriptionId === pkg.stripePriceId);
+                  
               const isSelectedFromUrl = packageId === pkg.id;
               
               const finalPrice = discountPercent > 0 ? Math.round(pkg.price * (1 - discountPercent / 100)) : pkg.price;
@@ -276,7 +281,6 @@ const CheckoutPage: React.FC = () => {
                     ${isActivePlan 
                         ? 'border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)] scale-[1.02] bg-zinc-900 z-10' 
                         : 'border-zinc-800 hover:border-co-yellow hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] hover:-translate-y-2 hover:bg-zinc-900'}
-                    ${isSelectedFromUrl && !isActivePlan ? 'ring-2 ring-co-yellow ring-offset-4 ring-offset-black' : ''}
                   `}
                 >
                   {pkg.name === 'Elite' && !isActivePlan && (
