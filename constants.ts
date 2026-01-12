@@ -71,14 +71,14 @@ export const PACKAGES: TrainingPackage[] = [
     price: 310,
     billingPeriod: 'Monthly',
     maxSessions: 12,
-    description: 'The ultimate performance package for dedicated athletes.',
+    description: 'The ultimate performance package (Ages 13-19).',
     color: 'border-co-yellow',
     features: [
       '12 Sessions / Month',
       '4 Opportunities/Week (MWF + 2 Fri)',
       '2x 30min 1-on-1 Sessions',
       'Physical Analysis',
-      'Individual Combine Testing'
+      'Physical Assessment'
     ]
   },
   {
@@ -88,7 +88,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 215,
     billingPeriod: 'Monthly',
     maxSessions: 8,
-    description: 'High-intensity training to maintain peak condition.',
+    description: 'High-intensity training (Ages 13-19).',
     color: 'border-co-red',
     features: [
       '8 Sessions / Month',
@@ -104,7 +104,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 120,
     billingPeriod: 'Monthly',
     maxSessions: 4,
-    description: 'Consistent training foundation.',
+    description: 'Consistent training foundation (Ages 9-12).',
     color: 'border-zinc-500',
     features: [
       '4 Sessions / Month',
@@ -119,7 +119,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 100,
     billingPeriod: 'Monthly',
     maxSessions: 2, // 2 sessions per month
-    description: 'Intro to sports fitness (Grades 6 & Under).',
+    description: 'Intro to sports fitness (Ages 5-8).',
     color: 'border-white',
     features: [
       '2 Sessions / Month',
@@ -186,8 +186,8 @@ export const MOCK_EVENTS: Event[] = [
   },
     {
     id: 'evt_3',
-    title: 'Open Combine Testing',
-    description: 'Quarterly combine stats measurement.',
+    title: 'Physical Assessment',
+    description: 'Quarterly physical assessment stats measurement.',
     date: '2023-11-24',
     startTime: '9:00 AM',
     endTime: '12:00 PM',
