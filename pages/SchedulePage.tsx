@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Event, User, Child } from '../types';
-import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircle, CheckCircle, Users } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
@@ -291,7 +290,8 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                     </div>
                     {selectedEvent.minAge && (
                         <div className="flex items-center gap-3 text-zinc-300">
-                            <span className="bg-zinc-900 text-co-yellow text-[10px] px-2 py-1 rounded border border-zinc-800 uppercase font-bold">
+                            <Users className="text-co-yellow" size={20} />
+                            <span className="font-bold text-co-yellow">
                                 Ages {selectedEvent.minAge} - {selectedEvent.maxAge}
                             </span>
                         </div>
