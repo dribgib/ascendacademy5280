@@ -48,10 +48,11 @@ const env = import.meta.env || {};
 const stripeKey = env.VITE_STRIPE_LIVE_PUBLISHABLE_KEY || env.VITE_STRIPE_PUBLISHABLE_KEY || env.VITE_STRIPE_TEST_PUBLISHABLE_KEY || '';
 const isTestMode = stripeKey.startsWith('pk_test');
 
+// Console log for debugging production vs test environment
 if (isTestMode) {
-  console.log('App is running in Stripe TEST MODE. Ensure Test Price IDs are configured.');
+  console.log('%c Ascend Academy: Running in Stripe TEST MODE ', 'background: #222; color: #ffeb3b; font-weight: bold; border: 1px solid #ffeb3b;');
 } else {
-  console.log('App is running in Stripe LIVE MODE.');
+  console.log('%c Ascend Academy: Running in Stripe LIVE MODE ', 'background: #222; color: #4ade80; font-weight: bold; border: 1px solid #4ade80;');
 }
 
 // DEFINITION: Price IDs for both environments.

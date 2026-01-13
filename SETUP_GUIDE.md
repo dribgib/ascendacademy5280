@@ -5,12 +5,21 @@ This is a standard React application (Vite) using **Vercel Serverless Functions*
 
 ## 2. Environment Variables (Vercel)
 
-Go to your Vercel Project Settings > Environment Variables and add these:
+Go to your Vercel Project Settings > Environment Variables and add these. 
 
+**Core Configuration:**
 1.  `VITE_PUBLIC_SUPABASE_URL`: Your Supabase Project URL.
 2.  `VITE_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase Anon Public Key.
-3.  `VITE_STRIPE_PUBLISHABLE_KEY`: Your Stripe Public Key (starts with pk_).
-4.  `STRIPE_SECRET_KEY`: Your Stripe Secret Key (starts with sk_). **(Do not prefix with VITE_)**
+
+**Stripe Configuration (Live Mode):**
+3.  `VITE_STRIPE_LIVE_PUBLISHABLE_KEY`: Your Stripe Live Public Key (starts with pk_live_).
+4.  `STRIPE_LIVE_SECRET_KEY`: Your Stripe Live Secret Key (starts with sk_live_).
+
+**Stripe Configuration (Test Mode - Optional):**
+5.  `VITE_STRIPE_TEST_PUBLISHABLE_KEY`: Your Stripe Test Public Key (starts with pk_test_).
+6.  `STRIPE_TEST_SECRET_KEY`: Your Stripe Test Secret Key (starts with sk_test_).
+
+**Note:** The application will automatically select the Live keys if they are present.
 
 ## 3. Database Setup (Supabase)
 
@@ -24,6 +33,7 @@ To automatically update subscription status when a payment succeeds:
 1.  Create a file `api/stripe-webhook.js`.
 2.  Add a Webhook endpoint in Stripe Dashboard pointing to `https://your-site.vercel.app/api/stripe-webhook`.
 3.  Select events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+4.  Add `STRIPE_WEBHOOK_SECRET` to your Vercel Environment Variables.
 
 ## 5. Zapier Setup (Waivers)
 To integrate WaiverSign/DocuSign via Zapier:
