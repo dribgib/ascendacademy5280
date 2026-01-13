@@ -59,6 +59,8 @@ export interface Event {
   registeredKidIds: string[]; // List of IDs of kids registered
   checkedInKidIds: string[]; // List of IDs of kids who attended
   allowedPackages?: string[]; // IDs of packages allowed to register (e.g. ['p_elite', 'p_pro'])
+  minAge?: number; // Optional age restriction (inclusive)
+  maxAge?: number; // Optional age restriction (inclusive)
 }
 
 export interface Donation {

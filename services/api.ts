@@ -445,11 +445,13 @@ const supabaseApi = {
         bookedSlots: e.registrations?.length || 0,
         registeredKidIds: e.registrations?.map((r: any) => r.child_id) || [],
         checkedInKidIds: e.registrations?.filter((r: any) => r.checked_in).map((r: any) => r.child_id) || [],
-        allowedPackages: e.allowed_packages
+        allowedPackages: e.allowed_packages,
+        minAge: e.min_age,
+        maxAge: e.max_age
       }));
     },
 
-    create: async (event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }) => {
+    create: async (event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[], minAge?: number, maxAge?: number }) => {
       const { error } = await supabase.from('events').insert({
         title: event.title,
         description: event.description,
@@ -457,12 +459,14 @@ const supabaseApi = {
         end_time: event.endTime,
         location: event.location,
         max_slots: event.maxSlots,
-        allowed_packages: event.allowedPackages
+        allowed_packages: event.allowedPackages,
+        min_age: event.minAge,
+        max_age: event.maxAge
       });
       if (error) throw error;
     },
 
-    createBulk: async (events: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }[]) => {
+    createBulk: async (events: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[], minAge?: number, maxAge?: number }[]) => {
       const dbEvents = events.map(event => ({
         title: event.title,
         description: event.description,
@@ -470,14 +474,16 @@ const supabaseApi = {
         end_time: event.endTime,
         location: event.location,
         max_slots: event.maxSlots,
-        allowed_packages: event.allowedPackages
+        allowed_packages: event.allowedPackages,
+        min_age: event.minAge,
+        max_age: event.maxAge
       }));
       
       const { error } = await supabase.from('events').insert(dbEvents);
       if (error) throw error;
     },
     
-    update: async (id: string, event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[] }) => {
+    update: async (id: string, event: { title: string, description: string, startTime: string, endTime: string, location: string, maxSlots: number, allowedPackages?: string[], minAge?: number, maxAge?: number }) => {
       const { error } = await supabase.from('events').update({
         title: event.title,
         description: event.description,
@@ -485,7 +491,9 @@ const supabaseApi = {
         end_time: event.endTime,
         location: event.location,
         max_slots: event.maxSlots,
-        allowed_packages: event.allowedPackages
+        allowed_packages: event.allowedPackages,
+        min_age: event.minAge,
+        max_age: event.maxAge
       }).eq('id', id);
       
       if (error) throw error;
@@ -512,13 +520,13 @@ const supabaseApi = {
 
       const { data: evt, error: evtError } = await supabase
         .from('events')
-        .select('allowed_packages')
+        .select('allowed_packages, min_age, max_age')
         .eq('id', eventId)
         .single();
 
       if (evtError) throw new Error("Event not found.");
 
-      // Check restrictions
+      // Check restrictions (Plan)
       if (evt.allowed_packages && evt.allowed_packages.length > 0) {
           const isAllowed = evt.allowed_packages.includes(pkg.id);
           if (!isAllowed) {
@@ -527,6 +535,20 @@ const supabaseApi = {
                 .join(' or ');
               throw new Error(`Restricted session. Requires: ${allowedNames}. Your plan: ${pkg.name}.`);
           }
+      }
+      
+      // Check Age (Backend Validation)
+      if (evt.min_age !== null && evt.max_age !== null && child.dob) {
+           const birthDate = new Date(child.dob);
+           const today = new Date();
+           let age = today.getFullYear() - birthDate.getFullYear();
+           const m = today.getMonth() - birthDate.getMonth();
+           if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+           }
+           if (age < evt.min_age || age > evt.max_age) {
+               throw new Error(`Age restriction: ${evt.min_age}-${evt.max_age}. Athlete is ${age}.`);
+           }
       }
       
       // Check usage limits

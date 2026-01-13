@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Clock, MapPin, Calendar, Info, X, AlertCircl
 import { useModal } from '../context/ModalContext';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
+import { calculateAge } from '../constants';
 
 interface SchedulePageProps {
   user: User | null;
@@ -54,10 +55,23 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     }
   };
 
-  const handleRegister = async (eventId: string, kidId: string, isWaitlist: boolean) => {
+  const handleRegister = async (event: Event, kid: Child, isWaitlist: boolean) => {
     if (!user) {
         navigate('/login');
         return;
+    }
+
+    // CHECK AGE RESTRICTION
+    if (event.minAge !== undefined && event.maxAge !== undefined && kid.dob) {
+       const age = calculateAge(kid.dob);
+       if (age < event.minAge || age > event.maxAge) {
+          showAlert(
+              "Age Restriction", 
+              `This session is for athletes aged ${event.minAge}-${event.maxAge}. ${kid.firstName} is currently ${age}.`, 
+              'info'
+          );
+          return;
+       }
     }
 
     const action = isWaitlist ? "Join Waitlist" : "Register";
@@ -65,13 +79,13 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     if (!confirmed) return;
 
     try {
-      await api.registrations.register(eventId, kidId);
+      await api.registrations.register(event.id, kid.id);
       await loadEvents(); // Reload events to update slot counts
       await loadKids(); // Reload kids to update usage stats if needed
       
       // Update the selected event in the modal locally to reflect changes immediately
       const updatedEvents = await api.events.list();
-      const updatedSelected = updatedEvents.find(e => e.id === eventId);
+      const updatedSelected = updatedEvents.find(e => e.id === event.id);
       if (updatedSelected) setSelectedEvent(updatedSelected);
 
       showAlert('Success', isWaitlist ? 'Added to Waitlist!' : 'Registration Successful!', 'success');
@@ -275,6 +289,13 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                         <Clock className="text-co-yellow" size={20} />
                         <span>{selectedEvent.startTime} - {selectedEvent.endTime}</span>
                     </div>
+                    {selectedEvent.minAge && (
+                        <div className="flex items-center gap-3 text-zinc-300">
+                            <span className="bg-zinc-900 text-co-yellow text-[10px] px-2 py-1 rounded border border-zinc-800 uppercase font-bold">
+                                Ages {selectedEvent.minAge} - {selectedEvent.maxAge}
+                            </span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-3 text-zinc-300">
                         <MapPin className="text-co-red" size={20} />
                         <span>{selectedEvent.location}</span>
@@ -333,7 +354,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                                     <button
                                         key={kid.id}
                                         disabled={(!isRegistered && limitReached) || (!isRegistered && !hasPlan)}
-                                        onClick={() => isRegistered ? handleUnregister(selectedEvent.id, kid.id) : handleRegister(selectedEvent.id, kid.id, isFull)}
+                                        onClick={() => isRegistered ? handleUnregister(selectedEvent.id, kid.id) : handleRegister(selectedEvent, kid, isFull)}
                                         className={`
                                             w-full flex items-center justify-between p-3 rounded uppercase font-bold text-sm transition-colors border
                                             ${isRegistered 

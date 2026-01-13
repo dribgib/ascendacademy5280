@@ -4,7 +4,7 @@ import { User, Event, Child } from '../types';
 import { api } from '../services/api';
 import { QrCode, Plus, Calendar as CalendarIcon, Smartphone, Users, CheckCircle, Trash2, Edit, Grid, List, X, ShieldCheck, Repeat, AlertTriangle } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
-import { PACKAGES } from '../constants';
+import { PACKAGES, AGE_BRACKETS } from '../constants';
 
 interface AdminDashboardProps {
   user: User;
@@ -50,7 +50,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
     endTime: '', 
     location: '', 
     maxSlots: 20,
-    allowedPackages: [] as string[]
+    allowedPackages: [] as string[],
+    ageGroupIndex: 0 // Index of AGE_BRACKETS
   });
 
   const [kidToAdd, setKidToAdd] = useState('');
@@ -99,7 +100,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const openCreateModal = () => {
       setIsEditing(false);
       setEditingEventId(null);
-      setEventForm({ title: '', description: '', date: '', startTime: '', endTime: '', location: '', maxSlots: 20, allowedPackages: [] });
+      setEventForm({ 
+        title: '', 
+        description: '', 
+        date: '', 
+        startTime: '', 
+        endTime: '', 
+        location: '', 
+        maxSlots: 20, 
+        allowedPackages: [],
+        ageGroupIndex: 0 // Default to "All Ages"
+      });
       setIsRecurring(false);
       setRecurrenceDays([]);
       setRecurrenceEndDate('');
@@ -109,6 +120,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const openEditModal = (evt: Event) => {
       setIsEditing(true);
       setEditingEventId(evt.id);
+
+      // Find matching age bracket or default to All Ages
+      const bracketIdx = AGE_BRACKETS.findIndex(b => b.min === evt.minAge && b.max === evt.maxAge);
+      const safeBracketIdx = bracketIdx >= 0 ? bracketIdx : 0;
+
       setEventForm({
           title: evt.title,
           description: evt.description,
@@ -117,7 +133,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
           endTime: evt.endTime24 || '',     // Use the 24h format for <input type="time">
           location: evt.location,
           maxSlots: evt.maxSlots,
-          allowedPackages: evt.allowedPackages || []
+          allowedPackages: evt.allowedPackages || [],
+          ageGroupIndex: safeBracketIdx
       });
       setIsRecurring(false); // Edit is single instance only
       setShowCreateModal(true);
@@ -132,12 +149,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const selectedAgeGroup = AGE_BRACKETS[eventForm.ageGroupIndex];
+      const minAge = selectedAgeGroup.min === 0 && selectedAgeGroup.max === 99 ? undefined : selectedAgeGroup.min;
+      const maxAge = selectedAgeGroup.min === 0 && selectedAgeGroup.max === 99 ? undefined : selectedAgeGroup.max;
+
       const basePayload = {
         title: eventForm.title,
         description: eventForm.description,
         location: eventForm.location,
         maxSlots: eventForm.maxSlots,
-        allowedPackages: eventForm.allowedPackages
+        allowedPackages: eventForm.allowedPackages,
+        minAge,
+        maxAge
       };
 
       if (isEditing && editingEventId) {
@@ -334,6 +357,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                          <span className="bg-zinc-800 text-zinc-400 text-[10px] px-2 py-1 rounded border border-zinc-700 uppercase">
                              Restricted ({evt.allowedPackages.length})
                          </span>
+                     )}
+                     {evt.minAge && (
+                        <span className="bg-zinc-800 text-co-yellow text-[10px] px-2 py-1 rounded border border-zinc-700 uppercase">
+                            Ages {evt.minAge}-{evt.maxAge}
+                        </span>
                      )}
                   </div>
                   <h3 className="font-bold text-white text-xl">{evt.title}</h3>
@@ -596,6 +624,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         <textarea className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} />
                     </div>
                     
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">Age Bracket</label>
+                            <select 
+                                className="w-full bg-black border border-zinc-700 p-2 text-white rounded outline-none"
+                                value={eventForm.ageGroupIndex}
+                                onChange={(e) => setEventForm({...eventForm, ageGroupIndex: parseInt(e.target.value)})}
+                            >
+                                {AGE_BRACKETS.map((bracket, i) => (
+                                    <option key={i} value={i}>{bracket.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-zinc-400 text-xs uppercase mb-1">Max Capacity</label>
+                            <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.maxSlots} onChange={e => setEventForm({...eventForm, maxSlots: parseInt(e.target.value)})} />
+                        </div>
+                    </div>
+                    
                     {/* Allowed Packages Section */}
                     <div>
                         <label className="block text-zinc-400 text-xs uppercase mb-2 flex items-center gap-2">
@@ -619,7 +666,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         <p className="text-zinc-600 text-[10px] mt-1">If no packages selected, anyone with an active subscription can join.</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                         <div>
                             <label className="block text-zinc-400 text-xs uppercase mb-1">Date {isRecurring && '(Start Date)'}</label>
                             <div className="relative">
@@ -633,10 +680,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                 />
                                 <CalendarIcon className="absolute right-3 top-2.5 text-zinc-500 pointer-events-none" size={16} />
                             </div>
-                        </div>
-                        <div>
-                            <label className="block text-zinc-400 text-xs uppercase mb-1">Max Capacity</label>
-                            <input required type="number" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.maxSlots} onChange={e => setEventForm({...eventForm, maxSlots: parseInt(e.target.value)})} />
                         </div>
                     </div>
 

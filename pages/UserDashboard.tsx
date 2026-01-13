@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
 import { Plus, User as KidIcon, Calendar, CheckCircle, CreditCard, ExternalLink, FileSignature, ArrowRight, Loader2, Settings, Upload, Camera, AlertTriangle, X, Trash2, RefreshCw, ChevronRight, PauseCircle, PlayCircle, ShieldAlert, Image as ImageIcon } from 'lucide-react';
-import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES } from '../constants';
+import { POPULAR_SPORTS, WAIVER_CONFIG, PACKAGES, calculateAge } from '../constants';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
@@ -300,13 +300,27 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     }
   };
 
-  const handleRegister = async (eventId: string, kidId: string, isWaitlist: boolean) => {
+  const handleRegister = async (event: Event, kidId: string, isWaitlist: boolean) => {
+    // 1. Get kid data to calculate age
+    const kid = kids.find(k => k.id === kidId);
+    if (kid && event.minAge !== undefined && event.maxAge !== undefined && kid.dob) {
+        const age = calculateAge(kid.dob);
+        if (age < event.minAge || age > event.maxAge) {
+           showAlert(
+               "Age Restriction", 
+               `This session is for athletes aged ${event.minAge}-${event.maxAge}. ${kid.firstName} is currently ${age}.`, 
+               'info'
+           );
+           return;
+        }
+    }
+
     const action = isWaitlist ? "Join Waitlist" : "Register";
     const confirmed = await showConfirm(`Confirm ${action}`, `${action} for this session?`);
     if (!confirmed) return;
 
     try {
-      await api.registrations.register(eventId, kidId);
+      await api.registrations.register(event.id, kidId);
       loadData();
       showAlert('Success', isWaitlist ? 'Added to Waitlist!' : 'Registration Successful!', 'success');
     } catch (e: any) {
@@ -544,6 +558,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 <div className="flex items-center gap-3 mb-1">
                                 <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-1 rounded font-mono">{evt.date}</span>
                                 <span className="text-co-yellow font-bold text-sm">{evt.startTime} - {evt.endTime}</span>
+                                {evt.minAge && (
+                                    <span className="bg-zinc-900 text-co-yellow text-[10px] px-2 py-1 rounded border border-zinc-800 uppercase font-bold">
+                                        Ages {evt.minAge} - {evt.maxAge}
+                                    </span>
+                                )}
                                 </div>
                                 <h4 className="font-bold text-white text-lg">{evt.title}</h4>
                                 <p className="text-zinc-500 text-sm">{evt.description} @ {evt.location}</p>
@@ -560,7 +579,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     <button
                                     key={kid.id}
                                     disabled={(!isRegistered && limitReached) || (!isRegistered && !hasPlan)}
-                                    onClick={() => isRegistered ? handleUnregister(evt.id, kid.id) : handleRegister(evt.id, kid.id, isFull)}
+                                    onClick={() => isRegistered ? handleUnregister(evt.id, kid.id) : handleRegister(evt, kid.id, isFull)}
                                     className={`
                                         text-xs py-2 px-3 rounded uppercase font-bold transition-colors
                                         ${isRegistered 

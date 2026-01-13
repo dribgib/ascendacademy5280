@@ -19,6 +19,26 @@ export const WAIVER_CONFIG = {
   }
 };
 
+// --- AGE CONFIGURATION ---
+export const AGE_BRACKETS = [
+  { label: 'All Ages', min: 0, max: 99 },
+  { label: 'Rookie (5-8)', min: 5, max: 8 },
+  { label: 'Pro (9-12)', min: 9, max: 12 },
+  { label: 'Elite (13-19)', min: 13, max: 19 }
+];
+
+export const calculateAge = (dob: string): number => {
+  if (!dob) return 0;
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+  }
+  return age;
+};
+
 // --- STRIPE CONFIGURATION ---
 // @ts-ignore
 const env = import.meta.env || {};
@@ -71,7 +91,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 310,
     billingPeriod: 'Monthly',
     maxSessions: 12,
-    description: 'The ultimate performance package (Ages 13-19).',
+    description: 'The ultimate performance package.',
     color: 'border-co-yellow',
     features: [
       '12 Sessions / Month',
@@ -88,7 +108,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 215,
     billingPeriod: 'Monthly',
     maxSessions: 8,
-    description: 'High-intensity training (Ages 13-19).',
+    description: 'High-intensity training.',
     color: 'border-co-red',
     features: [
       '8 Sessions / Month',
@@ -104,7 +124,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 120,
     billingPeriod: 'Monthly',
     maxSessions: 4,
-    description: 'Consistent training foundation (Ages 9-12).',
+    description: 'Consistent training foundation.',
     color: 'border-zinc-500',
     features: [
       '4 Sessions / Month',
@@ -119,7 +139,7 @@ export const PACKAGES: TrainingPackage[] = [
     price: 100,
     billingPeriod: 'Monthly',
     maxSessions: 2, // 2 sessions per month
-    description: 'Intro to sports fitness (Ages 5-8).',
+    description: 'Intro to sports fitness.',
     color: 'border-white',
     features: [
       '2 Sessions / Month',
@@ -165,7 +185,9 @@ export const MOCK_EVENTS: Event[] = [
     maxSlots: 20,
     bookedSlots: 15,
     registeredKidIds: [],
-    checkedInKidIds: []
+    checkedInKidIds: [],
+    minAge: 13,
+    maxAge: 19
   },
   {
     id: 'evt_2',
@@ -182,7 +204,9 @@ export const MOCK_EVENTS: Event[] = [
     maxSlots: 15,
     bookedSlots: 5,
     registeredKidIds: [],
-    checkedInKidIds: []
+    checkedInKidIds: [],
+    minAge: 5,
+    maxAge: 8
   },
     {
     id: 'evt_3',
