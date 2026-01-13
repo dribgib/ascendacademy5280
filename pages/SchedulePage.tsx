@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Event, User, Child } from '../types';
@@ -61,7 +62,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     }
 
     // CHECK AGE RESTRICTION
-    if (event.minAge !== undefined && event.maxAge !== undefined && kid.dob) {
+    if (event.minAge !== undefined && event.minAge !== null && event.maxAge !== undefined && event.maxAge !== null && kid.dob) {
        const age = calculateAge(kid.dob);
        if (age < event.minAge || age > event.maxAge) {
           showAlert(
@@ -161,18 +162,28 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
           <div className="space-y-1">
             {dayEvents.map(evt => {
                 const isFull = evt.bookedSlots >= evt.maxSlots;
+                // Determine Age Label
+                const ageLabel = (evt.minAge && evt.maxAge) ? `Ages ${evt.minAge}-${evt.maxAge}` : 'All Ages';
+                
                 return (
                     <button
                         key={evt.id}
                         onClick={() => setSelectedEvent(evt)}
-                        className={`w-full text-left text-[10px] p-1.5 rounded truncate border transition-colors
+                        className={`w-full text-left p-1.5 rounded truncate border transition-colors group flex flex-col gap-0.5
                             ${isFull 
                                 ? 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-co-red' 
                                 : 'bg-co-yellow/10 text-co-yellow border-co-yellow/20 hover:bg-co-yellow hover:text-black'}
                         `}
                     >
-                        <span className="font-bold mr-1">{evt.startTime}</span>
-                        {evt.title}
+                        <div className="flex justify-between items-center text-[10px] uppercase font-bold">
+                            <span>{evt.startTime}</span>
+                            <span className={`text-[8px] px-1 rounded ${isFull ? 'bg-zinc-700 text-zinc-300' : 'bg-black/20 text-current'}`}>
+                                {ageLabel}
+                            </span>
+                        </div>
+                        <div className="text-[10px] truncate leading-tight font-medium">
+                            {evt.title}
+                        </div>
                     </button>
                 );
             })}
@@ -288,14 +299,17 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                         <Clock className="text-co-yellow" size={20} />
                         <span>{selectedEvent.startTime} - {selectedEvent.endTime}</span>
                     </div>
-                    {selectedEvent.minAge && (
-                        <div className="flex items-center gap-3 text-zinc-300">
-                            <Users className="text-co-yellow" size={20} />
-                            <span className="font-bold text-co-yellow">
-                                Ages {selectedEvent.minAge} - {selectedEvent.maxAge}
-                            </span>
-                        </div>
-                    )}
+                    
+                    {/* Always show Age Requirement row, even if All Ages */}
+                    <div className="flex items-center gap-3 text-zinc-300">
+                        <Users className="text-co-yellow" size={20} />
+                        <span className="font-bold text-co-yellow uppercase">
+                            {selectedEvent.minAge && selectedEvent.maxAge 
+                                ? `Ages ${selectedEvent.minAge} - ${selectedEvent.maxAge}` 
+                                : 'All Ages'}
+                        </span>
+                    </div>
+
                     <div className="flex items-center gap-3 text-zinc-300">
                         <MapPin className="text-co-red" size={20} />
                         <span>{selectedEvent.location}</span>

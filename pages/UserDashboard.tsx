@@ -1,4 +1,5 @@
 
+// ... existing imports ...
 import React, { useEffect, useState, useRef } from 'react';
 import { User, Child, Event } from '../types';
 import { api } from '../services/api';
@@ -10,6 +11,7 @@ import AdminDashboard from './AdminDashboard';
 import { useModal } from '../context/ModalContext';
 import LoadingScreen from '../components/LoadingScreen';
 
+// ... existing component definition ...
 interface UserDashboardProps {
   user: User;
 }
@@ -29,7 +31,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   
   const [loading, setLoading] = useState(true);
   
-  // New Kid Form
+  // New Kid Form State
   const [addStep, setAddStep] = useState(1);
   const [newKidName, setNewKidName] = useState({ first: '', last: '' });
   const [newKidDob, setNewKidDob] = useState('');
@@ -50,6 +52,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const pollIntervalRef = useRef<number | null>(null);
   const pollTimeoutRef = useRef<number | null>(null);
 
+  // ... (keep all useEffects and handlers the same until the render) ...
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const view = params.get('view');
@@ -65,7 +68,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     else setLoading(false);
   }, [user.id, isAdminView]);
 
-  // Clean up polling on unmount or modal close
   useEffect(() => {
       return () => stopPolling();
   }, []);
@@ -188,24 +190,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       showAlert('Success', 'Athlete added successfully!', 'success');
   };
 
-  // --- NEW: POLLING VERIFICATION LOGIC ---
   const startVerification = () => {
       setAddStep(4);
       setPolling(true);
       setVerificationFailed(false);
       setFailMessage('');
 
-      // Stop after 2 minutes (120000ms)
       pollTimeoutRef.current = window.setTimeout(() => {
           stopPolling();
           setVerificationFailed(true);
           setFailMessage("Verification timed out. Systems may be slow.");
       }, 120000); 
 
-      // Initial check
       checkWaivers();
-
-      // Interval check every 5s
       pollIntervalRef.current = window.setInterval(checkWaivers, 5000);
   };
 
@@ -215,10 +212,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
           if (result.verified) {
               stopPolling();
               await createChildProfile();
-          } else {
-              // Still missing... keep polling or fail silently until timeout
-              // Optional: Update failMessage to show partial progress if API supported it
-          }
+          } 
       } catch (e) {
           console.error("Waiver poll error:", e);
       }
@@ -301,7 +295,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   };
 
   const handleRegister = async (event: Event, kidId: string, isWaitlist: boolean) => {
-    // 1. Get kid data to calculate age
     const kid = kids.find(k => k.id === kidId);
     if (kid && event.minAge !== undefined && event.maxAge !== undefined && kid.dob) {
         const age = calculateAge(kid.dob);
@@ -551,6 +544,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     <div className="space-y-4">
                     {events.length === 0 ? <p className="text-zinc-500">No upcoming sessions found.</p> : events.map(evt => {
                         const isFull = evt.bookedSlots >= evt.maxSlots;
+                        const ageLabel = (evt.minAge && evt.maxAge) ? `Ages ${evt.minAge}-${evt.maxAge}` : 'All Ages';
+
                         return (
                         <div key={evt.id} className="bg-black border border-zinc-800 p-5 rounded hover:border-zinc-700 transition-colors">
                             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -558,11 +553,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 <div className="flex items-center gap-3 mb-1">
                                 <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-1 rounded font-mono">{evt.date}</span>
                                 <span className="text-co-yellow font-bold text-sm">{evt.startTime} - {evt.endTime}</span>
-                                {evt.minAge && (
-                                    <span className="bg-zinc-900 text-co-yellow text-[10px] px-2 py-1 rounded border border-zinc-800 uppercase font-bold">
-                                        Ages {evt.minAge} - {evt.maxAge}
-                                    </span>
-                                )}
+                                
+                                <span className="bg-zinc-900 text-co-yellow text-[10px] px-2 py-1 rounded border border-zinc-800 uppercase font-bold">
+                                    {ageLabel}
+                                </span>
                                 </div>
                                 <h4 className="font-bold text-white text-lg">{evt.title}</h4>
                                 <p className="text-zinc-500 text-sm">{evt.description} @ {evt.location}</p>
