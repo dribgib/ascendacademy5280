@@ -1,7 +1,8 @@
+
 import Stripe from 'stripe';
 
-// Check for Test key first, then Live key, then generic key
-const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+// Check for Live key first, then generic key, then Test key
+const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_TEST_SECRET_KEY;
 
 if (!stripeKey) {
   throw new Error('Missing Stripe Secret Key in Environment Variables');

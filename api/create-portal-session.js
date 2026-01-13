@@ -1,9 +1,10 @@
+
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 // Configuration
-// We verify usage of keys provided by the user
-const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+// We verify usage of keys provided by the user, checking Live first
+const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_TEST_SECRET_KEY;
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_PUBLIC_SUPABASE_URL;
 // Use Service Role Key for reliable backend operations (bypasses RLS)
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_PUBLIC_SUPABASE_ANON_KEY;

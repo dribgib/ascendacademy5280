@@ -43,12 +43,15 @@ export const calculateAge = (dob: string): number => {
 // @ts-ignore
 const env = import.meta.env || {};
 // Check if the app is initialized with a Test Key
+// Prioritize LIVE key
 // @ts-ignore
-const stripeKey = env.VITE_STRIPE_TEST_PUBLISHABLE_KEY || env.VITE_STRIPE_LIVE_PUBLISHABLE_KEY || env.VITE_STRIPE_PUBLISHABLE_KEY || '';
+const stripeKey = env.VITE_STRIPE_LIVE_PUBLISHABLE_KEY || env.VITE_STRIPE_PUBLISHABLE_KEY || env.VITE_STRIPE_TEST_PUBLISHABLE_KEY || '';
 const isTestMode = stripeKey.startsWith('pk_test');
 
 if (isTestMode) {
   console.log('App is running in Stripe TEST MODE. Ensure Test Price IDs are configured.');
+} else {
+  console.log('App is running in Stripe LIVE MODE.');
 }
 
 // DEFINITION: Price IDs for both environments.

@@ -1,12 +1,13 @@
+
 import { loadStripe } from '@stripe/stripe-js';
 
 // Safely access environment variable
 // @ts-ignore
 const env = import.meta.env || {};
 
-// LOGIC: Check for TEST key first, then LIVE key.
+// LOGIC: Check for LIVE key first, then Generic key, then TEST key.
 // @ts-ignore
-const STRIPE_KEY = env.VITE_STRIPE_TEST_PUBLISHABLE_KEY || env.VITE_STRIPE_LIVE_PUBLISHABLE_KEY || env.VITE_STRIPE_PUBLISHABLE_KEY;
+const STRIPE_KEY = env.VITE_STRIPE_LIVE_PUBLISHABLE_KEY || env.VITE_STRIPE_PUBLISHABLE_KEY || env.VITE_STRIPE_TEST_PUBLISHABLE_KEY;
 
 if (!STRIPE_KEY) {
   console.warn('Stripe Key Missing: Checkout features will be disabled. Check your Vercel Environment Variables.');

@@ -1,8 +1,9 @@
+
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 // Configuration
-const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_TEST_SECRET_KEY;
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; 
 const supabaseUrl = process.env.VITE_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; 
