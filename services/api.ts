@@ -180,7 +180,8 @@ const supabaseApi = {
         // We select all fields from subscriptions to ensure we can filter by status in JS
         const { data: children, error } = await supabase.from('children').select(`
             *,
-            subscriptions (*)
+            subscriptions (*),
+            class_packs (*)
         `);
         if (error) throw error;
 
@@ -196,6 +197,7 @@ const supabaseApi = {
             .gte('events.start_time', startIso);
 
         // 3. Map Data
+        const now = new Date();
         return children.map((c: any) => {
             // Fix: subscriptions comes as an array. Sort by created_at desc or filter active.
             const subs = c.subscriptions || [];
@@ -213,6 +215,22 @@ const supabaseApi = {
                 usageStats = { used, limit, planName };
             }
 
+            // Map class packs (filter active ones)
+            const classPacks = (c.class_packs || [])
+                .filter((pack: any) => {
+                    const expiresAt = new Date(pack.expires_at);
+                    return pack.credits_remaining > 0 && expiresAt > now;
+                })
+                .map((pack: any) => ({
+                    id: pack.id,
+                    packType: pack.pack_type,
+                    creditsRemaining: pack.credits_remaining,
+                    creditsTotal: pack.credits_total,
+                    purchaseDate: pack.purchase_date,
+                    expiresAt: pack.expires_at,
+                    stripePaymentId: pack.stripe_payment_id
+                }));
+
             return {
                 id: c.id,
                 parentId: c.parent_id,
@@ -224,7 +242,8 @@ const supabaseApi = {
                 image: c.image_url,
                 subscriptionId: activeSub?.package_id,
                 subscriptionStatus: activeSub ? activeSub.status : 'none', // Pass through specific status (active/paused)
-                usageStats 
+                usageStats,
+                classPacks
             };
         });
     },
@@ -301,7 +320,8 @@ const supabaseApi = {
         .from('children')
         .select(`
             *,
-            subscriptions (*)
+            subscriptions (*),
+            class_packs (*)
         `)
         .eq('parent_id', parentId);
       
@@ -334,6 +354,23 @@ const supabaseApi = {
             usageStats = { used, limit, planName };
         }
 
+        // Map class packs (filter active ones)
+        const now = new Date();
+        const classPacks = (c.class_packs || [])
+            .filter((pack: any) => {
+                const expiresAt = new Date(pack.expires_at);
+                return pack.credits_remaining > 0 && expiresAt > now;
+            })
+            .map((pack: any) => ({
+                id: pack.id,
+                packType: pack.pack_type,
+                creditsRemaining: pack.credits_remaining,
+                creditsTotal: pack.credits_total,
+                purchaseDate: pack.purchase_date,
+                expiresAt: pack.expires_at,
+                stripePaymentId: pack.stripe_payment_id
+            }));
+
         return {
             id: c.id,
             parentId: c.parent_id,
@@ -345,7 +382,8 @@ const supabaseApi = {
             image: c.image_url,
             subscriptionId: activeSub?.package_id,
             subscriptionStatus: activeSub ? activeSub.status : 'none', // Return 'active' or 'paused'
-            usageStats
+            usageStats,
+            classPacks
         };
       });
     },
@@ -504,7 +542,7 @@ const supabaseApi = {
     register: async (eventId: string, childId: string) => {
       const { data: child, error: childError } = await supabase
         .from('children')
-        .select(`*, subscriptions(*)`)
+        .select(`*, subscriptions(*), class_packs(*)`)
         .eq('id', childId)
         .single();
         
@@ -512,31 +550,26 @@ const supabaseApi = {
       
       const activeSub = child.subscriptions?.find((s: any) => s.status === 'active' || s.status === 'trialing');
       
-      if (!activeSub) throw new Error("Athlete does not have an active membership.");
-      
-      const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
-      
-      if (!pkg) throw new Error("Unknown subscription package.");
+      // Get active class packs (not expired, has credits)
+      const now = new Date();
+      const activePacks = (child.class_packs || []).filter((pack: any) => {
+        const expiresAt = new Date(pack.expires_at);
+        return pack.credits_remaining > 0 && expiresAt > now;
+      });
+
+      // Must have either active subscription OR class pack credits
+      if (!activeSub && activePacks.length === 0) {
+        throw new Error("Athlete does not have an active membership or class pack.");
+      }
 
       const { data: evt, error: evtError } = await supabase
         .from('events')
-        .select('allowed_packages, min_age, max_age')
+        .select('allowed_packages, min_age, max_age, start_time, end_time')
         .eq('id', eventId)
         .single();
 
       if (evtError) throw new Error("Event not found.");
 
-      // Check restrictions (Plan)
-      if (evt.allowed_packages && evt.allowed_packages.length > 0) {
-          const isAllowed = evt.allowed_packages.includes(pkg.id);
-          if (!isAllowed) {
-              const allowedNames = evt.allowed_packages
-                .map((pid: string) => PACKAGES.find(p => p.id === pid)?.name || pid)
-                .join(' or ');
-              throw new Error(`Restricted session. Requires: ${allowedNames}. Your plan: ${pkg.name}.`);
-          }
-      }
-      
       // Check Age (Backend Validation)
       if (evt.min_age !== null && evt.max_age !== null && child.dob) {
            const birthDate = new Date(child.dob);
@@ -550,28 +583,111 @@ const supabaseApi = {
                throw new Error(`Age restriction: ${evt.min_age}-${evt.max_age}. Athlete is ${age}.`);
            }
       }
-      
-      // Check usage limits
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0,0,0,0);
-      const startIso = startOfMonth.toISOString();
-      
-      const { count } = await supabase
-        .from('registrations')
-        .select('id', { count: 'exact' })
-        .eq('child_id', childId)
-        .gte('created_at', startIso); 
+
+      let useClassPack = false;
+      let selectedPackId = null;
+
+      // Determine session duration from event times
+      const eventStart = new Date(evt.start_time);
+      const eventEnd = new Date(evt.end_time);
+      const durationMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+      const is45MinSession = durationMinutes <= 50; // Allow some buffer
+
+      // If subscription is active, check limits and restrictions
+      if (activeSub) {
+        const pkg = PACKAGES.find(p => p.id === activeSub.package_id || p.stripePriceId === activeSub.package_id);
         
-      if ((count || 0) >= pkg.maxSessions) {
-          throw new Error(`Plan limit reached! ${pkg.name} allows ${pkg.maxSessions} sessions per month.`);
+        if (!pkg) throw new Error("Unknown subscription package.");
+
+        // Check restrictions (Plan)
+        if (evt.allowed_packages && evt.allowed_packages.length > 0) {
+            const isAllowed = evt.allowed_packages.includes(pkg.id);
+            if (!isAllowed) {
+                const allowedNames = evt.allowed_packages
+                  .map((pid: string) => PACKAGES.find(p => p.id === pid)?.name || pid)
+                  .join(' or ');
+                throw new Error(`Restricted session. Requires: ${allowedNames}. Your plan: ${pkg.name}.`);
+            }
+        }
+        
+        // Check usage limits for subscription
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0,0,0,0);
+        const startIso = startOfMonth.toISOString();
+        
+        const { count } = await supabase
+          .from('registrations')
+          .select('id', { count: 'exact' })
+          .eq('child_id', childId)
+          .is('class_pack_id', null) // Only count subscription-based registrations
+          .gte('created_at', startIso); 
+          
+        if ((count || 0) >= pkg.maxSessions) {
+            // Subscription limit reached, try to use class pack instead
+            if (activePacks.length > 0) {
+                useClassPack = true;
+            } else {
+                throw new Error(`Plan limit reached! ${pkg.name} allows ${pkg.maxSessions} sessions per month.`);
+            }
+        }
+      } else {
+        // No active subscription, must use class pack
+        useClassPack = true;
       }
 
+      // If using class pack, find appropriate pack based on session duration
+      if (useClassPack) {
+        if (activePacks.length === 0) {
+          throw new Error("No class pack credits available.");
+        }
+
+        // Find matching pack by duration (45min or 75min)
+        const matchingPack = activePacks.find((pack: any) => {
+          if (is45MinSession) {
+            return pack.pack_type.includes('45min');
+          } else {
+            return pack.pack_type.includes('75min');
+          }
+        });
+
+        if (!matchingPack) {
+          const requiredDuration = is45MinSession ? '45-minute' : '75-minute';
+          throw new Error(`This ${requiredDuration} session requires a matching class pack. Your available packs don't match this session type.`);
+        }
+
+        selectedPackId = matchingPack.id;
+      }
+
+      // Create registration
       const { error } = await supabase.from('registrations').insert({
         event_id: eventId,
-        child_id: childId
+        child_id: childId,
+        class_pack_id: selectedPackId
       });
+      
       if (error) throw error;
+
+      // If using class pack, decrement credits
+      if (selectedPackId) {
+        const { error: updateError } = await supabase
+          .from('class_packs')
+          .update({ 
+            credits_remaining: supabase.rpc('decrement_credits', { pack_id: selectedPackId })
+          })
+          .eq('id', selectedPackId);
+
+        // Fallback if RPC doesn't exist - direct decrement
+        if (updateError) {
+          const pack = activePacks.find((p: any) => p.id === selectedPackId);
+          if (pack) {
+            await supabase
+              .from('class_packs')
+              .update({ credits_remaining: pack.credits_remaining - 1 })
+              .eq('id', selectedPackId);
+          }
+        }
+      }
     },
     
     unregister: async (eventId: string, childId: string) => {
@@ -617,7 +733,7 @@ const supabaseApi = {
   },
 
   billing: {
-    createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0, returnUrl: string, userEmail: string) => {
+    createCheckoutSession: async (priceId: string, childId: string, userId: string, activeSubscriptionCount: number = 0, returnUrl: string, userEmail: string, isClassPack: boolean = false, packType?: string) => {
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe not initialized.");
       
@@ -630,7 +746,9 @@ const supabaseApi = {
               userId, 
               userEmail,
               activeSubscriptionCount,
-              returnUrl: returnUrl
+              returnUrl: returnUrl,
+              isClassPack,
+              packType
           })
       });
 

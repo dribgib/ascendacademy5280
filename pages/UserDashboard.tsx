@@ -482,6 +482,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             </span>
                                         </div>
                                         
+                                        {/* Class Pack Credits */}
+                                        {kid.classPacks && kid.classPacks.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 items-center w-full">
+                                                {kid.classPacks.map((pack: any, idx: number) => {
+                                                    const expiresAt = new Date(pack.expiresAt);
+                                                    const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                    return (
+                                                        <span key={idx} className="text-[10px] uppercase font-medium bg-blue-900/40 text-blue-400 px-2 py-1 rounded border border-blue-900/50">
+                                                            {pack.creditsRemaining} Credits ({pack.packType.replace('pack_', '').replace('_', ' ')}) - {daysLeft}d left
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        
                                         <div className="flex gap-2 w-full">
                                             <button 
                                                 onClick={(e) => {
@@ -505,11 +520,53 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             <span className="text-[10px] uppercase font-medium bg-amber-900/40 text-amber-400 px-2 py-1 rounded border border-amber-900/50 inline-block">
                                                 Subscription Paused
                                             </span>
+                                            
+                                            {/* Class Pack Credits for paused subscriptions */}
+                                            {kid.classPacks && kid.classPacks.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 items-center w-full">
+                                                    {kid.classPacks.map((pack: any, idx: number) => {
+                                                        const expiresAt = new Date(pack.expiresAt);
+                                                        const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                        return (
+                                                            <span key={idx} className="text-[10px] uppercase font-medium bg-blue-900/40 text-blue-400 px-2 py-1 rounded border border-blue-900/50">
+                                                                {pack.creditsRemaining} Credits ({pack.packType.replace('pack_', '').replace('_', ' ')}) - {daysLeft}d left
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                            
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); handleResumeSubscription(kid); }}
                                                 className="w-full bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
                                             >
                                                 <PlayCircle size={12} /> Resume Subscription
+                                            </button>
+                                        </div>
+                                    ) : kid.classPacks && kid.classPacks.length > 0 ? (
+                                        <div className="flex flex-col items-start gap-3">
+                                            <span className="text-[10px] uppercase font-medium text-zinc-400 px-2 py-1 rounded border border-zinc-700 inline-block">
+                                                Class Pack Only
+                                            </span>
+                                            
+                                            {/* Show class pack credits */}
+                                            <div className="flex flex-wrap gap-2 items-center w-full">
+                                                {kid.classPacks.map((pack: any, idx: number) => {
+                                                    const expiresAt = new Date(pack.expiresAt);
+                                                    const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                    return (
+                                                        <span key={idx} className="text-[10px] uppercase font-medium bg-blue-900/40 text-blue-400 px-2 py-1 rounded border border-blue-900/50">
+                                                            {pack.creditsRemaining} Credits ({pack.packType.replace('pack_', '').replace('_', ' ')}) - {daysLeft}d left
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            <button 
+                                                onClick={() => navigate(`/checkout/pack_10_45min?kidId=${kid.id}`)} 
+                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                            >
+                                                Buy More Credits <ChevronRight size={12} />
                                             </button>
                                         </div>
                                     ) : (

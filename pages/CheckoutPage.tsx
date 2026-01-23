@@ -106,8 +106,10 @@ const CheckoutPage: React.FC = () => {
     }
 
     // NEW SUBSCRIPTION FLOW
-    // Calculate count of OTHER kids with active subs
-    const activeSubscriptionCount = kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length;
+    // Calculate count of OTHER kids with active subs (only for subscription plans, not class packs)
+    const activeSubscriptionCount = !pkg.isClassPack 
+      ? kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length 
+      : 0;
 
     setProcessing(true);
     try {
@@ -121,7 +123,9 @@ const CheckoutPage: React.FC = () => {
           user.id, 
           activeSubscriptionCount,
           returnUrl, 
-          user.email
+          user.email,
+          pkg.isClassPack,
+          pkg.packType
       );
     } catch (e: any) {
       showAlert('Checkout Error', e.message || 'Checkout initiation failed.', 'error');

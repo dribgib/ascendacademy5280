@@ -11,6 +11,16 @@ export interface User {
   stripeCustomerId?: string;
 }
 
+export interface ClassPack {
+  id: string;
+  packType: '10pack_45min' | '20pack_45min' | '10pack_75min' | '20pack_75min';
+  creditsRemaining: number;
+  creditsTotal: number;
+  purchaseDate: string;
+  expiresAt: string;
+  stripePaymentId?: string;
+}
+
 export interface Child {
   id: string;
   parentId: string;
@@ -28,6 +38,7 @@ export interface Child {
     limit: number;
     planName: string;
   };
+  classPacks?: ClassPack[]; // Class pack credits
 }
 
 export interface TrainingPackage {
@@ -38,8 +49,12 @@ export interface TrainingPackage {
   description: string;
   features: string[];
   color: string;
-  billingPeriod: 'Monthly' | 'Weekly' | 'Per Session';
+  billingPeriod: 'Monthly' | 'Weekly' | 'Per Session' | 'One-Time';
   maxSessions: number; // Max sessions allowed per billing period
+  isClassPack?: boolean; // True for class packs (one-time purchases)
+  packType?: '10pack_45min' | '20pack_45min' | '10pack_75min' | '20pack_75min';
+  expirationMonths?: number; // Months until expiration for class packs
+  sessionDuration?: '45min' | '75min'; // Duration for class pack sessions
 }
 
 export interface Event {

@@ -27,6 +27,14 @@ const COUPONS = {
   }
 };
 
+// Class pack configuration
+const CLASS_PACK_TYPES = {
+  pack_10_45min: { credits: 10, duration: '45min', expirationMonths: 2 },
+  pack_20_45min: { credits: 20, duration: '45min', expirationMonths: 3 },
+  pack_10_75min: { credits: 10, duration: '75min', expirationMonths: 2 },
+  pack_20_75min: { credits: 20, duration: '75min', expirationMonths: 3 }
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -35,7 +43,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { priceId, userId, childId, returnUrl, userEmail, activeSubscriptionCount } = req.body;
+    const { priceId, userId, childId, returnUrl, userEmail, activeSubscriptionCount, isClassPack, packType } = req.body;
 
     // 1. Get/Create Stripe Customer ID
     const { data: profile } = await supabase
@@ -58,13 +66,17 @@ export default async function handler(req, res) {
     const sessionConfig = {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: 'subscription',
+      mode: isClassPack ? 'payment' : 'subscription', // One-time payment for packs, subscription for monthly
       success_url: `${returnUrl}&session_id={CHECKOUT_SESSION_ID}`, 
       cancel_url: returnUrl,
       client_reference_id: userId,
-      metadata: { childId, userId },
-      subscription_data: { metadata: { childId, userId } }
+      metadata: { childId, userId, isClassPack: isClassPack ? 'true' : 'false', packType: packType || '' }
     };
+
+    // For subscriptions, add subscription metadata
+    if (!isClassPack) {
+      sessionConfig.subscription_data = { metadata: { childId, userId } };
+    }
 
     if (customerId) {
         sessionConfig.customer = customerId;
@@ -72,8 +84,8 @@ export default async function handler(req, res) {
         sessionConfig.customer_email = userEmail;
     }
     
-    // 3. APPLY SIBLING DISCOUNT or ALLOW PROMO CODES
-    if (activeSubscriptionCount > 0) {
+    // 3. APPLY SIBLING DISCOUNT or ALLOW PROMO CODES (subscriptions only)
+    if (!isClassPack && activeSubscriptionCount > 0) {
         // Determine Mode
         const isTestMode = stripeKey.startsWith('sk_test');
         const couponMap = isTestMode ? COUPONS.TEST : COUPONS.LIVE;

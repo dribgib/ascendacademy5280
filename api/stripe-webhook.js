@@ -53,11 +53,14 @@ export default async function handler(req, res) {
 
   try {
       switch (event.type) {
-        // 1. Session Completed: Sync Customer ID
+        // 1. Session Completed: Sync Customer ID & Handle Class Pack Purchases
         case 'checkout.session.completed': {
             const session = event.data.object;
             const userId = session.client_reference_id; // Passed from create-checkout-session
             const customerId = session.customer;
+            const isClassPack = session.metadata?.isClassPack === 'true';
+            const packType = session.metadata?.packType;
+            const childId = session.metadata?.childId;
 
             if (userId && customerId) {
                 const { error } = await supabase
@@ -66,6 +69,37 @@ export default async function handler(req, res) {
                     .eq('id', userId);
                 
                 if (error) console.error('Error syncing customer ID:', error);
+            }
+
+            // Handle class pack purchase
+            if (isClassPack && packType && childId && session.payment_status === 'paid') {
+                const packConfig = {
+                  pack_10_45min: { credits: 10, expirationMonths: 2 },
+                  pack_20_45min: { credits: 20, expirationMonths: 3 },
+                  pack_10_75min: { credits: 10, expirationMonths: 2 },
+                  pack_20_75min: { credits: 20, expirationMonths: 3 }
+                };
+
+                const config = packConfig[packType];
+                if (config) {
+                    const purchaseDate = new Date();
+                    const expiresAt = new Date(purchaseDate);
+                    expiresAt.setMonth(expiresAt.getMonth() + config.expirationMonths);
+
+                    const { error: packError } = await supabase
+                        .from('class_packs')
+                        .insert({
+                            child_id: childId,
+                            pack_type: packType,
+                            credits_remaining: config.credits,
+                            credits_total: config.credits,
+                            purchase_date: purchaseDate.toISOString(),
+                            expires_at: expiresAt.toISOString(),
+                            stripe_payment_id: session.payment_intent
+                        });
+
+                    if (packError) console.error('Class Pack Insert Error:', packError);
+                }
             }
             break;
         }

@@ -73,6 +73,23 @@ const PRICE_IDS = {
   rookie: {
     live: 'price_1SgU4sIQ7QGupvoPibE6fbry',
     test: 'price_1SguxAIQ7QGupvoPktEZ4PgY'
+  },
+  // CLASS PACKS (One-time payments)
+  pack_10_45min: {
+    live: 'price_1SsjnoIQ7QGupvoPsbZn0mEx',
+    test: 'price_1SsjnoIQ7QGupvoPsbZn0mEx' // TODO: Create separate test mode price
+  },
+  pack_20_45min: {
+    live: 'price_1Ssjo6IQ7QGupvoP5jeIBh3t',
+    test: 'price_1Ssjo6IQ7QGupvoP5jeIBh3t' // TODO: Create separate test mode price
+  },
+  pack_10_75min: {
+    live: 'price_1SsjojIQ7QGupvoP7GuKRnso',
+    test: 'price_1SsjojIQ7QGupvoP7GuKRnso' // TODO: Create separate test mode price
+  },
+  pack_20_75min: {
+    live: 'price_1Ssjp0IQ7QGupvoPmItS0vS3',
+    test: 'price_1Ssjp0IQ7QGupvoPmItS0vS3' // TODO: Create separate test mode price
   }
 };
 
@@ -150,6 +167,91 @@ export const PACKAGES: TrainingPackage[] = [
       '45min Sessions',
       'Monday & Wednesday Only',
       'Fundamentals Focus'
+    ]
+  },
+  // CLASS PACKS (One-Time Purchases)
+  {
+    id: 'pack_10_45min',
+    stripePriceId: getPrice('pack_10_45min'),
+    name: 'In-Season 10-Pack (45 min)',
+    price: 150,
+    billingPeriod: 'One-Time',
+    maxSessions: 10,
+    description: 'Perfect for in-season training.',
+    color: 'border-blue-500',
+    isClassPack: true,
+    packType: '10pack_45min',
+    expirationMonths: 2,
+    sessionDuration: '45min',
+    features: [
+      '10 Sessions Total',
+      '45min Sessions',
+      '$15 per class',
+      'Use within 2 months',
+      'Ideal for in-season'
+    ]
+  },
+  {
+    id: 'pack_20_45min',
+    stripePriceId: getPrice('pack_20_45min'),
+    name: 'In-Season 20-Pack (45 min)',
+    price: 300,
+    billingPeriod: 'One-Time',
+    maxSessions: 20,
+    description: 'Best value for in-season athletes.',
+    color: 'border-blue-600',
+    isClassPack: true,
+    packType: '20pack_45min',
+    expirationMonths: 3,
+    sessionDuration: '45min',
+    features: [
+      '20 Sessions Total',
+      '45min Sessions',
+      '$15 per class',
+      'Use within 3 months',
+      'Best in-season value'
+    ]
+  },
+  {
+    id: 'pack_10_75min',
+    stripePriceId: getPrice('pack_10_75min'),
+    name: 'Performance 10-Pack (1hr 15min)',
+    price: 300,
+    billingPeriod: 'One-Time',
+    maxSessions: 10,
+    description: 'Extended training sessions.',
+    color: 'border-purple-500',
+    isClassPack: true,
+    packType: '10pack_75min',
+    expirationMonths: 2,
+    sessionDuration: '75min',
+    features: [
+      '10 Sessions Total',
+      '1hr 15min Sessions',
+      '$30 per class',
+      'Use within 2 months',
+      'Intensive training'
+    ]
+  },
+  {
+    id: 'pack_20_75min',
+    stripePriceId: getPrice('pack_20_75min'),
+    name: 'Performance 20-Pack (1hr 15min)',
+    price: 600,
+    billingPeriod: 'One-Time',
+    maxSessions: 20,
+    description: 'Maximum performance package.',
+    color: 'border-purple-600',
+    isClassPack: true,
+    packType: '20pack_75min',
+    expirationMonths: 3,
+    sessionDuration: '75min',
+    features: [
+      '20 Sessions Total',
+      '1hr 15min Sessions',
+      '$30 per class',
+      'Use within 3 months',
+      'Elite performance value'
     ]
   }
 ];
