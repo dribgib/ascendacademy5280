@@ -199,7 +199,7 @@ const HomePage: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => pkg.isClassPack).map((pkg) => (
-                  <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 ${pkg.color} hover:-translate-y-2`}>
+                  <div key={pkg.id} className={`bg-card-bg p-8 pt-12 flex flex-col relative group transition-all duration-300 border-t-4 ${pkg.color} hover:-translate-y-2`}>
                     <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
                       {pkg.expirationMonths} Months
                     </div>

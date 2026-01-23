@@ -20,6 +20,7 @@ const CheckoutPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [syncingPayment, setSyncingPayment] = useState(false);
+  const [packageView, setPackageView] = useState<'subscription' | 'packs'>('subscription');
 
   useEffect(() => {
     // 1. Check for Stripe Success Return
@@ -256,8 +257,36 @@ const CheckoutPage: React.FC = () => {
           </div>
         )}
 
+        {/* Tab Switcher */}
+        {activeKid && (
+          <div className="flex justify-center mb-12">
+            <div className="inline-flex bg-zinc-900 border-2 border-zinc-800 p-1.5 rounded-sm">
+              <button
+                onClick={() => setPackageView('subscription')}
+                className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
+                  packageView === 'subscription'
+                    ? 'bg-co-yellow text-black shadow-lg -skew-x-6'
+                    : 'text-zinc-400 hover:text-white -skew-x-6'
+                }`}
+              >
+                <span className="skew-x-6 inline-block">Monthly Plans</span>
+              </button>
+              <button
+                onClick={() => setPackageView('packs')}
+                className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
+                  packageView === 'packs'
+                    ? 'bg-co-yellow text-black shadow-lg -skew-x-6'
+                    : 'text-zinc-400 hover:text-white -skew-x-6'
+                }`}
+              >
+                <span className="skew-x-6 inline-block">Class Packs</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Discount Banner */}
-        {discountPercent > 0 && activeKid && activeKid.subscriptionStatus !== 'active' && (
+        {discountPercent > 0 && activeKid && activeKid.subscriptionStatus !== 'active' && packageView === 'subscription' && (
              <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 mb-8 rounded text-center uppercase tracking-wide flex items-center justify-center gap-2 font-medium shadow-lg mx-auto max-w-2xl">
                 <Tag size={20} /> {discountLabel}: Save {discountPercent}% on this subscription!
              </div>
@@ -266,7 +295,7 @@ const CheckoutPage: React.FC = () => {
         {/* Pricing Cards (Only if Kid Selected) */}
         {activeKid && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2">
-            {PACKAGES.map((pkg) => {
+            {PACKAGES.filter(pkg => packageView === 'subscription' ? !pkg.isClassPack : pkg.isClassPack).map((pkg) => {
               // Highlight if this kid has this specific active plan
               // Check against both internal ID and Stripe Price ID
               const isActivePlan = (activeKid.subscriptionStatus === 'active' || activeKid.subscriptionStatus === 'trialing') && 
@@ -280,16 +309,22 @@ const CheckoutPage: React.FC = () => {
                 <div 
                   key={pkg.id} 
                   className={`
-                    bg-card-bg p-8 flex flex-col relative transition-all duration-300 border-2 rounded-sm group
+                    bg-card-bg ${pkg.isClassPack ? 'p-8 pt-12' : 'p-8'} flex flex-col relative transition-all duration-300 border-2 rounded-sm group
                     ${isActivePlan 
                         ? 'border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)] scale-[1.02] bg-zinc-900 z-10' 
                         : 'border-zinc-800 hover:border-co-yellow hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] hover:-translate-y-2 hover:bg-zinc-900'}
                   `}
                 >
-                  {pkg.name === 'Elite' && !isActivePlan && (
+                  {pkg.name === 'Elite' && !isActivePlan && !pkg.isClassPack && (
                     <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium font-teko tracking-wide z-10">
                       Best Value
                     </span>
+                  )}
+                  
+                  {pkg.isClassPack && (
+                    <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
+                      {pkg.expirationMonths} Months
+                    </div>
                   )}
                   
                   {isActivePlan && (
@@ -302,9 +337,9 @@ const CheckoutPage: React.FC = () => {
                     <h3 className={`font-teko text-4xl uppercase transition-colors ${isActivePlan ? 'text-green-400' : 'text-white group-hover:text-co-yellow'}`}>{pkg.name}</h3>
                     <div className="flex items-baseline gap-1 mt-2 border-b border-zinc-800 pb-4">
                       <span className="text-3xl font-bold text-white">${finalPrice}</span>
-                      <span className="text-sm text-zinc-500 uppercase font-medium">/ Month</span>
+                      <span className="text-sm text-zinc-500 uppercase font-medium">/ {pkg.isClassPack ? 'One-Time' : 'Month'}</span>
                     </div>
-                    {discountPercent > 0 && (
+                    {discountPercent > 0 && !pkg.isClassPack && (
                         <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500 mt-1 opacity-70">${pkg.price}/mo</p>
                     )}
                   </div>
@@ -328,7 +363,7 @@ const CheckoutPage: React.FC = () => {
                       onClick={() => handleSubscribe(pkg.id)}
                       className="w-full py-4 uppercase font-teko text-2xl transition-colors tracking-wide border bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow"
                     >
-                      Select Plan
+                      {pkg.isClassPack ? 'Buy Pack' : 'Select Plan'}
                     </button>
                   )}
                 </div>
