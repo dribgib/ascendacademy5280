@@ -134,21 +134,21 @@ const HomePage: React.FC = () => {
                 onClick={() => setPackageView('subscription')}
                 className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'subscription'
-                    ? 'bg-co-yellow text-black shadow-lg -skew-x-6'
-                    : 'text-zinc-400 hover:text-white -skew-x-6'
+                    ? 'bg-co-yellow text-black shadow-lg'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <span className="skew-x-6 inline-block">Monthly Plans</span>
+                Monthly Plans
               </button>
               <button
                 onClick={() => setPackageView('packs')}
                 className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'packs'
-                    ? 'bg-co-yellow text-black shadow-lg -skew-x-6'
-                    : 'text-zinc-400 hover:text-white -skew-x-6'
+                    ? 'bg-co-yellow text-black shadow-lg'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <span className="skew-x-6 inline-block">Class Packs</span>
+                Class Packs
               </button>
             </div>
           </div>
