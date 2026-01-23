@@ -478,22 +478,31 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                 {kid.usageStats.planName} Plan
                                             </span>
                                             <span className="text-[10px] text-zinc-500">
-                                                {kid.usageStats.used} / {kid.usageStats.limit} Sessions
+                                                {kid.usageStats.used} / {kid.usageStats.limit} Sessions This Month
                                             </span>
                                         </div>
                                         
                                         {/* Class Pack Credits */}
                                         {kid.classPacks && kid.classPacks.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 items-center w-full">
-                                                {kid.classPacks.map((pack: any, idx: number) => {
-                                                    const expiresAt = new Date(pack.expiresAt);
-                                                    const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                                                    return (
-                                                        <span key={idx} className="text-[10px] uppercase font-medium bg-blue-900/40 text-blue-400 px-2 py-1 rounded border border-blue-900/50">
-                                                            {pack.creditsRemaining} Credits ({pack.packType.replace('pack_', '').replace('_', ' ')}) - {daysLeft}d left
-                                                        </span>
-                                                    );
-                                                })}
+                                            <div className="w-full bg-blue-950/30 border border-blue-900/50 rounded p-3">
+                                                <div className="text-[10px] uppercase font-bold text-blue-400 mb-2 tracking-wider">Class Packs Available</div>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {kid.classPacks.map((pack: any, idx: number) => {
+                                                        const expiresAt = new Date(pack.expiresAt);
+                                                        const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                        const isExpiringSoon = daysLeft <= 7;
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between text-[10px]">
+                                                                <span className="text-zinc-300 font-medium">
+                                                                    {pack.packType.replace('pack_', '').replace('_', ' ')} Pack
+                                                                </span>
+                                                                <span className={`font-bold ${isExpiringSoon ? 'text-amber-400' : 'text-blue-400'}`}>
+                                                                    {pack.creditsRemaining} / {pack.creditsTotal} credits • {daysLeft} days left
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
                                         
@@ -508,12 +517,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                 <RefreshCw size={12} /> Change Plan
                                             </button>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); handlePauseSubscription(kid); }}
-                                                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-teko tracking-wide"
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    navigate(`/checkout/pack_10_45min?kidId=${kid.id}`); 
+                                                }}
+                                                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-blue-500 font-teko tracking-wide"
                                             >
-                                                <PauseCircle size={12} /> Pause
+                                                <Plus size={12} /> Buy Pack
                                             </button>
                                         </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handlePauseSubscription(kid); }}
+                                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-teko tracking-wide"
+                                        >
+                                            <PauseCircle size={12} /> Pause Subscription
+                                        </button>
                                     </div>
                                     ) : kid.subscriptionStatus === 'paused' ? (
                                         <div className="flex flex-col items-start gap-3">
@@ -523,25 +541,45 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             
                                             {/* Class Pack Credits for paused subscriptions */}
                                             {kid.classPacks && kid.classPacks.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 items-center w-full">
-                                                    {kid.classPacks.map((pack: any, idx: number) => {
-                                                        const expiresAt = new Date(pack.expiresAt);
-                                                        const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                                                        return (
-                                                            <span key={idx} className="text-[10px] uppercase font-medium bg-blue-900/40 text-blue-400 px-2 py-1 rounded border border-blue-900/50">
-                                                                {pack.creditsRemaining} Credits ({pack.packType.replace('pack_', '').replace('_', ' ')}) - {daysLeft}d left
-                                                            </span>
-                                                        );
-                                                    })}
+                                                <div className="w-full bg-blue-950/30 border border-blue-900/50 rounded p-3">
+                                                    <div className="text-[10px] uppercase font-bold text-blue-400 mb-2 tracking-wider">Class Packs Available</div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        {kid.classPacks.map((pack: any, idx: number) => {
+                                                            const expiresAt = new Date(pack.expiresAt);
+                                                            const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                            const isExpiringSoon = daysLeft <= 7;
+                                                            return (
+                                                                <div key={idx} className="flex items-center justify-between text-[10px]">
+                                                                    <span className="text-zinc-300 font-medium">
+                                                                        {pack.packType.replace('pack_', '').replace('_', ' ')} Pack
+                                                                    </span>
+                                                                    <span className={`font-bold ${isExpiringSoon ? 'text-amber-400' : 'text-blue-400'}`}>
+                                                                        {pack.creditsRemaining} / {pack.creditsTotal} credits • {daysLeft} days left
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             )}
                                             
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); handleResumeSubscription(kid); }}
-                                                className="w-full bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
-                                            >
-                                                <PlayCircle size={12} /> Resume Subscription
-                                            </button>
+                                            <div className="flex gap-2 w-full">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleResumeSubscription(kid); }}
+                                                    className="flex-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                                >
+                                                    <PlayCircle size={12} /> Resume
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        navigate(`/checkout/pack_10_45min?kidId=${kid.id}`); 
+                                                    }}
+                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 font-teko tracking-wide"
+                                                >
+                                                    <Plus size={12} /> Buy Pack
+                                                </button>
+                                            </div>
                                         </div>
                                     ) : kid.classPacks && kid.classPacks.length > 0 ? (
                                         <div className="flex flex-col items-start gap-3">
@@ -550,14 +588,26 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             </span>
                                             
                                             {/* Show class pack credits */}
-                                            <div className="flex flex-wrap gap-2 items-center w-full">
-                                                {kid.classPacks.map((pack: any, idx: number) => {
-                                                    const expiresAt = new Date(pack.expiresAt);
-                                                    const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                                                    return (
-                                                        <span key={idx} className="text-[10px] uppercase font-medium bg-blue-900/40 text-blue-400 px-2 py-1 rounded border border-blue-900/50">
-                                                            {pack.creditsRemaining} Credits ({pack.packType.replace('pack_', '').replace('_', ' ')}) - {daysLeft}d left
-                                                        </span>
+                                            <div className="w-full bg-blue-950/30 border border-blue-900/50 rounded p-3">
+                                                <div className="text-[10px] uppercase font-bold text-blue-400 mb-2 tracking-wider">Class Packs Available</div>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {kid.classPacks.map((pack: any, idx: number) => {
+                                                        const expiresAt = new Date(pack.expiresAt);
+                                                        const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                        const isExpiringSoon = daysLeft <= 7;
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between text-[10px]">
+                                                                <span className="text-zinc-300 font-medium">
+                                                                    {pack.packType.replace('pack_', '').replace('_', ' ')} Pack
+                                                                </span>
+                                                                <span className={`font-bold ${isExpiringSoon ? 'text-amber-400' : 'text-blue-400'}`}>
+                                                                    {pack.creditsRemaining} / {pack.creditsTotal} credits • {daysLeft} days left
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
                                                     );
                                                 })}
                                             </div>

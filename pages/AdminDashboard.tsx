@@ -476,16 +476,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                         {kids.length > 0 ? kids.map(k => {
                                             const hasStats = k.subscriptionStatus === 'active' && k.usageStats;
                                             const isLimitReached = hasStats && k.usageStats!.used >= k.usageStats!.limit;
+                                            const totalPackCredits = k.classPacks?.reduce((sum, pack) => sum + pack.creditsRemaining, 0) || 0;
                                             
                                             return (
-                                                <div key={k.id} className={`flex items-center gap-2 px-2 py-1 rounded border text-xs ${isLimitReached ? 'bg-red-900/20 border-red-900 text-red-300' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}>
-                                                    <span className="font-bold">{k.firstName}</span>
-                                                    {hasStats ? (
-                                                        <span className={`text-[10px] ${isLimitReached ? 'text-red-400' : 'text-co-yellow'}`}>
-                                                            {k.usageStats!.used}/{k.usageStats!.limit}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[10px] text-zinc-600">No Plan</span>
+                                                <div key={k.id} className="flex flex-col gap-1">
+                                                    <div className={`flex items-center gap-2 px-2 py-1 rounded border text-xs ${isLimitReached ? 'bg-red-900/20 border-red-900 text-red-300' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}>
+                                                        <span className="font-bold">{k.firstName}</span>
+                                                        {hasStats ? (
+                                                            <span className={`text-[10px] ${isLimitReached ? 'text-red-400' : 'text-co-yellow'}`}>
+                                                                {k.usageStats!.used}/{k.usageStats!.limit}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[10px] text-zinc-600">No Plan</span>
+                                                        )}
+                                                    </div>
+                                                    {totalPackCredits > 0 && (
+                                                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-900/20 border border-blue-900 text-blue-400 text-[10px]">
+                                                            <span>{totalPackCredits} pack credits</span>
+                                                        </div>
                                                     )}
                                                 </div>
                                             );

@@ -12,6 +12,7 @@ const HomePage: React.FC = () => {
   const [donationAmount, setDonationAmount] = useState<number | ''>('');
   const [customAmount, setCustomAmount] = useState<string>('');
   const [processingDonation, setProcessingDonation] = useState(false);
+  const [packageView, setPackageView] = useState<'subscription' | 'packs'>('subscription');
 
   const handleDonate = async () => {
     const amount = Number(customAmount) || Number(donationAmount);
@@ -126,73 +127,108 @@ const HomePage: React.FC = () => {
             <p className="text-zinc-400 text-xl max-w-2xl mx-auto font-light">Choose your level of commitment. From Rookie foundations to Elite performance.</p>
           </div>
 
-          {/* Monthly Subscriptions */}
-          <div className="mb-16">
-            <h3 className="font-teko text-4xl text-white uppercase mb-8 text-center">Monthly Memberships</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
-                <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
-                  <h3 className="font-teko text-5xl text-white uppercase mb-2">{pkg.name}</h3>
-                  <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                    <span className="text-3xl font-bold text-co-yellow">$</span>
-                    <span className="text-6xl font-teko font-bold text-white">{pkg.price}</span>
-                    <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
-                  </div>
-                  <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
-                  <ul className="space-y-4 mb-10 flex-grow">
-                    {pkg.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-co-yellow flex-shrink-0 mt-0.5" />
-                        <span className="text-zinc-300 text-sm font-medium">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link 
-                    to={`/checkout/${pkg.id}`} 
-                    className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-teko text-2xl text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-wide"
-                  >
-                    Select Plan
-                  </Link>
-                </div>
-              ))}
+          {/* Tab Switcher */}
+          <div className="flex justify-center mb-16">
+            <div className="inline-flex bg-zinc-900 border-2 border-zinc-800 p-1.5 rounded-sm">
+              <button
+                onClick={() => setPackageView('subscription')}
+                className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
+                  packageView === 'subscription'
+                    ? 'bg-co-yellow text-black shadow-lg -skew-x-6'
+                    : 'text-zinc-400 hover:text-white -skew-x-6'
+                }`}
+              >
+                <span className="skew-x-6 inline-block">Monthly Plans</span>
+              </button>
+              <button
+                onClick={() => setPackageView('packs')}
+                className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
+                  packageView === 'packs'
+                    ? 'bg-co-yellow text-black shadow-lg -skew-x-6'
+                    : 'text-zinc-400 hover:text-white -skew-x-6'
+                }`}
+              >
+                <span className="skew-x-6 inline-block">Class Packs</span>
+              </button>
             </div>
           </div>
 
-          {/* Class Packs */}
-          <div className="mt-20 border-t-2 border-zinc-800 pt-20">
-            <h3 className="font-teko text-4xl text-white uppercase mb-4 text-center">In-Season Class Packs</h3>
-            <p className="text-zinc-400 text-center mb-12 max-w-3xl mx-auto">Perfect for athletes in-season who need flexible training. Buy a pack, use it at your pace, and keep your edge year-round.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {PACKAGES.filter(pkg => pkg.isClassPack).map((pkg) => (
-                <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 ${pkg.color} hover:-translate-y-2`}>
-                  <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
-                    {pkg.expirationMonths} Months
+          {/* Monthly Subscriptions */}
+          {packageView === 'subscription' && (
+            <div className="animate-fade-in">
+              <div className="text-center mb-12">
+                <h3 className="font-teko text-5xl text-white uppercase mb-3">Monthly Memberships</h3>
+                <p className="text-zinc-400 max-w-2xl mx-auto">Recurring training with unlimited commitment. Cancel or pause anytime.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
+                  <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
+                    <h3 className="font-teko text-5xl text-white uppercase mb-2">{pkg.name}</h3>
+                    <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
+                      <span className="text-3xl font-bold text-co-yellow">$</span>
+                      <span className="text-6xl font-teko font-bold text-white">{pkg.price}</span>
+                      <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
+                    </div>
+                    <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
+                    <ul className="space-y-4 mb-10 flex-grow">
+                      {pkg.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <Check className="h-5 w-5 text-co-yellow flex-shrink-0 mt-0.5" />
+                          <span className="text-zinc-300 text-sm font-medium">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link 
+                      to={`/checkout/${pkg.id}`} 
+                      className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-teko text-2xl text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-wide"
+                    >
+                      Select Plan
+                    </Link>
                   </div>
-                  <h3 className="font-teko text-4xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
-                  <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                    <span className="text-3xl font-bold text-co-yellow">$</span>
-                    <span className="text-6xl font-teko font-bold text-white">{pkg.price}</span>
-                    <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">one-time</span>
-                  </div>
-                  <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
-                  <ul className="space-y-4 mb-10 flex-grow">
-                    {pkg.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-co-yellow flex-shrink-0 mt-0.5" />
-                        <span className="text-zinc-300 text-sm font-medium">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link 
-                    to={`/checkout/${pkg.id}`} 
-                    className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-teko text-2xl text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-wide"
-                  >
-                    Buy Pack
-                  </Link>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Class Packs */}
+          {packageView === 'packs' && (
+            <div className="animate-fade-in">
+              <div className="text-center mb-12">
+                <h3 className="font-teko text-5xl text-white uppercase mb-3">In-Season Class Packs</h3>
+                <p className="text-zinc-400 max-w-3xl mx-auto">Perfect for athletes in-season who need flexible training. Buy a pack, use it at your pace, and keep your edge year-round.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {PACKAGES.filter(pkg => pkg.isClassPack).map((pkg) => (
+                  <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 ${pkg.color} hover:-translate-y-2`}>
+                    <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
+                      {pkg.expirationMonths} Months
+                    </div>
+                    <h3 className="font-teko text-4xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
+                    <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
+                      <span className="text-3xl font-bold text-co-yellow">$</span>
+                      <span className="text-6xl font-teko font-bold text-white">{pkg.price}</span>
+                      <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">one-time</span>
+                    </div>
+                    <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
+                    <ul className="space-y-4 mb-10 flex-grow">
+                      {pkg.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <Check className="h-5 w-5 text-co-yellow flex-shrink-0 mt-0.5" />
+                          <span className="text-zinc-300 text-sm font-medium">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link 
+                      to={`/checkout/${pkg.id}`} 
+                      className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-teko text-2xl text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-wide"
+                    >
+                      Buy Pack
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Discounts & Sponsorship */}
           <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">

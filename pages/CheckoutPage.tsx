@@ -93,8 +93,8 @@ const CheckoutPage: React.FC = () => {
     // Check if child already has an active subscription
     const activeKid = kids.find(k => k.id === activeKidId);
     
-    // Check for any non-canceled/non-none status
-    if (activeKid && ['active', 'trialing', 'paused'].includes(activeKid.subscriptionStatus || '')) {
+    // Only block if trying to change subscription (not class packs)
+    if (!pkg.isClassPack && activeKid && ['active', 'trialing', 'paused'].includes(activeKid.subscriptionStatus || '')) {
         const confirmed = await showConfirm(
             "Manage Subscription", 
             `To switch ${activeKid.firstName}'s plan to ${pkg.name}, please use our secure Billing Portal. We will redirect you there now.`
@@ -105,7 +105,7 @@ const CheckoutPage: React.FC = () => {
         return;
     }
 
-    // NEW SUBSCRIPTION FLOW
+    // NEW SUBSCRIPTION FLOW OR CLASS PACK PURCHASE
     // Calculate count of OTHER kids with active subs (only for subscription plans, not class packs)
     const activeSubscriptionCount = !pkg.isClassPack 
       ? kids.filter(k => k.subscriptionStatus === 'active' && k.id !== activeKidId).length 
