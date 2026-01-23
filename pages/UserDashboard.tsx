@@ -608,9 +608,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                     })}
                                                 </div>
                                             </div>
-                                                    );
-                                                })}
-                                            </div>
                                             
                                             <button 
                                                 onClick={() => navigate(`/checkout/pack_10_45min?kidId=${kid.id}`)} 
