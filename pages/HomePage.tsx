@@ -153,11 +153,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Monthly Subscriptions */}
-          {packageView === 'subscription' && (
             <div className="animate-fade-in">
               <div className="text-center mb-12">
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">Monthly Memberships</h3>
+                <p className="text-zinc-400 max-w-3xl mx-auto">Unlimited training sessions each month. Build consistency, unlock your potential, and train alongside elite athletes. Cancel or pause anytime.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
@@ -168,7 +167,7 @@ const HomePage: React.FC = () => {
                       <span className="text-5xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
                     </div>
-                    <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
+                    <p className="text-zinc-400 text-sm min-h-[40px] leading-relaxed">{pkg.description}</p>
                     <ul className="space-y-4 mb-10 flex-grow">
                       {pkg.features.map((feat, idx) => (
                         <li key={idx} className="flex items-start gap-3">
@@ -207,7 +206,7 @@ const HomePage: React.FC = () => {
                       <span className="text-5xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">one-time</span>
                     </div>
-                    <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
+                    <p className="text-zinc-400 text-sm min-h-[40px] leading-relaxed">{pkg.description}</p>
                     <ul className="space-y-4 mb-10 flex-grow">
                       {pkg.features.map((feat, idx) => (
                         <li key={idx} className="flex items-start gap-3">
