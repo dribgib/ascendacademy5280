@@ -77,7 +77,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
     return false;
   };
 
-  const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-kanit text-lg uppercase tracking-wide cursor-pointer";
+  const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-kanit text-base uppercase tracking-wide cursor-pointer";
 
   return (
     <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-kanit selection:bg-co-yellow selection:text-black">
@@ -114,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                     {user.role === 'ADMIN' && (
                        <button 
                         onClick={() => navigate('/dashboard?view=admin')}
-                        className={`flex items-center gap-2 transition-colors font-shrikhand text-xl uppercase tracking-wide h-full mr-4 ${isActive('coach') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
+                        className={`flex items-center gap-2 transition-colors font-kanit text-base uppercase tracking-wide h-full mr-4 ${isActive('coach') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                       >
                         <Shield className="h-4 w-4 relative -top-[2px]" />
                         <span>Coach</span>
@@ -123,7 +123,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
 
                     <button 
                       onClick={() => navigate('/dashboard')}
-                      className={`flex items-center gap-2 transition-colors font-shrikhand text-xl uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
+                      className={`flex items-center gap-2 transition-colors font-kanit text-base uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                     >
                       <UserIcon className="h-4 w-4 relative -top-[2px]" />
                       <span>My Team</span>
@@ -140,7 +140,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 ) : (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-shrikhand text-xl uppercase hover:bg-white transition-colors"
+                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-kanit text-base uppercase hover:bg-white transition-colors"
                   >
                     Login
                   </button>
@@ -163,29 +163,29 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
         {isMenuOpen && (
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <button onClick={() => handleScrollTo('about')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left">About</button>
-              <button onClick={handlePackagesClick} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left">Packages</button>
-              <button onClick={() => { setIsMenuOpen(false); navigate('/schedule'); }} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left">Schedule</button>
+              <button onClick={() => handleScrollTo('about')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-kanit text-base uppercase w-full text-left">About</button>
+              <button onClick={handlePackagesClick} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-kanit text-base uppercase w-full text-left">Packages</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate('/schedule'); }} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-kanit text-base uppercase w-full text-left">Schedule</button>
               
               {user ? (
                 <>
                   <button 
                     onClick={() => { setIsMenuOpen(false); navigate('/dashboard'); }}
-                    className="text-co-yellow block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left flex items-center gap-2"
+                    className="text-co-yellow block px-3 py-2 rounded-md font-kanit text-base uppercase w-full text-left flex items-center gap-2"
                   >
                     <UserIcon size={16} className="relative -top-[2px]" /> My Team
                   </button>
                   {user.role === 'ADMIN' && (
                      <button 
                         onClick={() => { setIsMenuOpen(false); navigate('/dashboard?view=admin'); }}
-                        className="text-co-yellow block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left flex items-center gap-2"
+                        className="text-co-yellow block px-3 py-2 rounded-md font-kanit text-base uppercase w-full text-left flex items-center gap-2"
                       >
                         <Shield size={16} className="relative -top-[2px]" /> Coach
                       </button>
                   )}
                   <button 
                     onClick={() => { setIsMenuOpen(false); handleLogout(); }}
-                    className="text-zinc-400 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left flex items-center gap-2"
+                    className="text-zinc-400 hover:text-white block px-3 py-2 rounded-md font-kanit text-base uppercase w-full text-left flex items-center gap-2"
                   >
                     <LogOut size={16} className="relative -top-[1px]" /> Sign Out
                   </button>
@@ -193,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               ) : (
                 <button 
                   onClick={() => { setIsMenuOpen(false); navigate('/login'); }}
-                  className="bg-co-yellow text-black block px-3 py-2 rounded-md font-shrikhand text-xl uppercase font-bold text-center w-full mt-4"
+                  className="bg-co-yellow text-black block px-3 py-2 rounded-md font-kanit text-base uppercase font-bold text-center w-full mt-4"
                 >
                   Login
                 </button>
@@ -215,7 +215,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             {/* Left: Brand & Copyright */}
             <div className="md:text-left flex flex-col items-center md:items-start">
               <img 
-                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/1764999317387.jpg" 
+                src="https://api.matchups.ai/storage/v1/object/public/images/TRANSFULLPHOTO.png" 
                 alt="Ascend Academy 5280" 
                 className="h-20 w-auto object-contain cursor-pointer mb-2"
                 onClick={() => navigate('/')}

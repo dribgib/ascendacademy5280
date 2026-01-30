@@ -200,7 +200,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       <div className="text-center mb-10">
-        <h1 className="font-shrikhand text-6xl text-white uppercase mb-4">Training Schedule</h1>
+        <h1 className="font-shrikhand text-5xl text-white uppercase mb-4">Training Schedule</h1>
         <p className="text-zinc-500 max-w-2xl mx-auto">
             View upcoming sessions. Select a session to view details and availability status. 
         </p>
@@ -213,7 +213,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
         </button>
         
         <div className="relative group cursor-pointer">
-            <h2 className="font-shrikhand text-4xl text-white uppercase flex items-center gap-3">
+            <h2 className="font-shrikhand text-3xl text-white uppercase flex items-center gap-3">
                 {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 <Calendar size={24} className="text-zinc-500 group-hover:text-co-yellow transition-colors" />
             </h2>
@@ -289,7 +289,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                     <span className="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded font-mono uppercase tracking-wider">
                         {new Date(selectedEvent.isoStart).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </span>
-                    <h2 className="font-shrikhand text-4xl text-white uppercase mt-2 leading-none">
+                    <h2 className="font-shrikhand text-3xl text-white uppercase mt-2 leading-none">
                         {selectedEvent.title}
                     </h2>
                 </div>
@@ -337,12 +337,12 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
 
                 {/* Registration Buttons */}
                 <div className="border-t border-zinc-800 pt-6">
-                    <h3 className="font-shrikhand text-2xl text-white uppercase mb-4">Register Athletes</h3>
+                    <h3 className="font-shrikhand text-xl text-white uppercase mb-4">Register Athletes</h3>
                     
                     {!user ? (
                         <button 
                             onClick={() => navigate('/login')}
-                            className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-3 uppercase font-shrikhand text-xl rounded transition-colors"
+                            className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-3 uppercase font-kanit text-base rounded transition-colors"
                         >
                             Login to Register
                         </button>
@@ -351,7 +351,7 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
                              <p className="text-zinc-500 text-sm mb-3">No athletes found on your account.</p>
                              <button 
                                 onClick={() => navigate('/dashboard')}
-                                className="text-co-yellow underline uppercase font-shrikhand text-xl"
+                                className="text-co-yellow underline uppercase font-kanit text-base"
                             >
                                 Add Athlete on Dashboard
                             </button>

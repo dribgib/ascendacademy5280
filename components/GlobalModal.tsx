@@ -49,7 +49,7 @@ const GlobalModal: React.FC = () => {
             {getIcon()}
           </div>
           
-          <h3 className="font-shrikhand text-3xl text-white uppercase mb-2">
+          <h3 className="font-shrikhand text-2xl text-white uppercase mb-2">
             {modalState.title}
           </h3>
           
@@ -62,13 +62,13 @@ const GlobalModal: React.FC = () => {
               <>
                 <button 
                   onClick={onNo}
-                  className="flex-1 py-3 border border-zinc-700 text-zinc-300 uppercase font-shrikhand text-xl rounded hover:bg-zinc-800 transition-colors font-medium"
+                  className="flex-1 py-3 border border-zinc-700 text-zinc-300 uppercase font-kanit text-base rounded hover:bg-zinc-800 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={onYes}
-                  className="flex-1 py-3 bg-co-yellow text-black uppercase font-shrikhand text-xl font-medium rounded hover:bg-white transition-colors"
+                  className="flex-1 py-3 bg-co-yellow text-black uppercase font-kanit text-base font-medium rounded hover:bg-white transition-colors"
                 >
                   Confirm
                 </button>
@@ -76,7 +76,7 @@ const GlobalModal: React.FC = () => {
             ) : (
               <button 
                 onClick={onNo}
-                className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white uppercase font-shrikhand text-xl rounded transition-colors font-medium"
+                className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white uppercase font-kanit text-base rounded transition-colors font-medium"
               >
                 Close
               </button>

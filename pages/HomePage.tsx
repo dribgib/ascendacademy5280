@@ -46,10 +46,10 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
-          <p className="font-kanit text-xl md:text-2xl text-co-yellow mb-4 drop-shadow-md uppercase tracking-wide font-light">
-            Elite youth athletic performance training in Colorado
+          <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
+            Elite Youth Athletic Performance Training in Colorado
           </p>
-          <h1 className="font-shrikhand text-7xl md:text-[9rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl">
+          <h1 className="font-shrikhand text-6xl md:text-[7.5rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl">
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-tan">The Competition</span>
           </h1>
@@ -80,7 +80,7 @@ const HomePage: React.FC = () => {
                 className="relative rounded-lg shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-500 w-full object-cover"
               />
                 <div className="absolute -bottom-8 -right-8 bg-black p-8 border-l-4 border-co-yellow shadow-xl z-20">
-                <p className="font-shrikhand text-5xl text-white leading-none">RODERRICK JACKSON</p>
+                <p className="font-shrikhand text-4xl text-white leading-none">RODERRICK JACKSON</p>
                 <p className="text-zinc-400 text-sm tracking-[0.2em] uppercase mt-2 font-medium">Head Trainer</p>
               </div>
             </div>
@@ -89,7 +89,7 @@ const HomePage: React.FC = () => {
                 <div className="w-16 h-1 bg-co-yellow"></div>
                 <span className="font-kanit text-sm uppercase tracking-widest text-co-yellow font-medium">About The Coach</span>
               </div>
-              <h2 className="font-shrikhand text-6xl md:text-7xl text-white mb-8 uppercase leading-[0.9]">Built Different.</h2>
+              <h2 className="font-shrikhand text-5xl md:text-6xl text-white mb-8 uppercase leading-[0.9]">Built Different.</h2>
               <p className="text-zinc-400 text-lg mb-6 leading-relaxed font-light">
                 Former D1 football player at Wyoming and Arena League veteran, Roderrick Jackson brings professional-grade intensity and knowledge to youth fitness.
               </p>
@@ -133,17 +133,17 @@ const HomePage: React.FC = () => {
             <div className="inline-flex bg-zinc-900 border-2 border-zinc-800 p-1.5 rounded-sm">
               <button
                 onClick={() => setPackageView('subscription')}
-                className={`px-8 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-shrikhand text-xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'subscription'
                     ? 'bg-co-yellow text-black shadow-lg'
-                    : 'text-zinc-400 hover:text-white'
+                    : 'bg-zinc-900 text-zinc-500 hover:text-white'
                 }`}
               >
-                Monthly Plans
+                Monthly
               </button>
               <button
                 onClick={() => setPackageView('packs')}
-                className={`px-8 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-shrikhand text-xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'packs'
                     ? 'bg-co-yellow text-black shadow-lg'
                     : 'text-zinc-400 hover:text-white'
@@ -166,8 +166,8 @@ const HomePage: React.FC = () => {
                   <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
                     <h3 className="font-shrikhand text-5xl text-white uppercase mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                      <span className="text-3xl font-bold text-co-yellow">$</span>
-                      <span className="text-6xl font-shrikhand font-bold text-white">{pkg.price}</span>
+                      <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
+                      <span className="text-6xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
                     </div>
                     <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
@@ -206,8 +206,8 @@ const HomePage: React.FC = () => {
                     </div>
                     <h3 className="font-shrikhand text-4xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                      <span className="text-3xl font-bold text-co-yellow">$</span>
-                      <span className="text-6xl font-shrikhand font-bold text-white">{pkg.price}</span>
+                      <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
+                      <span className="text-6xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">one-time</span>
                     </div>
                     <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
@@ -270,11 +270,11 @@ const HomePage: React.FC = () => {
               <ul className="text-sm text-zinc-300 space-y-4 font-kanit">
                 <li className="flex justify-between border-b border-zinc-800 pb-2">
                   <span className="uppercase tracking-wide">Sibling Discount (1st Sibling)</span>
-                  <span className="text-co-yellow font-shrikhand text-2xl">45% OFF</span>
+                  <span className="text-co-yellow font-kanit text-xl font-bold uppercase">45% OFF</span>
                 </li>
                 <li className="flex justify-between border-b border-zinc-800 pb-2">
                   <span className="uppercase tracking-wide">Additional Siblings</span>
-                  <span className="text-co-yellow font-shrikhand text-2xl">65% OFF</span>
+                  <span className="text-co-yellow font-kanit text-xl font-bold uppercase">65% OFF</span>
                 </li>
               </ul>
             </div>

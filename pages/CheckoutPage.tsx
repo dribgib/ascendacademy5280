@@ -239,9 +239,9 @@ const CheckoutPage: React.FC = () => {
                 )}
               </button>
             ))}
-            <button 
+            <button
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 rounded font-shrikhand text-xl uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors opacity-70 hover:opacity-100"
+              className="px-6 py-2 rounded font-shrikhand text-lg uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors opacity-70 hover:opacity-100"
             >
               + Add Athlete
             </button>
@@ -263,17 +263,17 @@ const CheckoutPage: React.FC = () => {
             <div className="inline-flex bg-zinc-900 border-2 border-zinc-800 p-1.5 rounded-sm">
               <button
                 onClick={() => setPackageView('subscription')}
-                className={`px-8 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-shrikhand text-xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'subscription'
                     ? 'bg-co-yellow text-black shadow-lg'
-                    : 'text-zinc-400 hover:text-white'
+                    : 'bg-zinc-900 text-zinc-500 hover:text-white'
                 }`}
               >
-                Monthly Plans
+                Monthly
               </button>
               <button
                 onClick={() => setPackageView('packs')}
-                className={`px-8 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-shrikhand text-xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'packs'
                     ? 'bg-co-yellow text-black shadow-lg'
                     : 'text-zinc-400 hover:text-white'
@@ -336,11 +336,11 @@ const CheckoutPage: React.FC = () => {
                   <div className="mb-4 mt-4">
                     <h3 className={`font-shrikhand text-4xl uppercase transition-colors ${isActivePlan ? 'text-green-400' : 'text-white group-hover:text-co-yellow'}`}>{pkg.name}</h3>
                     <div className="flex items-baseline gap-1 mt-2 border-b border-zinc-800 pb-4">
-                      <span className="text-3xl font-bold text-white">${finalPrice}</span>
+                      <span className="text-3xl font-kanit font-bold text-white uppercase">${finalPrice}</span>
                       <span className="text-sm text-zinc-500 uppercase font-medium">/ {pkg.isClassPack ? 'One-Time' : 'Month'}</span>
                     </div>
                     {discountPercent > 0 && !pkg.isClassPack && (
-                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500 mt-1 opacity-70">${pkg.price}/mo</p>
+                        <p className="text-xs text-co-yellow line-through decoration-zinc-500 text-zinc-500 mt-1 opacity-70 font-kanit font-bold uppercase">${pkg.price}/mo</p>
                     )}
                   </div>
 

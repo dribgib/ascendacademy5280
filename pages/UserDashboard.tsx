@@ -351,7 +351,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       <div className="flex flex-col mb-10 border-b border-zinc-800 pb-8">
         <div className="flex flex-wrap justify-between items-start gap-6">
             <div className="flex-1 min-w-[300px]">
-                <h1 className="font-shrikhand text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap mb-2">
+                <h1 className="font-shrikhand text-4xl md:text-5xl text-white uppercase leading-none whitespace-nowrap mb-2">
                     {isAdminView ? "Coach's Dashboard" : "My Team"}
                 </h1>
                 <p className="text-zinc-500 max-w-xl">
@@ -366,19 +366,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="flex flex-wrap gap-3 w-full lg:w-auto mt-4 lg:mt-0 justify-start lg:justify-end">
                     <button 
                         onClick={() => setShowAccountModal(true)}
-                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-shrikhand text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-kanit text-base uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <Settings size={18} /> Account
                     </button>
                     <button 
                         onClick={handleManageBilling}
-                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-shrikhand text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-kanit text-base uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <CreditCard size={18} /> Billing
                     </button>
                     <button 
                         onClick={() => setShowAddKidModal(true)}
-                        className="bg-co-yellow text-black px-8 py-3 font-shrikhand text-xl uppercase rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="bg-co-yellow text-black px-8 py-3 font-kanit text-base uppercase rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <Plus size={20} /> Add Athlete
                     </button>
@@ -391,13 +391,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
                     <button 
                         onClick={() => toggleView('parent')}
-                        className={`px-6 py-2 rounded-md font-shrikhand text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+                        className={`px-6 py-2 rounded-md font-kanit text-base uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
                     >
                         My Team
                     </button>
                     <button 
                         onClick={() => toggleView('admin')}
-                        className={`px-6 py-2 rounded-md font-shrikhand text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black' : 'text-zinc-500 hover:text-white'}`}
+                        className={`px-6 py-2 rounded-md font-kanit text-base uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black' : 'text-zinc-500 hover:text-white'}`}
                     >
                         Coach
                     </button>
@@ -426,9 +426,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 {kids.length === 0 ? (
                     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-10 text-center">
                         <KidIcon className="mx-auto text-zinc-700 mb-4" size={48} />
-                        <h3 className="text-white font-shrikhand text-2xl uppercase mb-2">No Athletes Found</h3>
+                        <h3 className="text-white font-shrikhand text-xl uppercase mb-2">No Athletes Found</h3>
                         <p className="text-zinc-500 text-sm mb-6">Add your child to start scheduling sessions.</p>
-                        <button onClick={() => setShowAddKidModal(true)} className="text-co-yellow underline uppercase font-shrikhand text-xl">
+                        <button onClick={() => setShowAddKidModal(true)} className="text-co-yellow underline uppercase font-kanit text-base">
                             Add First Athlete
                         </button>
                     </div>
@@ -459,7 +459,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
                             <div className="flex-1 min-w-0 pr-6">
                                 <h3 
-                                    className={`font-shrikhand text-3xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
+                                    className={`font-shrikhand text-2xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
                                     onClick={() => {
                                         if (kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused') {
                                             navigate(`/checkout/p_elite?kidId=${kid.id}`);
@@ -512,7 +512,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                     e.stopPropagation();
                                                     navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`);
                                                 }}
-                                                className="flex-1 bg-white hover:bg-zinc-200 text-black text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-shrikhand tracking-wide"
+                                                className="flex-1 bg-white hover:bg-zinc-200 text-black text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-kanit tracking-wide"
                                             >
                                                 <RefreshCw size={12} /> Change Plan
                                             </button>
@@ -521,14 +521,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                     e.stopPropagation(); 
                                                     navigate(`/checkout/pack_10_45min?kidId=${kid.id}`); 
                                                 }}
-                                                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-blue-500 font-shrikhand tracking-wide"
+                                                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-blue-500 font-kanit tracking-wide"
                                             >
                                                 <Plus size={12} /> Buy Pack
                                             </button>
                                         </div>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handlePauseSubscription(kid); }}
-                                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-shrikhand tracking-wide"
+                                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-kanit tracking-wide"
                                         >
                                             <PauseCircle size={12} /> Pause Subscription
                                         </button>
@@ -566,7 +566,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             <div className="flex gap-2 w-full">
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleResumeSubscription(kid); }}
-                                                    className="flex-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-shrikhand tracking-wide"
+                                                    className="flex-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-kanit tracking-wide"
                                                 >
                                                     <PlayCircle size={12} /> Resume
                                                 </button>
@@ -575,7 +575,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                         e.stopPropagation(); 
                                                         navigate(`/checkout/pack_10_45min?kidId=${kid.id}`); 
                                                     }}
-                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 font-shrikhand tracking-wide"
+                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 font-kanit tracking-wide"
                                                 >
                                                     <Plus size={12} /> Buy Pack
                                                 </button>
@@ -611,7 +611,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             
                                             <button 
                                                 onClick={() => navigate(`/checkout/pack_10_45min?kidId=${kid.id}`)} 
-                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-shrikhand tracking-wide"
+                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-kanit tracking-wide"
                                             >
                                                 Buy More Credits <ChevronRight size={12} />
                                             </button>
@@ -642,7 +642,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 {/* Right Col: Schedule */}
                 <div className="lg:col-span-2">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-                    <h2 className="font-shrikhand text-3xl text-white uppercase mb-6 flex items-center gap-2">
+                    <h2 className="font-shrikhand text-2xl text-white uppercase mb-6 flex items-center gap-2">
                     <Calendar className="text-co-yellow" /> Upcoming Sessions
                     </h2>
                     <div className="space-y-4">
@@ -714,7 +714,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             <button onClick={() => setShowAccountModal(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white"><X size={24} /></button>
             <div className="text-center mb-8">
                 <Settings className="mx-auto text-co-yellow mb-4" size={48} />
-                <h2 className="font-shrikhand text-4xl text-white uppercase tracking-wide">Account Settings</h2>
+                <h2 className="font-shrikhand text-3xl text-white uppercase tracking-wide">Account Settings</h2>
             </div>
             <div className="mb-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded">
                 <p className="text-zinc-500 text-xs uppercase font-medium mb-1 tracking-wider">Registered Email</p>
@@ -722,7 +722,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <p className="text-zinc-600 text-[10px] mt-2 italic">Contact support to change email address.</p>
             </div>
             <form onSubmit={handleUpdatePassword} className="border-t border-zinc-800 pt-6">
-                <p className="text-white text-xl font-shrikhand uppercase mb-4">Change Password</p>
+                <p className="text-white text-base font-kanit uppercase mb-4">Change Password</p>
                 <div className="space-y-4">
                     <div>
                         <input required type="password" placeholder="New Password" minLength={6} value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" />
@@ -730,7 +730,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     <div>
                         <input required type="password" placeholder="Confirm Password" minLength={6} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" />
                     </div>
-                    <button type="submit" className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-shrikhand text-xl rounded transition-colors shadow-lg mt-2">Update Password</button>
+                    <button type="submit" className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-kanit text-base rounded transition-colors shadow-lg mt-2">Update Password</button>
                 </div>
                 {accountMsg && <div className={`mt-4 text-center p-2 rounded text-sm ${accountMsg.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}`}>{accountMsg}</div>}
             </form>
@@ -754,7 +754,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
             {addStep === 1 && (
                 <>
-                <h2 className="font-shrikhand text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
+                <h2 className="font-shrikhand text-2xl text-white uppercase mb-6">New Athlete Profile</h2>
                 <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <div className="flex items-center gap-6 mb-6 p-4 bg-black rounded border border-zinc-800">
                     <div className="h-20 w-20 rounded-full overflow-hidden bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 relative">
@@ -804,8 +804,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
                 </div>
                 <div className="flex gap-4 pt-4">
-                    <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Cancel</button>
-                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-shrikhand text-xl font-medium rounded flex items-center justify-center gap-2">Next: Waiver <ArrowRight size={18} /></button>
+                    <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-kanit text-base">Cancel</button>
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-kanit text-base font-medium rounded flex items-center justify-center gap-2">Next: Waiver <ArrowRight size={18} /></button>
                 </div>
                 </form>
                 </>
@@ -813,7 +813,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
             {addStep === 2 && (
                 <div className="text-center">
-                    <h2 className="font-shrikhand text-3xl text-white uppercase mb-2">Liability Waiver</h2>
+                    <h2 className="font-shrikhand text-2xl text-white uppercase mb-2">Liability Waiver</h2>
                     <p className="text-zinc-500 text-sm mb-8">
                         Step 1 of 2: General Liability Release.
                     </p>
@@ -829,10 +829,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
 
                     <div className="flex gap-4">
-                        <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Back</button>
+                        <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-kanit text-lg">Back</button>
                         <button 
                             onClick={() => setAddStep(3)}
-                            className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-shrikhand text-xl rounded flex items-center justify-center gap-2 font-medium"
+                            className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-kanit text-lg rounded flex items-center justify-center gap-2 font-medium"
                         >
                             Next Step <ArrowRight size={18} />
                         </button>
@@ -858,10 +858,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     </div>
 
                     <div className="flex gap-4">
-                        <button type="button" onClick={() => setAddStep(2)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Back</button>
+                        <button type="button" onClick={() => setAddStep(2)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-kanit text-lg">Back</button>
                         <button 
                             onClick={startVerification}
-                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-shrikhand text-xl rounded flex items-center justify-center gap-2 font-medium"
+                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-kanit text-lg rounded flex items-center justify-center gap-2 font-medium"
                         >
                             Verify & Add <CheckCircle size={18} />
                         </button>
@@ -910,11 +910,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 </div>
                             </div>
                             <div className="flex gap-4">
-                                <button type="button" onClick={() => setAddStep(3)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Back</button>
+                                <button type="button" onClick={() => setAddStep(3)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-kanit text-lg">Back</button>
                                 <button 
                                     onClick={handleManualOverride}
                                     disabled={!manualOverride}
-                                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 uppercase font-shrikhand text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 uppercase font-kanit text-lg rounded flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     Force Add Athlete
                                 </button>

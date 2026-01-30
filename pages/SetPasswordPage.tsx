@@ -100,10 +100,10 @@ const SetPasswordPage: React.FC = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-co-yellow hover:bg-yellow-500 text-black font-shrikhand text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4 font-medium"
+            className="w-full bg-co-yellow hover:bg-yellow-500 text-black font-kanit text-base uppercase py-3 transition-colors disabled:opacity-50 mt-4 font-medium"
           >
             {loading ? 'Updating...' : 'Set Password & Enter'}
           </button>
