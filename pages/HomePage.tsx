@@ -47,9 +47,9 @@ const HomePage: React.FC = () => {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
           <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
-            Elite Youth Athletic Performance Training in Colorado
+            Elite Youth Athletic Performance Training<br />in Colorado
           </p>
-          <h1 className="font-shrikhand text-6xl md:text-[7.5rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl">
+          <h1 className="font-shrikhand text-5xl md:text-[7rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl">
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-tan">The Competition</span>
           </h1>
@@ -101,14 +101,14 @@ const HomePage: React.FC = () => {
                 <div className="flex items-center gap-4 border-l-2 border-zinc-800 pl-4">
                   <div className="p-3 bg-zinc-900 rounded-full text-co-yellow"><Trophy size={28} /></div>
                   <div>
-                    <h4 className="font-shrikhand text-2xl text-white uppercase">D1 Experience</h4>
+                    <h4 className="font-shrikhand text-xl text-white uppercase">D1 Experience</h4>
                     <p className="text-xs text-zinc-500 uppercase tracking-wider">Proven at top levels</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 border-l-2 border-zinc-800 pl-4">
                   <div className="p-3 bg-zinc-900 rounded-full text-co-red"><Users size={28} /></div>
                   <div>
-                    <h4 className="font-shrikhand text-2xl text-white uppercase">Mentorship</h4>
+                    <h4 className="font-shrikhand text-xl text-white uppercase">Mentorship</h4>
                     <p className="text-xs text-zinc-500 uppercase tracking-wider">Character building</p>
                   </div>
                 </div>
@@ -164,7 +164,7 @@ const HomePage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
                   <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
-                    <h3 className="font-shrikhand text-5xl text-white uppercase mb-2">{pkg.name}</h3>
+                    <h3 className="font-kanit text-5xl text-white uppercase mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
                       <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
                       <span className="text-6xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
@@ -204,7 +204,7 @@ const HomePage: React.FC = () => {
                     <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
                       {pkg.expirationMonths} Months
                     </div>
-                    <h3 className="font-shrikhand text-4xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
+                    <h3 className="font-kanit text-4xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
                       <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
                       <span className="text-6xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
