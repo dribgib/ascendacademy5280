@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
           <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
             Elite Youth Athletic Performance<br />Training in Colorado
           </p>
-          <h1 className="font-kanit text-6xl md:text-[7.5rem] text-white uppercase leading-[0.85] tracking-wide mb-6 animate-fade-in-up drop-shadow-2xl font-black">
+          <h1 className="font-shrikhand text-5xl md:text-[7rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl overflow-visible px-8">
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-tan">The Competition</span>
           </h1>
@@ -158,9 +158,9 @@ const HomePage: React.FC = () => {
             <div className="animate-fade-in">
               <div className="text-center mb-12">
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">Monthly Memberships</h3>
-                <p className="text-zinc-400 max-w-2xl mx-auto">Recurring training with unlimited commitment. Cancel or pause anytime.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
                   <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
                     <h3 className="font-kanit text-2xl text-white uppercase mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
@@ -190,11 +190,11 @@ const HomePage: React.FC = () => {
           )}
 
           {packageView === 'packs' && (
-            <div className="animate-fade-in">
               <div className="text-center mb-12">
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">In-Season Class Packs</h3>
                 <p className="text-zinc-400 max-w-3xl mx-auto">Perfect for athletes in-season who need flexible training. Buy a pack, use it at your pace, and keep your edge year-round.</p>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => pkg.isClassPack).map((pkg) => (
                   <div key={pkg.id} className={`bg-card-bg p-8 pt-12 flex flex-col relative group transition-all duration-300 border-t-4 border-white hover:border-co-yellow hover:-translate-y-2`}>
                     <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
