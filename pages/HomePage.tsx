@@ -161,11 +161,10 @@ const HomePage: React.FC = () => {
                 <p className="text-zinc-400 max-w-2xl mx-auto">Recurring training with unlimited commitment. Cancel or pause anytime.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
                   <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
                     <h3 className="font-kanit text-2xl text-white uppercase mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                      <span className="text-2xl font-kanit font-bold text-co-yellow uppercase">$</span>
+                      <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
                       <span className="text-5xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
                     </div>
@@ -196,15 +195,14 @@ const HomePage: React.FC = () => {
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">In-Season Class Packs</h3>
                 <p className="text-zinc-400 max-w-3xl mx-auto">Perfect for athletes in-season who need flexible training. Buy a pack, use it at your pace, and keep your edge year-round.</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => pkg.isClassPack).map((pkg) => (
-                  <div key={pkg.id} className={`bg-card-bg p-8 pt-12 flex flex-col relative group transition-all duration-300 border-t-4 ${pkg.color} hover:-translate-y-2`}>
+                  <div key={pkg.id} className={`bg-card-bg p-8 pt-12 flex flex-col relative group transition-all duration-300 border-t-4 border-white hover:border-co-yellow hover:-translate-y-2`}>
                     <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
                       {pkg.expirationMonths} Months
                     </div>
                     <h3 className="font-kanit text-2xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                      <span className="text-2xl font-kanit font-bold text-co-yellow uppercase">$</span>
+                      <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
                       <span className="text-5xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">one-time</span>
                     </div>
