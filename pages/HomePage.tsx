@@ -153,11 +153,14 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
+          {/* Monthly Subscriptions */}
+          {packageView === 'subscription' && (
             <div className="animate-fade-in">
               <div className="text-center mb-12">
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">Monthly Memberships</h3>
                 <p className="text-zinc-400 max-w-2xl mx-auto">Recurring training with unlimited commitment. Cancel or pause anytime.</p>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
                   <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
                     <h3 className="font-kanit text-2xl text-white uppercase mb-2">{pkg.name}</h3>
