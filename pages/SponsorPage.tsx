@@ -26,14 +26,14 @@ const SponsorPage: React.FC = () => {
   if (sent) {
       return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 text-center">
-            <Heart size={64} className="text-co-red mb-6 animate-bounce" />
-            <h1 className="font-teko text-6xl text-white uppercase mb-4">Thank You!</h1>
+            <Heart size={64} className="text-co-yellow mb-6 animate-bounce" />
+            <h1 className="font-shrikhand text-6xl text-white uppercase mb-4">Thank You!</h1>
             <p className="text-zinc-400 max-w-lg mb-8 text-lg">
                 We have received your sponsorship inquiry. Roderrick Jackson will be in touch with you shortly at <span className="text-white font-bold">{formData.email}</span>.
             </p>
             <button 
                 onClick={() => window.location.href = '/'}
-                className="text-co-yellow uppercase font-teko text-xl underline hover:text-white font-medium"
+                className="text-co-yellow uppercase font-shrikhand text-xl underline hover:text-white font-medium"
             >
                 Return Home
             </button>
@@ -46,7 +46,7 @@ const SponsorPage: React.FC = () => {
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
-            <h1 className="font-teko text-6xl text-white uppercase mb-4">Sponsor An Athlete</h1>
+            <h1 className="font-shrikhand text-6xl text-white uppercase mb-4">Sponsor An Athlete</h1>
             <p className="text-zinc-500 text-lg">
                 Make a difference in a young athlete's life. 100% of sponsorship funds go directly towards training fees and equipment for families in need.
             </p>
@@ -54,7 +54,7 @@ const SponsorPage: React.FC = () => {
 
         <div className="bg-card-bg border border-zinc-800 p-8 rounded-lg shadow-xl relative overflow-hidden">
             {/* Decorative line */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-co-red to-co-yellow"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-co-tan to-co-yellow"></div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -105,7 +105,7 @@ const SponsorPage: React.FC = () => {
                 <button 
                     type="submit" 
                     disabled={sending}
-                    className="w-full bg-co-red hover:bg-white hover:text-black text-white py-4 font-teko text-2xl uppercase font-medium rounded flex items-center justify-center gap-2 transition-colors"
+                    className="w-full bg-co-yellow hover:bg-white hover:text-black text-black py-4 font-shrikhand text-2xl uppercase font-medium rounded flex items-center justify-center gap-2 transition-colors"
                 >
                     {sending ? 'Sending...' : <><Send size={20} /> Send Inquiry</>}
                 </button>

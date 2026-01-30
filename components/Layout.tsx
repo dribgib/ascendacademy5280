@@ -77,17 +77,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
     return false;
   };
 
-  const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-teko text-xl uppercase tracking-wide cursor-pointer";
+  const navLinkClass = "text-zinc-300 hover:text-co-yellow transition-colors duration-200 px-3 py-2 rounded-md font-kanit text-lg uppercase tracking-wide cursor-pointer";
 
   return (
-    <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-poppins selection:bg-co-red selection:text-white">
+    <div className="min-h-screen flex flex-col bg-dark-bg text-zinc-100 font-kanit selection:bg-co-yellow selection:text-black">
       <nav className="fixed w-full z-50 bg-black/95 backdrop-blur-sm border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
               <img 
-                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/1764999317387.jpg" 
+                src="https://api.ascendacademy5280.com/storage/v1/object/public/media/logo.png" 
                 alt="Ascend Academy 5280" 
                 className="h-16 w-auto object-contain"
               />
@@ -114,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                     {user.role === 'ADMIN' && (
                        <button 
                         onClick={() => navigate('/dashboard?view=admin')}
-                        className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full mr-4 ${isActive('coach') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
+                        className={`flex items-center gap-2 transition-colors font-shrikhand text-xl uppercase tracking-wide h-full mr-4 ${isActive('coach') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                       >
                         <Shield className="h-4 w-4 relative -top-[2px]" />
                         <span>Coach</span>
@@ -123,7 +123,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
 
                     <button 
                       onClick={() => navigate('/dashboard')}
-                      className={`flex items-center gap-2 transition-colors font-teko text-xl uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
+                      className={`flex items-center gap-2 transition-colors font-shrikhand text-xl uppercase tracking-wide h-full ${isActive('dashboard') ? 'text-co-yellow' : 'text-white hover:text-co-yellow'}`}
                     >
                       <UserIcon className="h-4 w-4 relative -top-[2px]" />
                       <span>My Team</span>
@@ -140,7 +140,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
                 ) : (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-teko text-xl uppercase hover:bg-white transition-colors"
+                    className="ml-6 bg-co-yellow text-black px-6 py-2 rounded-sm font-shrikhand text-xl uppercase hover:bg-white transition-colors"
                   >
                     Login
                   </button>
@@ -163,29 +163,29 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
         {isMenuOpen && (
           <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <button onClick={() => handleScrollTo('about')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">About</button>
-              <button onClick={handlePackagesClick} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Packages</button>
-              <button onClick={() => { setIsMenuOpen(false); navigate('/schedule'); }} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left">Schedule</button>
+              <button onClick={() => handleScrollTo('about')} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left">About</button>
+              <button onClick={handlePackagesClick} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left">Packages</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate('/schedule'); }} className="text-zinc-300 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left">Schedule</button>
               
               {user ? (
                 <>
                   <button 
                     onClick={() => { setIsMenuOpen(false); navigate('/dashboard'); }}
-                    className="text-co-yellow block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
+                    className="text-co-yellow block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left flex items-center gap-2"
                   >
                     <UserIcon size={16} className="relative -top-[2px]" /> My Team
                   </button>
                   {user.role === 'ADMIN' && (
                      <button 
                         onClick={() => { setIsMenuOpen(false); navigate('/dashboard?view=admin'); }}
-                        className="text-co-yellow block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
+                        className="text-co-yellow block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left flex items-center gap-2"
                       >
                         <Shield size={16} className="relative -top-[2px]" /> Coach
                       </button>
                   )}
                   <button 
                     onClick={() => { setIsMenuOpen(false); handleLogout(); }}
-                    className="text-zinc-400 hover:text-white block px-3 py-2 rounded-md font-teko text-xl uppercase w-full text-left flex items-center gap-2"
+                    className="text-zinc-400 hover:text-white block px-3 py-2 rounded-md font-shrikhand text-xl uppercase w-full text-left flex items-center gap-2"
                   >
                     <LogOut size={16} className="relative -top-[1px]" /> Sign Out
                   </button>
@@ -193,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
               ) : (
                 <button 
                   onClick={() => { setIsMenuOpen(false); navigate('/login'); }}
-                  className="bg-co-yellow text-black block px-3 py-2 rounded-md font-teko text-xl uppercase font-bold text-center w-full mt-4"
+                  className="bg-co-yellow text-black block px-3 py-2 rounded-md font-shrikhand text-xl uppercase font-bold text-center w-full mt-4"
                 >
                   Login
                 </button>
@@ -226,20 +226,20 @@ const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
             {/* Center: Contact Info */}
             <div className="flex flex-col items-center justify-center space-y-2">
                  <a href="mailto:rod@ascendacademy5280.com" className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm transition-colors group">
-                    <Mail size={14} className="text-co-red group-hover:text-co-yellow transition-colors" /> 
+                    <Mail size={14} className="text-co-yellow group-hover:text-white transition-colors" /> 
                     <span>rod@ascendacademy5280.com</span>
                  </a>
                  <a href="tel:3039432787" className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm transition-colors group">
-                    <Phone size={14} className="text-co-yellow group-hover:text-co-red transition-colors" /> 
+                    <Phone size={14} className="text-co-yellow group-hover:text-white transition-colors" /> 
                     <span>303-943-2787</span>
                  </a>
             </div>
             
             {/* Right: Socials */}
             <div className="flex justify-center md:justify-end space-x-6">
-              <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><Instagram /></a>
-              <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><Youtube /></a>
-              <a href="#" className="text-zinc-500 hover:text-co-red transition-colors"><TikTokIcon /></a>
+              <a href="#" className="text-zinc-500 hover:text-co-yellow transition-colors"><Instagram /></a>
+              <a href="#" className="text-zinc-500 hover:text-co-yellow transition-colors"><Youtube /></a>
+              <a href="#" className="text-zinc-500 hover:text-co-yellow transition-colors"><TikTokIcon /></a>
             </div>
 
           </div>

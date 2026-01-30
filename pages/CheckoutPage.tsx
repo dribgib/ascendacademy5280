@@ -192,14 +192,14 @@ const CheckoutPage: React.FC = () => {
         {processing && (
             <div className="fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center backdrop-blur-md animate-fade-in">
                 <Loader2 className="w-20 h-20 text-co-yellow animate-spin mb-6" />
-                <h2 className="text-white font-teko text-4xl uppercase tracking-widest animate-pulse">Processing...</h2>
+                <h2 className="text-white font-shrikhand text-4xl uppercase tracking-widest animate-pulse">Processing...</h2>
                 <p className="text-zinc-500 text-sm mt-3 uppercase tracking-wider">Please do not refresh the page</p>
             </div>
         )}
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="font-teko text-5xl text-white uppercase mb-2">Choose Your Edge</h1>
+          <h1 className="font-shrikhand text-5xl text-white uppercase mb-2">Choose Your Edge</h1>
           <p className="text-zinc-500 max-w-2xl mx-auto">
             Unlock full potential. Secure payment processing powered by Stripe.
           </p>
@@ -208,7 +208,7 @@ const CheckoutPage: React.FC = () => {
         {paymentSuccess && (
             <div className="max-w-3xl mx-auto mb-8 bg-green-900/20 border border-green-800 p-6 rounded text-center flex flex-col items-center animate-fade-in">
                 <CheckCircle className="text-green-500 mb-2" size={32} />
-                <h3 className="text-white font-teko text-2xl uppercase">Payment Successful</h3>
+                <h3 className="text-white font-shrikhand text-2xl uppercase">Payment Successful</h3>
                 <p className="text-zinc-400 text-sm">Your athlete's subscription is active. Welcome to the team.</p>
                 <button 
                   onClick={() => window.location.reload()} 
@@ -227,7 +227,7 @@ const CheckoutPage: React.FC = () => {
                 key={kid.id}
                 onClick={() => setActiveKidId(kid.id)}
                 className={`
-                  relative px-8 py-3 rounded transform transition-all duration-300 font-teko text-2xl uppercase tracking-wide border-2
+                  relative px-8 py-3 rounded transform transition-all duration-300 font-shrikhand text-2xl uppercase tracking-wide border-2
                   ${activeKidId === kid.id 
                     ? 'bg-co-yellow text-black border-co-yellow scale-110 z-10 shadow-[0_0_20px_rgba(255,215,0,0.4)]' 
                     : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300 grayscale opacity-70 hover:opacity-100 hover:grayscale-0'}
@@ -241,7 +241,7 @@ const CheckoutPage: React.FC = () => {
             ))}
             <button 
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 rounded font-teko text-xl uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors opacity-70 hover:opacity-100"
+              className="px-6 py-2 rounded font-shrikhand text-xl uppercase tracking-wide border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-white hover:border-zinc-500 bg-transparent transition-colors opacity-70 hover:opacity-100"
             >
               + Add Athlete
             </button>
@@ -249,7 +249,7 @@ const CheckoutPage: React.FC = () => {
         ) : (
           <div className="text-center mb-12 p-8 bg-zinc-900/50 rounded-lg border border-zinc-800 max-w-xl mx-auto">
             <UserIcon className="mx-auto h-12 w-12 text-zinc-600 mb-4" />
-            <h3 className="text-white text-xl font-teko uppercase mb-2">No Athletes Found</h3>
+            <h3 className="text-white text-xl font-shrikhand uppercase mb-2">No Athletes Found</h3>
             <p className="text-zinc-500 mb-6">You must create an athlete profile before purchasing a training package.</p>
             <button onClick={() => navigate('/dashboard')} className="bg-co-yellow text-black px-6 py-2 uppercase rounded">
               Go to Dashboard
@@ -263,7 +263,7 @@ const CheckoutPage: React.FC = () => {
             <div className="inline-flex bg-zinc-900 border-2 border-zinc-800 p-1.5 rounded-sm">
               <button
                 onClick={() => setPackageView('subscription')}
-                className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'subscription'
                     ? 'bg-co-yellow text-black shadow-lg'
                     : 'text-zinc-400 hover:text-white'
@@ -273,7 +273,7 @@ const CheckoutPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setPackageView('packs')}
-                className={`px-8 py-4 font-teko text-2xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-all duration-300 ${
                   packageView === 'packs'
                     ? 'bg-co-yellow text-black shadow-lg'
                     : 'text-zinc-400 hover:text-white'
@@ -316,7 +316,7 @@ const CheckoutPage: React.FC = () => {
                   `}
                 >
                   {pkg.name === 'Elite' && !isActivePlan && !pkg.isClassPack && (
-                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium font-teko tracking-wide z-10">
+                    <span className="absolute top-0 right-0 bg-co-yellow text-black text-[10px] px-2 py-1 uppercase rounded-bl font-medium font-shrikhand tracking-wide z-10">
                       Best Value
                     </span>
                   )}
@@ -334,7 +334,7 @@ const CheckoutPage: React.FC = () => {
                   )}
 
                   <div className="mb-4 mt-4">
-                    <h3 className={`font-teko text-4xl uppercase transition-colors ${isActivePlan ? 'text-green-400' : 'text-white group-hover:text-co-yellow'}`}>{pkg.name}</h3>
+                    <h3 className={`font-shrikhand text-4xl uppercase transition-colors ${isActivePlan ? 'text-green-400' : 'text-white group-hover:text-co-yellow'}`}>{pkg.name}</h3>
                     <div className="flex items-baseline gap-1 mt-2 border-b border-zinc-800 pb-4">
                       <span className="text-3xl font-bold text-white">${finalPrice}</span>
                       <span className="text-sm text-zinc-500 uppercase font-medium">/ {pkg.isClassPack ? 'One-Time' : 'Month'}</span>
@@ -355,13 +355,13 @@ const CheckoutPage: React.FC = () => {
                   </ul>
 
                   {isActivePlan ? (
-                    <button disabled className="w-full bg-green-900/20 text-green-500 border border-green-900/50 py-4 uppercase font-teko text-xl rounded cursor-default tracking-wide">
+                    <button disabled className="w-full bg-green-900/20 text-green-500 border border-green-900/50 py-4 uppercase font-shrikhand text-xl rounded cursor-default tracking-wide">
                       Active
                     </button>
                   ) : (
                     <button 
                       onClick={() => handleSubscribe(pkg.id)}
-                      className="w-full py-4 uppercase font-teko text-2xl transition-colors tracking-wide border bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow"
+                      className="w-full py-4 uppercase font-shrikhand text-2xl transition-colors tracking-wide border bg-black text-white border-zinc-700 hover:bg-co-yellow hover:text-black hover:border-co-yellow"
                     >
                       {pkg.isClassPack ? 'Buy Pack' : 'Select Plan'}
                     </button>
@@ -378,7 +378,7 @@ const CheckoutPage: React.FC = () => {
             
             {/* Status Panel */}
             <div>
-               <h3 className="flex items-center gap-2 text-white font-teko text-3xl uppercase mb-4">
+               <h3 className="flex items-center gap-2 text-white font-shrikhand text-3xl uppercase mb-4">
                  <AlertCircle size={24} className="text-co-yellow" /> Subscription Status
                </h3>
                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
@@ -399,7 +399,7 @@ const CheckoutPage: React.FC = () => {
 
             {/* Billing History Link */}
             <div>
-               <h3 className="flex items-center gap-2 text-white font-teko text-3xl uppercase mb-4">
+               <h3 className="flex items-center gap-2 text-white font-shrikhand text-3xl uppercase mb-4">
                  <CreditCard size={24} className="text-co-yellow" /> Billing Portal
                </h3>
                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
@@ -410,12 +410,12 @@ const CheckoutPage: React.FC = () => {
                         <button 
                             onClick={handleOpenPortal} 
                             disabled={processing}
-                            className="bg-white text-black px-8 py-3 uppercase hover:bg-zinc-200 transition-colors w-full font-teko text-2xl tracking-wide border border-transparent"
+                            className="bg-white text-black px-8 py-3 uppercase hover:bg-zinc-200 transition-colors w-full font-shrikhand text-2xl tracking-wide border border-transparent"
                         >
                             Manage Subscription
                         </button>
                    ) : (
-                        <button disabled className="bg-zinc-800 text-zinc-500 px-8 py-3 uppercase cursor-not-allowed w-full border border-zinc-700 font-teko text-2xl tracking-wide">
+                        <button disabled className="bg-zinc-800 text-zinc-500 px-8 py-3 uppercase cursor-not-allowed w-full border border-zinc-700 font-shrikhand text-2xl tracking-wide">
                             No Billing History
                         </button>
                    )}

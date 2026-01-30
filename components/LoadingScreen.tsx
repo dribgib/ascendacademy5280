@@ -50,11 +50,11 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ text = "Ascend Academy", 
       </div>
 
       <div className="text-center">
-        <h2 className="text-white font-teko text-5xl tracking-widest uppercase animate-pulse">
+        <h2 className="text-white font-shrikhand text-5xl tracking-widest uppercase animate-pulse">
             {text}
         </h2>
         {subText && (
-            <p className="text-zinc-500 font-teko text-xl uppercase tracking-wide mt-2">
+            <p className="text-zinc-500 font-shrikhand text-xl uppercase tracking-wide mt-2">
                 {subText}
             </p>
         )}

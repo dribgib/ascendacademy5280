@@ -351,7 +351,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       <div className="flex flex-col mb-10 border-b border-zinc-800 pb-8">
         <div className="flex flex-wrap justify-between items-start gap-6">
             <div className="flex-1 min-w-[300px]">
-                <h1 className="font-teko text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap mb-2">
+                <h1 className="font-shrikhand text-5xl md:text-6xl text-white uppercase leading-none whitespace-nowrap mb-2">
                     {isAdminView ? "Coach's Dashboard" : "My Team"}
                 </h1>
                 <p className="text-zinc-500 max-w-xl">
@@ -366,19 +366,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="flex flex-wrap gap-3 w-full lg:w-auto mt-4 lg:mt-0 justify-start lg:justify-end">
                     <button 
                         onClick={() => setShowAccountModal(true)}
-                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-shrikhand text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <Settings size={18} /> Account
                     </button>
                     <button 
                         onClick={handleManageBilling}
-                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-teko text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="border border-zinc-700 text-zinc-300 px-6 py-3 font-shrikhand text-xl uppercase hover:bg-zinc-800 hover:text-white rounded flex items-center justify-center gap-2 transition-colors whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <CreditCard size={18} /> Billing
                     </button>
                     <button 
                         onClick={() => setShowAddKidModal(true)}
-                        className="bg-co-yellow text-black px-8 py-3 font-teko text-xl uppercase rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
+                        className="bg-co-yellow text-black px-8 py-3 font-shrikhand text-xl uppercase rounded hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-grow sm:flex-grow-0"
                     >
                         <Plus size={20} /> Add Athlete
                     </button>
@@ -391,13 +391,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <div className="bg-zinc-900 border border-zinc-700 p-1 rounded-lg inline-flex">
                     <button 
                         onClick={() => toggleView('parent')}
-                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+                        className={`px-6 py-2 rounded-md font-shrikhand text-xl uppercase transition-all whitespace-nowrap ${!isAdminView ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
                     >
                         My Team
                     </button>
                     <button 
                         onClick={() => toggleView('admin')}
-                        className={`px-6 py-2 rounded-md font-teko text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black' : 'text-zinc-500 hover:text-white'}`}
+                        className={`px-6 py-2 rounded-md font-shrikhand text-xl uppercase transition-all whitespace-nowrap ${isAdminView ? 'bg-co-yellow text-black' : 'text-zinc-500 hover:text-white'}`}
                     >
                         Coach
                     </button>
@@ -407,7 +407,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
       </div>
 
       {systemError && (
-          <div className="bg-red-900/20 border border-red-900 p-4 rounded-lg mb-8 flex items-center gap-4 text-red-200">
+          <div className="bg-yellow-900/20 border border-yellow-900 p-4 rounded-lg mb-8 flex items-center gap-4 text-yellow-200">
               <AlertTriangle size={24} />
               <div>
                   <h3 className="font-bold uppercase">System Alert</h3>
@@ -426,9 +426,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 {kids.length === 0 ? (
                     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-10 text-center">
                         <KidIcon className="mx-auto text-zinc-700 mb-4" size={48} />
-                        <h3 className="text-white font-teko text-2xl uppercase mb-2">No Athletes Found</h3>
+                        <h3 className="text-white font-shrikhand text-2xl uppercase mb-2">No Athletes Found</h3>
                         <p className="text-zinc-500 text-sm mb-6">Add your child to start scheduling sessions.</p>
-                        <button onClick={() => setShowAddKidModal(true)} className="text-co-yellow underline uppercase font-teko text-xl">
+                        <button onClick={() => setShowAddKidModal(true)} className="text-co-yellow underline uppercase font-shrikhand text-xl">
                             Add First Athlete
                         </button>
                     </div>
@@ -439,7 +439,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         
                         <button 
                             onClick={(e) => { e.stopPropagation(); handleDeleteKid(kid); }}
-                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors z-10"
+                            className="absolute top-4 right-4 text-zinc-600 hover:text-zinc-300 transition-colors z-10"
                             title="Remove Athlete"
                         >
                             <Trash2 size={16} />
@@ -459,7 +459,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
                             <div className="flex-1 min-w-0 pr-6">
                                 <h3 
-                                    className={`font-teko text-3xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
+                                    className={`font-shrikhand text-3xl text-white uppercase leading-none mt-1 truncate ${kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused' ? 'cursor-pointer hover:text-co-yellow' : ''}`}
                                     onClick={() => {
                                         if (kid.subscriptionStatus !== 'active' && kid.subscriptionStatus !== 'paused') {
                                             navigate(`/checkout/p_elite?kidId=${kid.id}`);
@@ -512,7 +512,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                     e.stopPropagation();
                                                     navigate(`/checkout/${getPackageIdForUrl(kid.subscriptionId)}?kidId=${kid.id}`);
                                                 }}
-                                                className="flex-1 bg-white hover:bg-zinc-200 text-black text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                                className="flex-1 bg-white hover:bg-zinc-200 text-black text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-shrikhand tracking-wide"
                                             >
                                                 <RefreshCw size={12} /> Change Plan
                                             </button>
@@ -521,14 +521,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                     e.stopPropagation(); 
                                                     navigate(`/checkout/pack_10_45min?kidId=${kid.id}`); 
                                                 }}
-                                                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-blue-500 font-teko tracking-wide"
+                                                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-blue-500 font-shrikhand tracking-wide"
                                             >
                                                 <Plus size={12} /> Buy Pack
                                             </button>
                                         </div>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handlePauseSubscription(kid); }}
-                                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-teko tracking-wide"
+                                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 border border-zinc-700 font-shrikhand tracking-wide"
                                         >
                                             <PauseCircle size={12} /> Pause Subscription
                                         </button>
@@ -566,7 +566,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             <div className="flex gap-2 w-full">
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); handleResumeSubscription(kid); }}
-                                                    className="flex-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                                    className="flex-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] uppercase font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-shrikhand tracking-wide"
                                                 >
                                                     <PlayCircle size={12} /> Resume
                                                 </button>
@@ -575,7 +575,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                         e.stopPropagation(); 
                                                         navigate(`/checkout/pack_10_45min?kidId=${kid.id}`); 
                                                     }}
-                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 font-teko tracking-wide"
+                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-2 rounded transition-colors flex items-center justify-center gap-1 font-shrikhand tracking-wide"
                                                 >
                                                     <Plus size={12} /> Buy Pack
                                                 </button>
@@ -611,7 +611,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             
                                             <button 
                                                 onClick={() => navigate(`/checkout/pack_10_45min?kidId=${kid.id}`)} 
-                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-teko tracking-wide"
+                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-shrikhand tracking-wide"
                                             >
                                                 Buy More Credits <ChevronRight size={12} />
                                             </button>
@@ -619,7 +619,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     ) : (
                                     <button 
                                         onClick={() => navigate(`/checkout/p_elite?kidId=${kid.id}`)} 
-                                        className="w-full text-xs uppercase font-medium bg-red-900/40 text-red-200 px-3 py-2 rounded border border-red-900/50 hover:bg-red-900 transition-colors flex items-center justify-center gap-1 mt-2"
+                                        className="w-full text-xs uppercase font-medium bg-zinc-800 text-zinc-300 px-3 py-2 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1 mt-2"
                                     >
                                         No Active Plan <ChevronRight size={12} />
                                     </button>
@@ -642,8 +642,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 {/* Right Col: Schedule */}
                 <div className="lg:col-span-2">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-                    <h2 className="font-teko text-3xl text-white uppercase mb-6 flex items-center gap-2">
-                    <Calendar className="text-co-red" /> Upcoming Sessions
+                    <h2 className="font-shrikhand text-3xl text-white uppercase mb-6 flex items-center gap-2">
+                    <Calendar className="text-co-yellow" /> Upcoming Sessions
                     </h2>
                     <div className="space-y-4">
                     {events.length === 0 ? <p className="text-zinc-500">No upcoming sessions found.</p> : events.map(evt => {
@@ -681,12 +681,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     className={`
                                         text-xs py-2 px-3 rounded uppercase font-bold transition-colors
                                         ${isRegistered 
-                                        ? 'bg-green-900/30 text-green-500 border border-green-900 hover:bg-red-900/50 hover:text-red-200 hover:border-red-900 cursor-pointer' 
+                                        ? 'bg-green-900/30 text-green-500 border border-green-900 hover:bg-zinc-800 hover:text-zinc-300 hover:border-zinc-700 cursor-pointer' 
                                         : (limitReached || !hasPlan)
                                             ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed border border-zinc-800'
                                             : isFull
                                                 ? 'bg-zinc-800 border border-zinc-700 text-white hover:border-co-yellow'
-                                                : 'bg-zinc-800 hover:bg-co-red hover:text-white text-zinc-300 border border-zinc-700'}
+                                                : 'bg-zinc-800 hover:bg-co-yellow hover:text-black text-zinc-300 border border-zinc-700'}
                                     `}
                                     >
                                     {isRegistered ? (
@@ -714,7 +714,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
             <button onClick={() => setShowAccountModal(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white"><X size={24} /></button>
             <div className="text-center mb-8">
                 <Settings className="mx-auto text-co-yellow mb-4" size={48} />
-                <h2 className="font-teko text-4xl text-white uppercase tracking-wide">Account Settings</h2>
+                <h2 className="font-shrikhand text-4xl text-white uppercase tracking-wide">Account Settings</h2>
             </div>
             <div className="mb-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded">
                 <p className="text-zinc-500 text-xs uppercase font-medium mb-1 tracking-wider">Registered Email</p>
@@ -722,7 +722,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 <p className="text-zinc-600 text-[10px] mt-2 italic">Contact support to change email address.</p>
             </div>
             <form onSubmit={handleUpdatePassword} className="border-t border-zinc-800 pt-6">
-                <p className="text-white text-xl font-teko uppercase mb-4">Change Password</p>
+                <p className="text-white text-xl font-shrikhand uppercase mb-4">Change Password</p>
                 <div className="space-y-4">
                     <div>
                         <input required type="password" placeholder="New Password" minLength={6} value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" />
@@ -730,9 +730,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     <div>
                         <input required type="password" placeholder="Confirm Password" minLength={6} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full bg-black border border-zinc-700 rounded px-4 py-3 text-white text-sm focus:border-co-yellow outline-none transition-colors" />
                     </div>
-                    <button type="submit" className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded transition-colors shadow-lg mt-2">Update Password</button>
+                    <button type="submit" className="w-full bg-co-yellow hover:bg-white text-black py-3 uppercase font-shrikhand text-xl rounded transition-colors shadow-lg mt-2">Update Password</button>
                 </div>
-                {accountMsg && <div className={`mt-4 text-center p-2 rounded text-sm ${accountMsg.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>{accountMsg}</div>}
+                {accountMsg && <div className={`mt-4 text-center p-2 rounded text-sm ${accountMsg.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}`}>{accountMsg}</div>}
             </form>
         </div>
         </div>
@@ -754,7 +754,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
             {addStep === 1 && (
                 <>
-                <h2 className="font-teko text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
+                <h2 className="font-shrikhand text-3xl text-white uppercase mb-6">New Athlete Profile</h2>
                 <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <div className="flex items-center gap-6 mb-6 p-4 bg-black rounded border border-zinc-800">
                     <div className="h-20 w-20 rounded-full overflow-hidden bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 relative">
@@ -797,15 +797,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                     <label className="block text-zinc-400 text-xs uppercase mb-2">Interests</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {POPULAR_SPORTS.map(sport => (
-                        <button type="button" key={sport} onClick={() => toggleSport(sport)} className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-red border-co-red text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}>
+                        <button type="button" key={sport} onClick={() => toggleSport(sport)} className={`text-xs p-2 rounded border transition-colors ${selectedSports.includes(sport) ? 'bg-co-yellow border-co-yellow text-black' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}>
                         {sport}
                         </button>
                     ))}
                     </div>
                 </div>
                 <div className="flex gap-4 pt-4">
-                    <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl font-medium rounded flex items-center justify-center gap-2">Next: Waiver <ArrowRight size={18} /></button>
+                    <button type="button" onClick={() => { setShowAddKidModal(false); resetForm(); }} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Cancel</button>
+                    <button type="submit" className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-shrikhand text-xl font-medium rounded flex items-center justify-center gap-2">Next: Waiver <ArrowRight size={18} /></button>
                 </div>
                 </form>
                 </>
@@ -813,7 +813,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
             {addStep === 2 && (
                 <div className="text-center">
-                    <h2 className="font-teko text-3xl text-white uppercase mb-2">Liability Waiver</h2>
+                    <h2 className="font-shrikhand text-3xl text-white uppercase mb-2">Liability Waiver</h2>
                     <p className="text-zinc-500 text-sm mb-8">
                         Step 1 of 2: General Liability Release.
                     </p>
@@ -823,16 +823,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         <p className="text-zinc-400 text-sm mb-4">
                             Click below to sign the liability waiver for <strong>{newKidName.first}</strong>.
                         </p>
-                        <a href={WAIVER_CONFIG.liability.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide">
+                        <a href={WAIVER_CONFIG.liability.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-yellow hover:text-white underline font-bold uppercase tracking-wide">
                             Open Liability Form <ExternalLink size={16} />
                         </a>
                     </div>
 
                     <div className="flex gap-4">
-                        <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                        <button type="button" onClick={() => setAddStep(1)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Back</button>
                         <button 
                             onClick={() => setAddStep(3)}
-                            className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 font-medium"
+                            className="flex-1 bg-white hover:bg-zinc-200 text-black py-3 uppercase font-shrikhand text-xl rounded flex items-center justify-center gap-2 font-medium"
                         >
                             Next Step <ArrowRight size={18} />
                         </button>
@@ -842,7 +842,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
             {addStep === 3 && (
                 <div className="text-center">
-                    <h2 className="font-teko text-3xl text-white uppercase mb-2">Photo & Video Waiver</h2>
+                    <h2 className="font-shrikhand text-3xl text-white uppercase mb-2">Photo & Video Waiver</h2>
                     <p className="text-zinc-500 text-sm mb-8">
                         Step 2 of 2: Media Release.
                     </p>
@@ -852,16 +852,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         <p className="text-zinc-400 text-sm mb-4">
                             Click below to sign the media release form for <strong>{newKidName.first}</strong>.
                         </p>
-                        <a href={WAIVER_CONFIG.photo.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-red hover:text-white underline font-bold uppercase tracking-wide">
+                        <a href={WAIVER_CONFIG.photo.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-co-yellow hover:text-white underline font-bold uppercase tracking-wide">
                             Open Media Form <ExternalLink size={16} />
                         </a>
                     </div>
 
                     <div className="flex gap-4">
-                        <button type="button" onClick={() => setAddStep(2)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                        <button type="button" onClick={() => setAddStep(2)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Back</button>
                         <button 
                             onClick={startVerification}
-                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 font-medium"
+                            className="flex-1 bg-co-yellow hover:bg-white text-black py-3 uppercase font-shrikhand text-xl rounded flex items-center justify-center gap-2 font-medium"
                         >
                             Verify & Add <CheckCircle size={18} />
                         </button>
@@ -871,7 +871,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
 
             {addStep === 4 && (
                 <div className="text-center">
-                    <h2 className="font-teko text-3xl text-white uppercase mb-4">Verifying Documents</h2>
+                    <h2 className="font-shrikhand text-3xl text-white uppercase mb-4">Verifying Documents</h2>
                     
                     {polling ? (
                         <div className="py-12">
@@ -886,14 +886,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                         </div>
                     ) : verificationFailed ? (
                         <div className="py-6">
-                            <div className="mb-8 bg-red-900/20 border border-red-900/50 p-4 rounded text-left">
+                            <div className="mb-8 bg-yellow-900/20 border border-yellow-900/50 p-4 rounded text-left">
                                 <div className="flex items-start gap-3">
-                                    <ShieldAlert className="text-red-500 flex-shrink-0" />
+                                    <ShieldAlert className="text-yellow-500 flex-shrink-0" />
                                     <div>
-                                        <h4 className="text-red-400 font-bold uppercase text-sm mb-1">Verification Failed</h4>
-                                        <p className="text-red-300 text-xs">{failMessage}</p>
+                                        <h4 className="text-yellow-400 font-bold uppercase text-sm mb-1">Verification Failed</h4>
+                                        <p className="text-yellow-300 text-xs">{failMessage}</p>
                                         
-                                        <div className="mt-4 pt-4 border-t border-red-900/30">
+                                        <div className="mt-4 pt-4 border-t border-yellow-900/30">
                                             <label className="flex items-start gap-2 cursor-pointer">
                                                 <input 
                                                     type="checkbox" 
@@ -910,11 +910,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 </div>
                             </div>
                             <div className="flex gap-4">
-                                <button type="button" onClick={() => setAddStep(3)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-teko text-xl">Back</button>
+                                <button type="button" onClick={() => setAddStep(3)} className="flex-1 py-3 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Back</button>
                                 <button 
                                     onClick={handleManualOverride}
                                     disabled={!manualOverride}
-                                    className="flex-1 bg-red-900 hover:bg-red-800 text-white py-3 uppercase font-teko text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 uppercase font-shrikhand text-xl rounded flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     Force Add Athlete
                                 </button>

@@ -336,10 +336,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
   const renderScheduleTab = () => (
       <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
+            <h2 className="font-shrikhand text-3xl text-white uppercase flex items-center gap-2">
                 <List className="text-zinc-400" /> Upcoming Sessions
             </h2>
-            <button onClick={openCreateModal} className="bg-co-red text-white px-4 py-1 text-sm uppercase rounded hover:bg-red-800 flex items-center gap-2 font-medium">
+            <button onClick={openCreateModal} className="bg-co-yellow text-black px-4 py-1 text-sm uppercase rounded hover:bg-white flex items-center gap-2 font-medium">
                 <Plus size={16} /> New Session
             </button>
           </div>
@@ -386,7 +386,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                 <button onClick={() => openEditModal(evt)} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded uppercase font-medium flex items-center gap-2">
                    <Edit size={14} /> Edit
                 </button>
-                <button onClick={() => initiateDeleteEvent(evt)} className="text-xs text-co-red hover:text-red-400 ml-auto uppercase font-medium flex items-center gap-1">
+                <button onClick={() => initiateDeleteEvent(evt)} className="text-xs text-zinc-400 hover:text-zinc-200 ml-auto uppercase font-medium flex items-center gap-1">
                    <Trash2 size={14} /> Cancel
                 </button>
               </div>
@@ -407,10 +407,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       return (
           <div className="space-y-8">
                <div className="flex justify-between items-center">
-                    <h2 className="font-teko text-3xl text-white uppercase flex items-center gap-2">
+                    <h2 className="font-shrikhand text-3xl text-white uppercase flex items-center gap-2">
                         <CalendarIcon className="text-zinc-400" /> Calendar View
                     </h2>
-                    <button onClick={openCreateModal} className="bg-co-red text-white px-4 py-1 text-sm font-medium uppercase rounded hover:bg-red-800 flex items-center gap-2">
+                    <button onClick={openCreateModal} className="bg-co-yellow text-black px-4 py-1 text-sm font-medium uppercase rounded hover:bg-white flex items-center gap-2">
                         <Plus size={16} /> New Session
                     </button>
                </div>
@@ -421,7 +421,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                            <div className="bg-zinc-950 p-3 border-b border-zinc-800 text-center">
                                {/* Date string here is already formatted by API as YYYY-MM-DD in Denver time. 
                                    We parse it back to local just for getting the weekday name, or we can rely on string parsing to be safe */}
-                               <span className="text-co-yellow font-teko text-2xl">
+                               <span className="text-co-yellow font-shrikhand text-2xl">
                                   {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                                </span>
                            </div>
@@ -447,7 +447,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
   const renderUsersTab = () => (
       <div>
-         <h2 className="font-teko text-3xl text-white uppercase mb-6 flex items-center gap-2">
+         <h2 className="font-shrikhand text-3xl text-white uppercase mb-6 flex items-center gap-2">
             <Users className="text-zinc-400" /> Athletes & Parents
          </h2>
          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden overflow-x-auto">
@@ -480,10 +480,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                             
                                             return (
                                                 <div key={k.id} className="flex flex-col gap-1">
-                                                    <div className={`flex items-center gap-2 px-2 py-1 rounded border text-xs ${isLimitReached ? 'bg-red-900/20 border-red-900 text-red-300' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}>
+                                                    <div className={`flex items-center gap-2 px-2 py-1 rounded border text-xs ${isLimitReached ? 'bg-yellow-900/20 border-yellow-900 text-yellow-300' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}>
                                                         <span className="font-bold">{k.firstName}</span>
                                                         {hasStats ? (
-                                                            <span className={`text-[10px] ${isLimitReached ? 'text-red-400' : 'text-co-yellow'}`}>
+                                                            <span className={`text-[10px] ${isLimitReached ? 'text-yellow-400' : 'text-co-yellow'}`}>
                                                                 {k.usageStats!.used}/{k.usageStats!.limit}
                                                             </span>
                                                         ) : (
@@ -509,7 +509,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                     {u.role !== 'ADMIN' && (
                                         <button 
                                             onClick={() => handleDeleteUser(u)}
-                                            className="text-zinc-500 hover:text-red-500 transition-colors"
+                                            className="text-zinc-500 hover:text-zinc-300 transition-colors"
                                             title="Delete User"
                                         >
                                             <Trash2 size={16} />
@@ -530,7 +530,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       {!hideHeader && (
           <div className="flex justify-between items-center mb-10">
             <div>
-                <h1 className="font-teko text-6xl text-white uppercase mb-2">Coach's Dashboard</h1>
+                <h1 className="font-shrikhand text-6xl text-white uppercase mb-2">Coach's Dashboard</h1>
                 <p className="text-zinc-500">Manage schedule, roster, and check-ins.</p>
             </div>
           </div>
@@ -538,7 +538,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
       {/* --- QUICK CHECK-IN BAR --- */}
       <div className="bg-card-bg border border-zinc-700 p-6 rounded-lg mb-8 shadow-xl">
-          <h2 className="font-teko text-3xl text-white uppercase mb-4 flex items-center gap-2">
+          <h2 className="font-shrikhand text-3xl text-white uppercase mb-4 flex items-center gap-2">
               <QrCode className="text-co-yellow" /> Quick Check-In
           </h2>
           <form onSubmit={handleCheckIn} className="flex flex-col md:flex-row gap-4 items-end">
@@ -573,7 +573,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
               </div>
               <button 
                 type="submit" 
-                className="w-full md:w-auto bg-white text-black font-teko text-xl uppercase px-8 py-3 rounded hover:bg-zinc-200 transition-colors"
+                className="w-full md:w-auto bg-white text-black font-shrikhand text-xl uppercase px-8 py-3 rounded hover:bg-zinc-200 transition-colors"
               >
                   Check In
               </button>
@@ -590,19 +590,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       <div className="flex gap-4 border-b border-zinc-800 mb-8 overflow-x-auto">
           <button 
               onClick={() => handleTabChange('schedule')}
-              className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'schedule' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
+              className={`pb-3 px-2 font-shrikhand text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'schedule' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
           >
               <List className="inline-block mr-2 relative -top-[2px]" size={18} /> Schedule List
           </button>
           <button 
               onClick={() => handleTabChange('calendar')}
-              className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'calendar' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
+              className={`pb-3 px-2 font-shrikhand text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'calendar' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
           >
               <CalendarIcon className="inline-block mr-2 relative -top-[2px]" size={18} /> Calendar View
           </button>
           <button 
               onClick={() => handleTabChange('users')}
-              className={`pb-3 px-2 font-teko text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'users' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
+              className={`pb-3 px-2 font-shrikhand text-2xl uppercase tracking-wide transition-colors whitespace-nowrap ${activeTab === 'users' ? 'text-co-yellow border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-white'}`}
           >
               <Users className="inline-block mr-2 relative -top-[2px]" size={18} /> Manage Users
           </button>
@@ -621,7 +621,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}>
             <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <h2 className="font-teko text-4xl text-white uppercase mb-6">{isEditing ? 'Edit Session' : 'Create New Session'}</h2>
+                <h2 className="font-shrikhand text-4xl text-white uppercase mb-6">{isEditing ? 'Edit Session' : 'Create New Session'}</h2>
                 <form onSubmit={handleSaveEvent} className="space-y-4">
                     <div>
                         <label className="block text-zinc-400 text-xs uppercase mb-1">Title</label>
@@ -756,8 +756,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                         <input required type="text" className="w-full bg-black border border-zinc-700 p-2 text-white" value={eventForm.location} onChange={e => setEventForm({...eventForm, location: e.target.value})} />
                     </div>
                     <div className="flex gap-4 pt-4">
-                        <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 text-zinc-400 hover:text-white uppercase font-teko text-xl">Cancel</button>
-                        <button type="submit" className="flex-1 bg-co-red hover:bg-white hover:text-black text-white py-3 uppercase font-teko text-xl rounded">
+                        <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 text-zinc-400 hover:text-white uppercase font-shrikhand text-xl">Cancel</button>
+                        <button type="submit" className="flex-1 bg-co-yellow hover:bg-white hover:text-black text-black py-3 uppercase font-shrikhand text-xl rounded">
                             {isEditing ? 'Save Changes' : (isRecurring ? 'Create Recurring' : 'Create Session')}
                         </button>
                     </div>
@@ -769,12 +769,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
       {/* DELETE CONFIRMATION MODAL */}
       {eventToDelete && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setEventToDelete(null)}>
-            <div className="bg-card-bg border border-red-900/50 p-8 rounded-lg max-w-sm w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
+            <div className="bg-card-bg border border-yellow-900/50 p-8 rounded-lg max-w-sm w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-center mb-6">
-                    <AlertTriangle className="text-co-red w-16 h-16" />
+                    <AlertTriangle className="text-co-yellow w-16 h-16" />
                 </div>
                 
-                <h2 className="text-center font-teko text-3xl text-white uppercase mb-2">Cancel Session?</h2>
+                <h2 className="text-center font-shrikhand text-3xl text-white uppercase mb-2">Cancel Session?</h2>
                 <p className="text-center text-zinc-400 text-sm mb-8">
                     You are about to cancel <strong className="text-white">{eventToDelete.title}</strong> on {eventToDelete.date}.
                 </p>
@@ -782,13 +782,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                 <div className="space-y-3">
                     <button 
                         onClick={() => confirmDelete('single')}
-                        className="w-full bg-red-900/40 hover:bg-red-900 text-red-100 border border-red-900 py-3 uppercase font-teko text-xl rounded transition-colors"
+                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 py-3 uppercase font-shrikhand text-xl rounded transition-colors"
                     >
                         Delete Just This Session
                     </button>
                     <button 
                         onClick={() => confirmDelete('future')}
-                        className="w-full bg-black hover:bg-zinc-800 text-zinc-300 border border-zinc-700 py-3 uppercase font-teko text-xl rounded transition-colors"
+                        className="w-full bg-black hover:bg-zinc-800 text-zinc-300 border border-zinc-700 py-3 uppercase font-shrikhand text-xl rounded transition-colors"
                     >
                         Delete This & All Future
                     </button>
@@ -809,7 +809,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
             <div className="bg-card-bg border border-zinc-700 p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <h2 className="font-teko text-4xl text-white uppercase">{showRosterModal.title}</h2>
+                        <h2 className="font-shrikhand text-4xl text-white uppercase">{showRosterModal.title}</h2>
                         <p className="text-zinc-500">{showRosterModal.date} @ {showRosterModal.startTime}</p>
                     </div>
                     <button onClick={() => setShowRosterModal(null)} className="text-zinc-500 hover:text-white"><X size={24} /></button>
@@ -818,7 +818,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Current Roster */}
                     <div>
-                        <h3 className="font-teko text-2xl text-white uppercase mb-4 border-b border-zinc-800 pb-2">Registered Athletes ({showRosterModal.registeredKidIds.length})</h3>
+                        <h3 className="font-shrikhand text-2xl text-white uppercase mb-4 border-b border-zinc-800 pb-2">Registered Athletes ({showRosterModal.registeredKidIds.length})</h3>
                         <ul className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
                             {showRosterModal.registeredKidIds.map(kidId => {
                                 const isCheckedIn = showRosterModal.checkedInKidIds.includes(kidId);
@@ -830,7 +830,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                         </div>
                                         <button 
                                             onClick={() => handleRemoveKidFromRoster(kidId)}
-                                            className="text-zinc-600 hover:text-red-500 p-1"
+                                            className="text-zinc-600 hover:text-zinc-300 p-1"
                                             title="Remove"
                                         >
                                             <X size={16} />
@@ -844,7 +844,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
 
                     {/* Add Athlete */}
                     <div>
-                        <h3 className="font-teko text-2xl text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add to Roster</h3>
+                        <h3 className="font-shrikhand text-2xl text-white uppercase mb-4 border-b border-zinc-800 pb-2">Add to Roster</h3>
                         <div className="flex gap-2 mb-4">
                             <select 
                                 className="flex-1 bg-black border border-zinc-700 p-2 text-white rounded text-sm outline-none"
@@ -863,7 +863,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                             <button 
                                 onClick={handleAddKidToRoster}
                                 disabled={!kidToAdd}
-                                className="bg-white text-black px-4 uppercase font-teko text-lg rounded hover:bg-zinc-200 disabled:opacity-50"
+                                className="bg-white text-black px-4 uppercase font-shrikhand text-lg rounded hover:bg-zinc-200 disabled:opacity-50"
                             >
                                 Add
                             </button>

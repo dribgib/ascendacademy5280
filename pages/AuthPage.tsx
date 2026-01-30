@@ -122,13 +122,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                     <div className="flex justify-center mb-6">
                         <Mail className="text-co-yellow h-16 w-16" />
                     </div>
-                    <h2 className="font-teko text-4xl text-white uppercase mb-4">Check Your Inbox</h2>
+                    <h2 className="font-shrikhand text-4xl text-white uppercase mb-4">Check Your Inbox</h2>
                     <p className="text-zinc-400 mb-8 text-lg">
                         We've sent password reset instructions to <span className="text-white font-bold">{email}</span>.
                     </p>
                     <button 
                         onClick={() => { setResetSent(false); setResetMode(false); setIsLogin(true); setError(''); }}
-                        className="w-full bg-white text-black font-teko text-xl uppercase py-3 rounded hover:bg-zinc-200 transition-colors"
+                        className="w-full bg-white text-black font-shrikhand text-xl uppercase py-3 rounded hover:bg-zinc-200 transition-colors"
                     >
                         Return to Login
                     </button>
@@ -156,7 +156,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 <div className="flex justify-center mb-4">
                     <CheckCircle className="text-co-yellow h-16 w-16" />
                 </div>
-                <h2 className="font-teko text-4xl text-white uppercase mb-4">Verify Your Email</h2>
+                <h2 className="font-shrikhand text-4xl text-white uppercase mb-4">Verify Your Email</h2>
                 <p className="text-zinc-400 mb-6 text-lg">
                     We've sent a verification link to <span className="text-white font-bold">{email}</span>.
                     <br />
@@ -166,7 +166,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 {/* Developer Hint */}
                 <div className="bg-zinc-900 border border-zinc-700 p-4 rounded text-left mb-6">
                     <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle size={16} className="text-co-red" />
+                        <AlertCircle size={16} className="text-co-yellow" />
                         <span className="text-white font-bold text-xs uppercase tracking-wide">Development Mode Tip</span>
                     </div>
                     <p className="text-zinc-500 text-xs leading-relaxed">
@@ -179,7 +179,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 <div className="flex flex-col gap-3">
                     <button 
                         onClick={() => { setMagicLinkSent(false); setIsLogin(true); }} 
-                        className="bg-white text-black font-teko text-xl uppercase py-3 rounded hover:bg-zinc-200 transition-colors"
+                        className="bg-white text-black font-shrikhand text-xl uppercase py-3 rounded hover:bg-zinc-200 transition-colors"
                     >
                         Return to Login
                     </button>
@@ -213,13 +213,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                 <div className="flex border-b border-zinc-800">
                 <button 
                     onClick={() => setIsLogin(true)}
-                    className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+                    className={`flex-1 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-colors ${isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
                 >
                     Login
                 </button>
                 <button 
                     onClick={() => setIsLogin(false)}
-                    className={`flex-1 py-4 font-teko text-2xl uppercase tracking-wide transition-colors ${!isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-red' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+                    className={`flex-1 py-4 font-shrikhand text-2xl uppercase tracking-wide transition-colors ${!isLogin ? 'text-white bg-zinc-800/50 border-b-2 border-co-yellow' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'}`}
                 >
                     Create Account
                 </button>
@@ -228,7 +228,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
 
             <div className="p-8">
             <div className="text-center mb-6">
-                <h2 className="font-teko text-3xl text-white uppercase">
+                <h2 className="font-shrikhand text-3xl text-white uppercase">
                     {resetMode ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Join The Squad')}
                 </h2>
                 <p className="text-zinc-500 text-sm mt-1">
@@ -239,7 +239,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
             </div>
 
             {error && (
-                <div className="bg-red-900/30 text-red-200 p-3 rounded text-sm mb-4 border border-red-900">
+                <div className="bg-yellow-900/30 text-yellow-200 p-3 rounded text-sm mb-4 border border-yellow-900">
                 {error}
                 </div>
             )}
@@ -254,7 +254,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                     <button 
                         type="submit" 
                         disabled={loading}
-                        className="w-full bg-co-yellow text-black hover:bg-white font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4 shadow-lg"
+                        className="w-full bg-co-yellow text-black hover:bg-white font-shrikhand text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-4 shadow-lg"
                     >
                         {loading ? 'Sending...' : 'Send Reset Link'}
                     </button>
@@ -313,10 +313,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ setUser }) => {
                     <button 
                     type="submit" 
                     disabled={loading}
-                    className={`w-full font-teko text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg 
+                    className={`w-full font-shrikhand text-xl uppercase py-3 transition-colors disabled:opacity-50 mt-6 shadow-lg 
                         ${isLogin 
                             ? 'bg-co-yellow !text-black hover:bg-white' 
-                            : 'bg-co-red text-white hover:bg-red-800'
+                            : 'bg-co-yellow text-black hover:bg-white'
                         }`}
                     >
                     {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}

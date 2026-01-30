@@ -130,7 +130,7 @@ export const PACKAGES: TrainingPackage[] = [
     billingPeriod: 'Monthly',
     maxSessions: 8,
     description: 'High-intensity training.',
-    color: 'border-co-red',
+    color: 'border-zinc-500',
     features: [
       '8 Sessions / Month',
       '1hr 15min Sessions',
