@@ -190,6 +190,7 @@ const HomePage: React.FC = () => {
           )}
 
           {packageView === 'packs' && (
+            <div className="animate-fade-in">
               <div className="text-center mb-12">
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">In-Season Class Packs</h3>
                 <p className="text-zinc-400 max-w-3xl mx-auto">Perfect for athletes in-season who need flexible training. Buy a pack, use it at your pace, and keep your edge year-round.</p>
