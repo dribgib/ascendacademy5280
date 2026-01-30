@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
           <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
             Elite Youth Athletic Performance<br />Training in Colorado
           </p>
-          <h1 className="font-shrikhand text-5xl md:text-[6.5rem] text-white uppercase leading-[0.85] tracking-wide mb-6 animate-fade-in-up drop-shadow-2xl overflow-visible" style={{ paddingLeft: '0.2em', paddingRight: '0.2em' }}>
+          <h1 className="font-shrikhand text-5xl md:text-[6.5rem] text-white uppercase leading-[0.85] tracking-wide mb-6 animate-fade-in-up drop-shadow-2xl overflow-visible" style={{ paddingLeft: '0.3em', paddingRight: '0.3em' }}>
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-tan">The Competition</span>
           </h1>
