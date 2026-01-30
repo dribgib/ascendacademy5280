@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
-          <p className="font-pinyon text-4xl md:text-5xl text-co-yellow mb-4 drop-shadow-md" style={{WebkitTextStroke: '1px rgba(0,0,0,0.5)'}}>
+          <p className="font-kanit text-xl md:text-2xl text-co-yellow mb-4 drop-shadow-md uppercase tracking-wide font-light">
             Elite youth athletic performance training in Colorado
           </p>
           <h1 className="font-shrikhand text-7xl md:text-[9rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl">
@@ -87,7 +87,7 @@ const HomePage: React.FC = () => {
             <div className="pl-0 md:pl-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-1 bg-co-yellow"></div>
-                <span className="font-pinyon text-2xl text-co-yellow" style={{WebkitTextStroke: '0.5px rgba(0,0,0,0.3)'}}>About The Coach</span>
+                <span className="font-kanit text-sm uppercase tracking-widest text-co-yellow font-medium">About The Coach</span>
               </div>
               <h2 className="font-shrikhand text-6xl md:text-7xl text-white mb-8 uppercase leading-[0.9]">Built Different.</h2>
               <p className="text-zinc-400 text-lg mb-6 leading-relaxed font-light">
@@ -122,7 +122,7 @@ const HomePage: React.FC = () => {
       <section id="packages" className="py-32 bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <p className="font-pinyon text-4xl text-co-yellow mb-2" style={{WebkitTextStroke: '0.5px rgba(0,0,0,0.3)'}}>Find Your Level</p>
+            <p className="font-kanit text-xl text-co-yellow mb-2 uppercase tracking-widest font-light">Find Your Level</p>
             <h2 className="font-shrikhand text-7xl text-white uppercase mb-4">Training Packages</h2>
             <div className="w-24 h-1 bg-co-yellow mx-auto mb-6"></div>
             <p className="text-zinc-400 text-xl max-w-2xl mx-auto font-light font-kanit">Choose your level of commitment. From Rookie foundations to Elite performance.</p>
@@ -240,7 +240,7 @@ const HomePage: React.FC = () => {
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-black/10 rounded-full blur-3xl"></div>
         
         <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
-          <p className="font-pinyon text-4xl md:text-5xl text-black/70 mb-2" style={{WebkitTextStroke: '0.5px rgba(0,0,0,0.2)'}}>Join the Squad</p>
+          <p className="font-kanit text-xl md:text-2xl text-black/70 mb-2 uppercase tracking-widest font-light">Join the Squad</p>
           <h2 className="font-shrikhand text-7xl md:text-8xl text-black uppercase mb-6 drop-shadow-lg">Ready to Ascend?</h2>
           <p className="text-black/80 text-xl md:text-2xl mb-12 max-w-2xl mx-auto font-light font-kanit">
             Spots fill up fast. Create your account, register your athletes, and get to work.
