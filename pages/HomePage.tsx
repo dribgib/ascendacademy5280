@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
           <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
             Elite Youth Athletic Performance Training<br />in Colorado
           </p>
-          <h1 className="font-shrikhand text-5xl md:text-[7rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl">
+          <h1 className="font-shrikhand text-5xl md:text-[7rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl px-4">
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-tan">The Competition</span>
           </h1>
@@ -101,14 +101,14 @@ const HomePage: React.FC = () => {
                 <div className="flex items-center gap-4 border-l-2 border-zinc-800 pl-4">
                   <div className="p-3 bg-zinc-900 rounded-full text-co-yellow"><Trophy size={28} /></div>
                   <div>
-                    <h4 className="font-shrikhand text-xl text-white uppercase">D1 Experience</h4>
+                    <h4 className="font-shrikhand text-lg text-white uppercase">D1 Experience</h4>
                     <p className="text-xs text-zinc-500 uppercase tracking-wider">Proven at top levels</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 border-l-2 border-zinc-800 pl-4">
                   <div className="p-3 bg-zinc-900 rounded-full text-co-red"><Users size={28} /></div>
                   <div>
-                    <h4 className="font-shrikhand text-xl text-white uppercase">Mentorship</h4>
+                    <h4 className="font-shrikhand text-lg text-white uppercase">Mentorship</h4>
                     <p className="text-xs text-zinc-500 uppercase tracking-wider">Character building</p>
                   </div>
                 </div>
@@ -128,12 +128,11 @@ const HomePage: React.FC = () => {
             <p className="text-zinc-400 text-xl max-w-2xl mx-auto font-light font-kanit">Choose your level of commitment. From Rookie foundations to Elite performance.</p>
           </div>
 
-          {/* Tab Switcher */}
           <div className="flex justify-center mb-16">
             <div className="inline-flex bg-zinc-900 border-2 border-zinc-800 p-1.5 rounded-sm">
               <button
                 onClick={() => setPackageView('subscription')}
-                className={`px-8 py-4 font-shrikhand text-xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-kanit text-base uppercase tracking-widest transition-all duration-300 ${
                   packageView === 'subscription'
                     ? 'bg-co-yellow text-black shadow-lg'
                     : 'bg-zinc-900 text-zinc-500 hover:text-white'
@@ -143,7 +142,7 @@ const HomePage: React.FC = () => {
               </button>
               <button
                 onClick={() => setPackageView('packs')}
-                className={`px-8 py-4 font-shrikhand text-xl uppercase tracking-wide transition-all duration-300 ${
+                className={`px-8 py-4 font-kanit text-base uppercase tracking-widest transition-all duration-300 ${
                   packageView === 'packs'
                     ? 'bg-co-yellow text-black shadow-lg'
                     : 'text-zinc-400 hover:text-white'
@@ -154,20 +153,17 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Monthly Subscriptions */}
-          {packageView === 'subscription' && (
             <div className="animate-fade-in">
               <div className="text-center mb-12">
-                <h3 className="font-shrikhand text-5xl text-white uppercase mb-3">Monthly Memberships</h3>
+                <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">Monthly Memberships</h3>
                 <p className="text-zinc-400 max-w-2xl mx-auto">Recurring training with unlimited commitment. Cancel or pause anytime.</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {PACKAGES.filter(pkg => !pkg.isClassPack).map((pkg) => (
                   <div key={pkg.id} className={`bg-card-bg p-8 flex flex-col relative group transition-all duration-300 border-t-4 border-transparent hover:border-co-yellow hover:-translate-y-2`}>
-                    <h3 className="font-kanit text-5xl text-white uppercase mb-2">{pkg.name}</h3>
+                    <h3 className="font-kanit text-2xl text-white uppercase mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                      <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
-                      <span className="text-6xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
+                      <span className="text-2xl font-kanit font-bold text-co-yellow uppercase">$</span>
+                      <span className="text-5xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">/ {pkg.billingPeriod}</span>
                     </div>
                     <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
@@ -181,7 +177,7 @@ const HomePage: React.FC = () => {
                     </ul>
                     <Link 
                       to={`/checkout/${pkg.id}`} 
-                      className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-shrikhand text-2xl text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-wide"
+                      className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-kanit text-base text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-widest"
                     >
                       Select Plan
                     </Link>
@@ -204,10 +200,10 @@ const HomePage: React.FC = () => {
                     <div className="absolute top-4 right-4 bg-co-yellow text-black text-xs px-3 py-1 font-bold uppercase tracking-wider">
                       {pkg.expirationMonths} Months
                     </div>
-                    <h3 className="font-kanit text-4xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
+                    <h3 className="font-kanit text-2xl text-white uppercase mb-2 leading-tight">{pkg.name}</h3>
                     <div className="flex items-baseline mb-8 pb-8 border-b border-zinc-800">
-                      <span className="text-3xl font-kanit font-bold text-co-yellow uppercase">$</span>
-                      <span className="text-6xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
+                      <span className="text-2xl font-kanit font-bold text-co-yellow uppercase">$</span>
+                      <span className="text-5xl font-kanit font-bold text-white uppercase">{pkg.price}</span>
                       <span className="ml-2 text-zinc-500 text-sm font-medium uppercase tracking-wide">one-time</span>
                     </div>
                     <p className="text-zinc-400 text-sm mb-8 min-h-[40px] leading-relaxed">{pkg.description}</p>
@@ -221,7 +217,7 @@ const HomePage: React.FC = () => {
                     </ul>
                     <Link 
                       to={`/checkout/${pkg.id}`} 
-                      className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-shrikhand text-2xl text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-wide"
+                      className="block w-full py-4 bg-black border border-zinc-700 text-center uppercase font-kanit text-base text-white hover:bg-co-yellow hover:text-black hover:border-transparent transition-all duration-300 tracking-widest"
                     >
                       Buy Pack
                     </Link>
