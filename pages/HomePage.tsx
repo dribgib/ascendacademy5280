@@ -47,7 +47,7 @@ const HomePage: React.FC = () => {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
           <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
-            Elite Youth Athletic Performance Training<br />in Colorado
+            Elite Youth Athletic Performance<br />Training in Colorado
           </p>
           <h1 className="font-shrikhand text-5xl md:text-[7rem] text-white uppercase leading-[0.85] tracking-tight mb-6 animate-fade-in-up drop-shadow-2xl px-4">
             Rise Above <br />
@@ -190,11 +190,10 @@ const HomePage: React.FC = () => {
             </div>
           )}
 
-          {/* Class Packs */}
           {packageView === 'packs' && (
             <div className="animate-fade-in">
               <div className="text-center mb-12">
-                <h3 className="font-shrikhand text-5xl text-white uppercase mb-3">In-Season Class Packs</h3>
+                <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">In-Season Class Packs</h3>
                 <p className="text-zinc-400 max-w-3xl mx-auto">Perfect for athletes in-season who need flexible training. Buy a pack, use it at your pace, and keep your edge year-round.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
