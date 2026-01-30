@@ -45,11 +45,11 @@ const HomePage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-black/40 to-black/70"></div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center sm:px-6 lg:px-8 overflow-visible">
           <p className="font-kanit text-2xl md:text-3xl text-co-yellow mb-4 drop-shadow-md font-bold">
             Elite Youth Athletic Performance<br />Training in Colorado
           </p>
-          <h1 className="font-shrikhand text-5xl md:text-[7rem] text-white uppercase leading-[0.85] tracking-normal mb-6 animate-fade-in-up drop-shadow-2xl px-12 md:px-16">
+          <h1 className="font-shrikhand text-5xl md:text-[6.5rem] text-white uppercase leading-[0.85] tracking-wide mb-6 animate-fade-in-up drop-shadow-2xl overflow-visible" style={{ paddingLeft: '0.2em', paddingRight: '0.2em' }}>
             Rise Above <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-co-yellow to-co-tan">The Competition</span>
           </h1>
