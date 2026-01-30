@@ -153,6 +153,8 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
+          {/* Monthly Subscriptions */}
+          {packageView === 'subscription' && (
             <div className="animate-fade-in">
               <div className="text-center mb-12">
                 <h3 className="font-kanit text-3xl text-white uppercase mb-3 tracking-wide">Monthly Memberships</h3>
