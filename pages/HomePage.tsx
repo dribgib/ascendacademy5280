@@ -97,7 +97,7 @@ const HomePage: React.FC = () => {
                 Ascend Academy 5280 isn't just a gym. It's a laboratory for building better athletes and better people. We focus on speed, agility, strength, and mental toughness.
               </p>
               
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="flex items-center gap-4 border-l-2 border-zinc-800 pl-4">
                   <div className="p-3 bg-zinc-900 rounded-full text-co-yellow"><Trophy size={28} /></div>
                   <div>
