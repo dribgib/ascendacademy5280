@@ -151,9 +151,10 @@ const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
     }
 
     // Days of current month
+    const todayStr = new Date().toISOString().slice(0, 10);
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const dayEvents = events.filter(e => e.date === dateStr);
+      const dayEvents = events.filter(e => e.date === dateStr && e.date >= todayStr);
       const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
 
       days.push(
