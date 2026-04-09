@@ -435,7 +435,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 ) : (
                     kids.map(kid => (
                     <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group hover:border-zinc-600 transition-colors">
-                        <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : kid.subscriptionStatus === 'paused' ? 'bg-amber-500' : (kid.classPacks && kid.classPacks.some((p: any) => p.isFreeTrial)) ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
+                        <div className={`absolute top-0 left-0 h-full ${kid.subscriptionStatus === 'active' ? 'w-1 bg-green-500' : kid.subscriptionStatus === 'paused' ? 'w-1 bg-amber-500' : (kid.classPacks && kid.classPacks.some((p: any) => p.isFreeTrial)) ? 'w-1.5 bg-gradient-to-b from-emerald-400 to-green-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'w-1 bg-zinc-700'}`}></div>
                         
                         <button 
                             onClick={(e) => { e.stopPropagation(); handleDeleteKid(kid); }}
@@ -591,17 +591,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                             const nonTrialPacks = kid.classPacks!.filter((p: any) => !p.isFreeTrial);
                                             return (
                                                 <div className="flex flex-col items-start gap-3">
-                                                    <span className="text-[10px] uppercase font-medium bg-emerald-900/40 text-emerald-400 px-2 py-1 rounded border border-emerald-900/50 inline-block">
-                                                        Free Trial
-                                                    </span>
+                                                    <div className="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white text-sm uppercase font-bold py-2 px-3 rounded text-center tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-pulse">
+                                                        ★ FREE TRIAL ACTIVE ★
+                                                    </div>
                                                     
-                                                    <div className="w-full bg-emerald-950/30 border border-emerald-900/50 rounded p-3">
-                                                        <div className="text-[10px] uppercase font-bold text-emerald-400 mb-2 tracking-wider">Trial Sessions</div>
-                                                        <div className="flex items-center justify-between text-[10px]">
-                                                            <span className="text-zinc-300 font-medium">Sessions Remaining</span>
-                                                            <span className={`font-bold ${isExpiringSoon ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                                                {trialPack.creditsRemaining} / {trialPack.creditsTotal} • {daysLeft} days left
+                                                    <div className="w-full bg-emerald-950/40 border-2 border-emerald-500/60 rounded p-4 shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+                                                        <div className="text-xs uppercase font-bold text-emerald-300 mb-2 tracking-wider">Trial Sessions</div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-zinc-200 font-medium text-sm">Sessions Remaining</span>
+                                                            <span className={`font-bold text-lg ${isExpiringSoon ? 'text-amber-400' : 'text-emerald-300'}`}>
+                                                                {trialPack.creditsRemaining} / {trialPack.creditsTotal}
                                                             </span>
+                                                        </div>
+                                                        <div className={`text-xs mt-1 text-right font-medium ${isExpiringSoon ? 'text-amber-400' : 'text-emerald-400/70'}`}>
+                                                            {daysLeft} days remaining
                                                         </div>
                                                     </div>
 

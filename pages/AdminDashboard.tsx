@@ -489,7 +489,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                                                 {k.usageStats!.used}/{k.usageStats!.limit}
                                                             </span>
                                                         ) : hasFreeTrial ? (
-                                                            <span className="text-[10px] text-emerald-400">Trial {trialCredits} left</span>
+                                                            <span className="text-[10px] font-bold text-emerald-300 bg-emerald-900/40 px-1.5 py-0.5 rounded border border-emerald-800">★ Trial {trialCredits} left</span>
                                                         ) : (
                                                             <span className="text-[10px] text-zinc-600">No Plan</span>
                                                         )}

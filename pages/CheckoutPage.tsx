@@ -387,14 +387,14 @@ const CheckoutPage: React.FC = () => {
                     {activeKid.subscriptionStatus === 'active' ? (
                        <span className="bg-green-900/30 text-green-400 px-3 py-1 rounded text-xs uppercase border border-green-900/50 font-medium">Active</span>
                     ) : activeKid.classPacks?.some((p: any) => p.isFreeTrial) ? (
-                       <span className="bg-emerald-900/30 text-emerald-400 px-3 py-1 rounded text-xs uppercase border border-emerald-900/50 font-medium">Free Trial</span>
+                       <span className="bg-emerald-500 text-white px-4 py-1.5 rounded text-xs uppercase border border-emerald-400 font-bold tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.4)]">★ Free Trial</span>
                     ) : (
                        <span className="bg-zinc-800 text-zinc-500 px-3 py-1 rounded text-xs uppercase font-medium">No Active Plan</span>
                     )}
                  </div>
                  <div className="flex justify-between items-center py-4">
                     <span className="text-zinc-400 text-sm uppercase tracking-wide">Status</span>
-                    <span className="text-zinc-500 text-sm uppercase font-bold">
+                    <span className={`text-sm uppercase font-bold ${activeKid.classPacks?.some((p: any) => p.isFreeTrial) ? 'text-emerald-400' : 'text-zinc-500'}`}>
                       {activeKid.subscriptionStatus === 'active' ? 'Auto-Renewing' : activeKid.classPacks?.some((p: any) => p.isFreeTrial) ? `${activeKid.classPacks.find((p: any) => p.isFreeTrial)?.creditsRemaining} trial sessions left` : 'Inactive'}
                     </span>
                  </div>
