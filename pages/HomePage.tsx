@@ -126,6 +126,7 @@ const HomePage: React.FC = () => {
             <h2 className="font-shrikhand text-7xl text-white uppercase mb-4">Training Packages</h2>
             <div className="w-24 h-1 bg-co-yellow mx-auto mb-6"></div>
             <p className="text-zinc-400 text-xl max-w-2xl mx-auto font-light font-kanit">Choose your level of commitment. From Rookie foundations to Elite performance.</p>
+            <p className="text-emerald-400 text-base mt-3 font-kanit">New athletes get <strong>6 free trial sessions</strong> — no payment required!</p>
           </div>
 
           <div className="flex justify-center mb-16">

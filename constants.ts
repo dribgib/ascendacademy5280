@@ -39,6 +39,13 @@ export const calculateAge = (dob: string): number => {
   return age;
 };
 
+// --- FREE TRIAL CONFIGURATION ---
+export const FREE_TRIAL_CONFIG = {
+  credits: 6,
+  expirationDays: 30,
+  packType: 'free_trial' as const,
+};
+
 // --- STRIPE CONFIGURATION ---
 // @ts-ignore
 const env = import.meta.env || {};

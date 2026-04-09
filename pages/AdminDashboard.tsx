@@ -477,6 +477,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                             const hasStats = k.subscriptionStatus === 'active' && k.usageStats;
                                             const isLimitReached = hasStats && k.usageStats!.used >= k.usageStats!.limit;
                                             const totalPackCredits = k.classPacks?.reduce((sum, pack) => sum + pack.creditsRemaining, 0) || 0;
+                                            const hasFreeTrial = k.classPacks?.some((p: any) => p.isFreeTrial);
+                                            const trialCredits = k.classPacks?.find((p: any) => p.isFreeTrial)?.creditsRemaining || 0;
                                             
                                             return (
                                                 <div key={k.id} className="flex flex-col gap-1">
@@ -486,6 +488,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, hideHeader = fals
                                                             <span className={`text-[10px] ${isLimitReached ? 'text-yellow-400' : 'text-co-yellow'}`}>
                                                                 {k.usageStats!.used}/{k.usageStats!.limit}
                                                             </span>
+                                                        ) : hasFreeTrial ? (
+                                                            <span className="text-[10px] text-emerald-400">Trial {trialCredits} left</span>
                                                         ) : (
                                                             <span className="text-[10px] text-zinc-600">No Plan</span>
                                                         )}

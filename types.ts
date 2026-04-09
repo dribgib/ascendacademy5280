@@ -13,12 +13,13 @@ export interface User {
 
 export interface ClassPack {
   id: string;
-  packType: '10pack_45min' | '20pack_45min' | '10pack_75min' | '20pack_75min';
+  packType: '10pack_45min' | '20pack_45min' | '10pack_75min' | '20pack_75min' | 'free_trial';
   creditsRemaining: number;
   creditsTotal: number;
   purchaseDate: string;
   expiresAt: string;
   stripePaymentId?: string;
+  isFreeTrial?: boolean;
 }
 
 export interface Child {

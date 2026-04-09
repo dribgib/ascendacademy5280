@@ -435,7 +435,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                 ) : (
                     kids.map(kid => (
                     <div key={kid.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden group hover:border-zinc-600 transition-colors">
-                        <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : kid.subscriptionStatus === 'paused' ? 'bg-amber-500' : 'bg-zinc-700'}`}></div>
+                        <div className={`absolute top-0 left-0 w-1 h-full ${kid.subscriptionStatus === 'active' ? 'bg-green-500' : kid.subscriptionStatus === 'paused' ? 'bg-amber-500' : (kid.classPacks && kid.classPacks.some((p: any) => p.isFreeTrial)) ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
                         
                         <button 
                             onClick={(e) => { e.stopPropagation(); handleDeleteKid(kid); }}
@@ -581,6 +581,59 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                                 </button>
                                             </div>
                                         </div>
+                                    ) : kid.classPacks && kid.classPacks.some((p: any) => p.isFreeTrial) ? (
+                                        // FREE TRIAL - active free trial pack
+                                        (() => {
+                                            const trialPack = kid.classPacks!.find((p: any) => p.isFreeTrial)!;
+                                            const expiresAt = new Date(trialPack.expiresAt);
+                                            const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                            const isExpiringSoon = daysLeft <= 7;
+                                            const nonTrialPacks = kid.classPacks!.filter((p: any) => !p.isFreeTrial);
+                                            return (
+                                                <div className="flex flex-col items-start gap-3">
+                                                    <span className="text-[10px] uppercase font-medium bg-emerald-900/40 text-emerald-400 px-2 py-1 rounded border border-emerald-900/50 inline-block">
+                                                        Free Trial
+                                                    </span>
+                                                    
+                                                    <div className="w-full bg-emerald-950/30 border border-emerald-900/50 rounded p-3">
+                                                        <div className="text-[10px] uppercase font-bold text-emerald-400 mb-2 tracking-wider">Trial Sessions</div>
+                                                        <div className="flex items-center justify-between text-[10px]">
+                                                            <span className="text-zinc-300 font-medium">Sessions Remaining</span>
+                                                            <span className={`font-bold ${isExpiringSoon ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                                                {trialPack.creditsRemaining} / {trialPack.creditsTotal} • {daysLeft} days left
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {nonTrialPacks.length > 0 && (
+                                                        <div className="w-full bg-blue-950/30 border border-blue-900/50 rounded p-3">
+                                                            <div className="text-[10px] uppercase font-bold text-blue-400 mb-2 tracking-wider">Class Packs</div>
+                                                            <div className="flex flex-col gap-1.5">
+                                                                {nonTrialPacks.map((pack: any, idx: number) => {
+                                                                    const packExp = new Date(pack.expiresAt);
+                                                                    const packDays = Math.ceil((packExp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                                    return (
+                                                                        <div key={idx} className="flex items-center justify-between text-[10px]">
+                                                                            <span className="text-zinc-300 font-medium">{pack.packType.replace('pack_', '').replace('_', ' ')} Pack</span>
+                                                                            <span className={`font-bold ${packDays <= 7 ? 'text-amber-400' : 'text-blue-400'}`}>
+                                                                                {pack.creditsRemaining} / {pack.creditsTotal} credits • {packDays} days left
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <button 
+                                                        onClick={() => navigate(`/checkout/p_elite?kidId=${kid.id}`)} 
+                                                        className="w-full bg-co-yellow hover:bg-white text-black text-[10px] uppercase font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1 shadow-sm font-kanit tracking-wide"
+                                                    >
+                                                        Upgrade to Full Plan <ChevronRight size={12} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })()
                                     ) : kid.classPacks && kid.classPacks.length > 0 ? (
                                         <div className="flex flex-col items-start gap-3">
                                             <span className="text-[10px] uppercase font-medium text-zinc-400 px-2 py-1 rounded border border-zinc-700 inline-block">
@@ -621,7 +674,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                         onClick={() => navigate(`/checkout/p_elite?kidId=${kid.id}`)} 
                                         className="w-full text-xs uppercase font-medium bg-zinc-800 text-zinc-300 px-3 py-2 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1 mt-2"
                                     >
-                                        No Active Plan <ChevronRight size={12} />
+                                        No Active Plan — Choose a Plan <ChevronRight size={12} />
                                     </button>
                                     )}
                                 </div>
@@ -673,16 +726,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                 const isRegistered = evt.registeredKidIds.includes(kid.id);
                                 const limitReached = kid.usageStats && kid.usageStats.used >= kid.usageStats.limit;
                                 const hasPlan = kid.subscriptionStatus === 'active';
+                                const hasCredits = kid.classPacks && kid.classPacks.length > 0;
+                                const canRegister = hasPlan || hasCredits;
                                 return (
                                     <button
                                     key={kid.id}
-                                    disabled={(!isRegistered && limitReached) || (!isRegistered && !hasPlan)}
+                                    disabled={(!isRegistered && limitReached && !hasCredits) || (!isRegistered && !canRegister)}
                                     onClick={() => isRegistered ? handleUnregister(evt.id, kid.id) : handleRegister(evt, kid.id, isFull)}
                                     className={`
                                         text-xs py-2 px-3 rounded uppercase font-bold transition-colors
                                         ${isRegistered 
                                         ? 'bg-green-900/30 text-green-500 border border-green-900 hover:bg-zinc-800 hover:text-zinc-300 hover:border-zinc-700 cursor-pointer' 
-                                        : (limitReached || !hasPlan)
+                                        : (limitReached && !hasCredits) || !canRegister
                                             ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed border border-zinc-800'
                                             : isFull
                                                 ? 'bg-zinc-800 border border-zinc-700 text-white hover:border-co-yellow'
@@ -691,7 +746,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
                                     >
                                     {isRegistered ? (
                                         <span className="flex items-center justify-center gap-1"><CheckCircle size={12} /> {kid.firstName} In</span>
-                                    ) : !hasPlan ? `Plan Required for ${kid.firstName}` : limitReached ? `Limit Reached` : isFull ? `Waitlist ${kid.firstName}` : `Sign Up ${kid.firstName}`}
+                                    ) : !canRegister ? `Plan Required for ${kid.firstName}` : (limitReached && !hasCredits) ? `Limit Reached` : isFull ? `Waitlist ${kid.firstName}` : `Sign Up ${kid.firstName}`}
                                     </button>
                                 );
                                 })}

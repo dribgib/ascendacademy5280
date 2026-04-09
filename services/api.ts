@@ -2,7 +2,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, Child, Event } from '../types';
 import { stripePromise } from '../lib/stripe';
-import { PACKAGES } from '../constants';
+import { PACKAGES, FREE_TRIAL_CONFIG } from '../constants';
 
 // Helper to format ISO timestamp to h:mm A (12-hour) in Denver Time
 const formatTime = (isoString: string) => {
@@ -228,7 +228,8 @@ const supabaseApi = {
                     creditsTotal: pack.credits_total,
                     purchaseDate: pack.purchase_date,
                     expiresAt: pack.expires_at,
-                    stripePaymentId: pack.stripe_payment_id
+                    stripePaymentId: pack.stripe_payment_id,
+                    isFreeTrial: pack.is_free_trial || false
                 }));
 
             return {
@@ -368,7 +369,8 @@ const supabaseApi = {
                 creditsTotal: pack.credits_total,
                 purchaseDate: pack.purchase_date,
                 expiresAt: pack.expires_at,
-                stripePaymentId: pack.stripe_payment_id
+                stripePaymentId: pack.stripe_payment_id,
+                isFreeTrial: pack.is_free_trial || false
             }));
 
         return {
@@ -406,6 +408,24 @@ const supabaseApi = {
         .single();
 
       if (error) throw error;
+
+      // Auto-grant free trial (6 sessions, 30 days)
+      try {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + FREE_TRIAL_CONFIG.expirationDays);
+        
+        await supabase.from('class_packs').insert({
+          child_id: data.id,
+          pack_type: FREE_TRIAL_CONFIG.packType,
+          credits_remaining: FREE_TRIAL_CONFIG.credits,
+          credits_total: FREE_TRIAL_CONFIG.credits,
+          expires_at: expiresAt.toISOString(),
+          is_free_trial: true
+        });
+      } catch (trialErr) {
+        console.warn("Free trial grant failed (may already exist):", trialErr);
+      }
+
       return data;
     },
 
@@ -642,8 +662,12 @@ const supabaseApi = {
           throw new Error("No class pack credits available.");
         }
 
+        // Free trial packs work for any session duration
+        const freeTrialPack = activePacks.find((pack: any) => pack.is_free_trial || pack.pack_type === 'free_trial');
+        
         // Find matching pack by duration (45min or 75min)
         const matchingPack = activePacks.find((pack: any) => {
+          if (pack.is_free_trial || pack.pack_type === 'free_trial') return false; // Skip trial packs in duration matching
           if (is45MinSession) {
             return pack.pack_type.includes('45min');
           } else {
@@ -651,12 +675,15 @@ const supabaseApi = {
           }
         });
 
-        if (!matchingPack) {
+        // Prefer duration-matched pack, fall back to free trial
+        const selectedPack = matchingPack || freeTrialPack;
+
+        if (!selectedPack) {
           const requiredDuration = is45MinSession ? '45-minute' : '75-minute';
           throw new Error(`This ${requiredDuration} session requires a matching class pack. Your available packs don't match this session type.`);
         }
 
-        selectedPackId = matchingPack.id;
+        selectedPackId = selectedPack.id;
       }
 
       // Create registration
